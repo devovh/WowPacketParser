@@ -111,20 +111,30 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                     // zamiast [u8 ArchetypeSerializationType][id...][0xFF].
                                     // Pakiet 881 sniffu 70938 (127 B) i 802 (127 078 B):
                                     // fragmenty = 00 CGObject, 80 ? (znany), 00, 00, 00, 00, 06 ?
-                                    var fragmentCount = fieldsData.ReadUInt16("EntityFragmentCount", i) & 0x1FF;
+                                    // [u16 liczba][u8 id * liczba]; id sa w numeracji klienta Forever
+                                    // (retail + 1 dla nie-tagow, tagi bez zmian), wiec trafiaja
+                                    // wprost w WowCSEntityFragments1215 (*_Classic). W pakietach
+                                    // gorna polowa licznika jest smieciem, wiec bierzemy dolny bajt.
+                                    var rawCount = fieldsData.ReadUInt16("EntityFragmentCount", i);
+                                    // Licznik jest zawsze 0x0300 | n: gorny bajt to typ serializacji
+                                    // (3), dolna polowa to liczba fragmentow. W pakiecie 881 sa 4:
+                                    // 33 26 CC CD (5. bajt FF to terminator listy, nie id).
+                                    // Id sa w numeracji klienta Forever (retail + 1 dla nie-tagow,
+                                    // tagi bez zmian), wiec trafiaja wprost w
+                                    // WowCSEntityFragments1215 (*_Classic).
+                                    var fragmentCount = (rawCount & 0xFF) + 1;
                                     fragments = new List<WowCSEntityFragment>();
                                     for (var fragmentIndex = 0; fragmentIndex < fragmentCount; ++fragmentIndex)
                                     {
-                                        var fragmentId = fieldsData.ReadByte("NewEntityFragmentID", i, fragmentIndex);
-                                        if (fragmentId == 0xFF)
+                                        var rawId = fieldsData.ReadByte("NewEntityFragmentID", i, fragmentIndex);
+                                        if (rawId == (byte)WowCSEntityFragments1215.End)
                                             break;
-                                        // Forever nie ma wartosci granicznej 0xFF - licznik jest
-                                        // wiarygodny, a nieznane id trafiaja do listy jako
-                                        // nieaktualizowalne (IsUpdateable = false), wiec nie zjadaja
-                                        // bitow maski.
-                                        if (!Enum.IsDefined(typeof(WowCSEntityFragments1215), (int)fragmentId))
-                                            fieldsData.AddValue("UnknownEntityFragmentID", fragmentId, i, fragmentIndex);
-                                        fragments.Add(new WowCSEntityFragment((WowCSEntityFragments1215)fragmentId));
+                                        if (!Enum.IsDefined(typeof(WowCSEntityFragments1215), (int)rawId))
+                                        {
+                                            fieldsData.AddValue("UnknownEntityFragmentID", rawId, i, fragmentIndex);
+                                            continue;
+                                        }
+                                        fragments.Add(new WowCSEntityFragment((WowCSEntityFragments1215)rawId));
                                     }
                                     if (obj != null)
                                         obj.EntityFragments = fragments;
@@ -289,9 +299,11 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
         }
 
         /// <summary>
-        /// Forever (70338-70938) nie ma maski fragmentow w bloku wartosci: po prefiksie
-        /// (IsOwned, HasFragmentUpdates, licznik i lista fragmentow) pola ida plasko, tak jak
-        /// je czyta UpdateFieldsHandler dla tych buildow. Dlatego maski nie czytamy wcale.
+        /// Forever (70338-70938): dane fragmentow w bloku wartosci. Po liscie fragmentow idzie
+        /// u32 rozmiar, u32 maska typow (TYPEID_OBJECT/UNIT/PLAYER/ACTIVEPLAYER/GAMEOBJECT)
+        /// i pola tych typow - patrz Player::BuildValuesUpdate / Creature::BuildValuesUpdate
+        /// w tc-forever. Wczesniej ten blok nie byl czytany wcale, wiec kazdy pakiet z
+        /// graczem/jednostka konczyl sie na "Updatefields not fully read".
         /// </summary>
         private static void ReadUpdateEntityFragmentDataForever(WoWObject obj, List<WowCSEntityFragment> fragments, UpdateValues updateValues, CoreParsers.UpdateFieldsHandlerBase handler, Packet fieldsData, int index)
         {
@@ -311,6 +323,65 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                             obj.ObjectData = data;
 
                         updateValues.Fields.UpdateData(data);
+                        break;
+                    }
+                    case WowCSEntityFragments.PlayerHouseInfoComponent_C:
+                    case WowCSEntityFragments.PlayerInitiativeComponent_C:
+                    case WowCSEntityFragments.Tag_Unit:
+                    case WowCSEntityFragments.Tag_Player:
+                    case WowCSEntityFragments.Tag_GameObject:
+                    {
+                        // Forever: dane fragmentu to u32 rozmiar, potem u32 maska typow
+                        // (TYPEID_OBJECT/UNIT/PLAYER/ACTIVEPLAYER/GAMEOBJECT) i dopiero pola
+                        // tych typow - patrz Player::BuildValuesUpdate w tc-forever.
+                        // Kolejnosc z emulatora (Player::BuildValuesUpdate): u32 maska typow,
+                        // potem pola tych typow. Bity maski to 1 << TYPEID_* (Object, Unit=5,
+                        // Player=6, ActivePlayer=7, GameObject=8), a nie 1<<0.. jak w 12.x.
+                        var typeMask = fieldsData.ReadUInt32("TypeMask", index);
+                        fieldsData.AddValue("DBGMASK", $"{typeMask:X}", index);
+                        const uint TypeMaskObject = 1u << 0;
+                        const uint TypeMaskUnit = 1u << 5;
+                        const uint TypeMaskPlayer = 1u << 6;
+                        const uint TypeMaskActivePlayer = 1u << 7;
+                        const uint TypeMaskGameObject = 1u << 8;
+
+                        if ((typeMask & TypeMaskObject) != 0)
+                        {
+                            var data = handler.ReadUpdateObjectData(fieldsData, index);
+                            if (obj is { ObjectData: IMutableObjectData mutObject })
+                                mutObject.UpdateData(data);
+                            else if (obj != null)
+                                obj.ObjectData = data;
+                            updateValues.Fields.UpdateData(data);
+                        }
+                        if ((typeMask & TypeMaskUnit) != 0)
+                        {
+                            var data = handler.ReadUpdateUnitData(fieldsData, index);
+                            if (obj is Unit unit)
+                            {
+                                if (unit.UnitData is IMutableUnitData mutUnit)
+                                    mutUnit.UpdateData(data);
+                                else
+                                    unit.UnitData = data;
+                            }
+                            updateValues.Fields.UpdateData(data);
+                        }
+                        if ((typeMask & TypeMaskPlayer) != 0)
+                            handler.ReadUpdatePlayerData(fieldsData, index);
+                        if ((typeMask & TypeMaskActivePlayer) != 0)
+                            handler.ReadUpdateActivePlayerData(fieldsData, index);
+                        if ((typeMask & TypeMaskGameObject) != 0)
+                        {
+                            var data = handler.ReadUpdateGameObjectData(fieldsData, index);
+                            if (obj is GameObject go)
+                            {
+                                if (go.GameObjectData is IMutableGameObjectData mutGo)
+                                    mutGo.UpdateData(data);
+                                else
+                                    go.GameObjectData = data;
+                            }
+                            updateValues.Fields.UpdateData(data);
+                        }
                         break;
                     }
                 }

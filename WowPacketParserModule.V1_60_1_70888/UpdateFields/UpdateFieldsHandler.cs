@@ -1604,6 +1604,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
         /// </summary>
         public override IPlayerData ReadUpdatePlayerData(Packet packet, params object[] indexes)
         {
+            // Forever 1.60.1 (70338-70938) - PlayerData::WriteUpdate z tc-forever
+            // (src/server/game/Entities/Object/Updates/UpdateFields.cpp:2847).
+            //
+            // Naglowek: 11 bitow "ktore bloki sa zapisane", potem po 32 bity kazdy zapisany
+            // blok (WriteClassicChangesMaskHeader). Numery bitow sa klasyczne - pola ida
+            // w kolejnosci zapisu w WriteUpdate, z grupa 32 trzymajaca TaxiMountAnimKitID.
             var data = new PlayerData();
             packet.ResetBitReader();
 
@@ -1615,13 +1621,148 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                     blocks[i] = packet.ReadUInt32("PlayerBlock", indexes, i);
 
             bool Changed(int bit) => (blocks[bit / 32] & (1u << (bit % 32))) != 0;
-            var changed = new List<int>();
-            for (var bit = 0; bit < BlockCount * 32; ++bit)
-                if (Changed(bit))
-                    changed.Add(bit);
-            packet.AddValue("PlayerChangedBits", string.Join(",", changed), indexes);
+            var classicGroup32 = (blocks[1] & 1) != 0;
 
+            var noQuestLogChangesMask = packet.ReadBit("NoQuestLogChangesMask", indexes);
+            if (Changed(0))
+            {
+                if (Changed(1)) data.HasQuestSession = packet.ReadBit("HasQuestSession", indexes);
+                if (Changed(2)) data.HasLevelLink = packet.ReadBit("HasLevelLink", indexes);
+                if (Changed(3)) data.Customizations.Resize(packet.ReadBits("CustomizationsCount", 32));
+                if (Changed(4)) data.RandomCustomizations.Resize(packet.ReadBits("RandomCustomizationsCount", 32));
+                if (Changed(5)) data.QuestSessionQuestLog.Resize(packet.ReadBits("QuestSessionQuestLogCount", 32));
+                if (Changed(6)) data.ArenaCooldowns.Resize(packet.ReadBits("ArenaCooldownsCount", 32));
+                if (Changed(7)) data.PetNames.Resize(packet.ReadBits("PetNamesCount", 32));
+                if (Changed(8)) data.VisualItemReplacements.Resize(packet.ReadBits("VisualItemReplacementsCount", 32));
+                if (Changed(36)) data.Name = new string('*', (int)packet.ReadBits("NameLength", 6));
+            }
+            if (classicGroup32)
+                data.DeclinedNames = packet.ReadBit("HasDeclinedNames", indexes) ? new DeclinedNames() : null;
             packet.ResetBitReader();
+
+            if (Changed(0))
+            {
+                for (var i = 0; i < data.Customizations.Count; ++i)
+                    data.Customizations[i] = ReadCreateChrCustomizationChoice(packet, indexes, "Customizations", i);
+                for (var i = 0; i < data.RandomCustomizations.Count; ++i)
+                    data.RandomCustomizations[i] = ReadCreateChrCustomizationChoice(packet, indexes, "RandomCustomizations", i);
+                for (var i = 0; i < data.QuestSessionQuestLog.Count; ++i)
+                    data.QuestSessionQuestLog[i] = ReadCreateQuestLog(packet, indexes, "QuestSessionQuestLog", i);
+                for (var i = 0; i < data.ArenaCooldowns.Count; ++i)
+                    data.ArenaCooldowns[i] = ReadCreateArenaCooldown(packet, indexes, "ArenaCooldowns", i);
+                for (var i = 0; i < data.PetNames.Count; ++i)
+                    data.PetNames[i] = ReadCreatePetCreatureName(packet, indexes, "PetNames", i);
+                for (var i = 0; i < data.VisualItemReplacements.Count; ++i)
+                    data.VisualItemReplacements[i] = packet.ReadInt32("VisualItemReplacements", indexes, i);
+                if (Changed(9)) data.DuelArbiter = packet.ReadPackedGuid128("DuelArbiter", indexes);
+                if (Changed(10)) data.WowAccount = packet.ReadPackedGuid128("WowAccount", indexes);
+                if (Changed(11)) data.BnetAccount = packet.ReadPackedGuid128("BnetAccount", indexes);
+                if (Changed(12)) data.GuildClubMemberID = packet.ReadUInt64("GuildClubMemberID", indexes);
+                if (Changed(13)) data.LootTargetGUID = packet.ReadPackedGuid128("LootTargetGUID", indexes);
+                if (Changed(14)) data.PlayerFlags = packet.ReadUInt32("PlayerFlags", indexes);
+                if (Changed(15)) data.PlayerFlagsEx = packet.ReadUInt32("PlayerFlagsEx", indexes);
+                if (Changed(16)) data.GuildRankID = packet.ReadUInt32("GuildRankID", indexes);
+                if (Changed(17)) data.GuildDeleteDate = packet.ReadUInt32("GuildDeleteDate", indexes);
+                if (Changed(18)) data.GuildLevel = packet.ReadInt32("GuildLevel", indexes);
+                if (Changed(19)) data.NativeSex = packet.ReadByte("NativeSex", indexes);
+                if (Changed(20)) data.Inebriation = packet.ReadByte("Inebriation", indexes);
+                if (Changed(21)) data.PvpTitle = packet.ReadByte("PvpTitle", indexes);
+                if (Changed(22)) data.ArenaFaction = packet.ReadByte("ArenaFaction", indexes);
+                if (Changed(23)) data.DuelTeam = packet.ReadUInt32("DuelTeam", indexes);
+                if (Changed(24)) data.GuildTimeStamp = packet.ReadInt32("GuildTimeStamp", indexes);
+                if (Changed(25))
+                {
+                    // WriteMapFieldUpdate: u8 ignoreChangesMask, potem [u16 liczba][klucz int32, wartosc int32]
+                    if (packet.ReadBool("QuestLogQuestIdToIndexIgnoreChangesMask", indexes))
+                    {
+                        var count = packet.ReadUInt32("QuestLogQuestIdToIndexCount", indexes);
+                        for (var i = 0; i < count; ++i)
+                        {
+                            packet.ReadInt32("Key", indexes, "QuestLogQuestIdToIndex", i);
+                            packet.ReadInt32("Value", indexes, "QuestLogQuestIdToIndex", i);
+                        }
+                    }
+                    else
+                    {
+                        var count = packet.ReadUInt16("QuestLogQuestIdToIndexCount", indexes);
+                        for (var i = 0; i < count; ++i)
+                        {
+                            packet.ReadInt32("Key", indexes, "QuestLogQuestIdToIndex", i);
+                            var state = packet.ReadByte("State", indexes, "QuestLogQuestIdToIndex", i);
+                            if (state != 2)
+                                packet.ReadInt32("Value", indexes, "QuestLogQuestIdToIndex", i);
+                        }
+                    }
+                }
+                if (Changed(26)) data.PlayerTitle = packet.ReadInt32("PlayerTitle", indexes);
+                if (Changed(27)) data.FakeInebriation = packet.ReadInt32("FakeInebriation", indexes);
+                if (Changed(28)) data.VirtualPlayerRealm = packet.ReadUInt32("VirtualPlayerRealm", indexes);
+                if (Changed(29)) data.CurrentSpecID = packet.ReadUInt32("CurrentSpecID", indexes);
+                if (Changed(30)) data.CurrentCombatTraitConfigSubTreeID = packet.ReadInt32("CurrentCombatTraitConfigSubTreeID", indexes);
+                if (Changed(31)) data.TaxiMountAnimKitID = packet.ReadInt32("TaxiMountAnimKitID", indexes);
+            }
+
+            if (Changed(32))
+            {
+                if (Changed(33)) data.CurrentBattlePetBreedQuality = packet.ReadByte("CurrentBattlePetBreedQuality", indexes);
+                if (Changed(34)) data.HonorLevel = packet.ReadInt32("HonorLevel", indexes);
+                if (Changed(35)) data.LogoutTime = packet.ReadInt64("LogoutTime", indexes);
+                if (Changed(37)) data.OfferedAdvJournalQuestID = packet.ReadInt32("OfferedAdvJournalQuestID", indexes);
+                if (Changed(38)) data.OfferedScriptQuestID = packet.ReadInt32("OfferedScriptQuestID", indexes);
+                if (Changed(39)) data.CurrentBattlePetSpeciesID = packet.ReadInt32("CurrentBattlePetSpeciesID", indexes);
+                if (Changed(40)) data.CtrOptions = ReadCreateCTROptions(packet, indexes, "CtrOptions");
+                if (Changed(41)) data.CovenantID = packet.ReadInt32("CovenantID", indexes);
+                if (Changed(42)) data.SoulbindID = packet.ReadInt32("SoulbindID", indexes);
+                if (Changed(43)) Substructures.MythicPlusHandler.ReadDungeonScoreSummary(packet, indexes, "DungeonScore");
+                if (Changed(44)) data.LeaverInfo = ReadCreateLeaverInfo(packet, indexes, "LeaverInfo");
+                if (Changed(45)) data.SpectateTarget = packet.ReadPackedGuid128("SpectateTarget", indexes);
+                if (Changed(46)) data.WorldLootObjectInventorySwapSlot = packet.ReadInt32("WorldLootObjectInventorySwapSlot", indexes);
+                if (Changed(48)) data.PersonalTabard = ReadCreateCustomTabardInfo(packet, indexes, "PersonalTabard");
+                if (Changed(49)) data.NpcAsPlayerInfo = ReadCreateNPCAsPlayerInfo(packet, indexes, "NpcAsPlayerInfo");
+            }
+
+            if (Changed(32))
+            {
+                if (Changed(36)) data.Name = packet.ReadWoWString("Name", data.Name?.Length ?? 0, indexes);
+                if (Changed(47) && data.DeclinedNames != null)
+                    data.DeclinedNames = ReadCreateDeclinedNames(packet, indexes, "DeclinedNames");
+            }
+
+            if (Changed(50))
+                for (var i = 0; i < 2; ++i)
+                    if (Changed(51 + i))
+                        data.PartyType[i] = packet.ReadByte("PartyType", indexes, i);
+
+            if (Changed(53))
+                for (var i = 0; i < 175; ++i)
+                    if (Changed(54 + i))
+                        data.QuestLog[i] = ReadCreateQuestLog(packet, indexes, "QuestLog", i);
+
+            if (Changed(229))
+                for (var i = 0; i < 19; ++i)
+                    if (Changed(230 + i))
+                        data.VisibleItems[i] = ReadCreateVisibleItem(packet, indexes, "VisibleItems", i);
+
+            if (Changed(249))
+                for (var i = 0; i < 6; ++i)
+                    if (Changed(250 + i))
+                        data.AvgItemLevel[i] = packet.ReadSingle("AvgItemLevel", indexes, i);
+
+            if (Changed(256))
+                for (var i = 0; i < 32; ++i)
+                    if (Changed(257 + i))
+                        data.ForcedReactions[i] = ReadCreateZonePlayerForcedReaction(packet, indexes, "ForcedReactions", i);
+
+            if (Changed(289))
+                for (var i = 0; i < 16; ++i)
+                    if (Changed(290 + i))
+                        Substructures.ItemHandler.ReadItemInstance(packet, indexes, i, "VisibleEquipableSpells");
+
+            if (Changed(306))
+                for (var i = 0; i < 19; ++i)
+                    if (Changed(307 + i))
+                        data.PlunderstormItemDisplayID[i] = packet.ReadUInt32("PlunderstormItemDisplayID", indexes, i);
+
             return data;
         }
 

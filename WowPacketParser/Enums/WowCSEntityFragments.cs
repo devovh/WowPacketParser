@@ -188,6 +188,22 @@ namespace WowPacketParser.Enums
         Tag_HouseExteriorPiece = 224,
         Tag_HouseExteriorRoot = 225,
         Tag_HousingDecorProxyGameObject = 226,
+        // Forever 1.60.1 (70338-70938) - rejestr klienta (rva 0x80146D0) ma te fragmenty
+        // przesuniete o +1 wzgledem retailu, a emulator (tc-forever) serializuje je jako
+        // EntityFragment + 1. Wartosci sa juz po przesunieciu, wiec trafiaja wprost z pakietu.
+        FVendor_C_Classic = 19,
+        FMeshObjectData_C_Classic = 21,
+        FHousingDecor_C_Classic = 22,
+        FHousingRoom_C_Classic = 23,
+        FHousingRoomComponentMesh_C_Classic = 24,
+        FHousingPlayerHouse_C_Classic = 25,
+        FJamHousingCornerstone_C_Classic = 29,
+        FNeighborhoodMirrorData_C_Classic = 32,
+        FMirroredPositionData_C_Classic = 33,
+        PlayerHouseInfoComponent_C_Classic = 34,
+        FHousingStorage_C_Classic = 35,
+        FHousingFixture_C_Classic = 36,
+        PlayerInitiativeComponent_C_Classic = 39,
         End = 255
     }
 
@@ -212,6 +228,7 @@ namespace WowPacketParser.Enums
                 case WowCSEntityFragments.FHousingStorage_C:
                 case WowCSEntityFragments.FHousingFixture_C:
                 case WowCSEntityFragments.PlayerInitiativeComponent_C:
+                // Forever 1.60.1: te same fragmenty, ale o +1 (patrz WowCSEntityFragments1215)
                     return true;
                 default:
                     return false;
