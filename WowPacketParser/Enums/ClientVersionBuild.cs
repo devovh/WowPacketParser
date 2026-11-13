@@ -1166,6 +1166,12 @@ namespace WowPacketParser.Enums
         V1_60_1_70178 = 70178, // beta (china only)
         V1_60_1_70205 = 70205, // beta
         V1_60_1_70235 = 70235, // beta (china only)
+        V1_60_1_70338 = 70338, // forever
+        V1_60_1_70532 = 70532, // forever
+        V1_60_1_70790 = 70790, // forever
+        V1_60_1_70862 = 70862, // forever
+        V1_60_1_70888 = 70888, // forever
+        V1_60_1_70938 = 70938, // forever
 
         // Battle.net - should probably not mix this but oh well
         BattleNetV37165 = 37165,

@@ -109,6 +109,12 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                 }
                             }
 
+                            if (handler == null)
+                            {
+                                packet.WriteLine("UPDATE_OBJECT: no UpdateFields handler for this build - values block skipped");
+                                break;
+                            }
+
                             ReadUpdateEntityFragmentData(obj, fragments, updateValues, handler, fieldsData, i);
 
                             if (fieldsData.Position != fieldsData.Length)
@@ -377,6 +383,12 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                 var flags = fieldsData.ReadByteE<UpdateFieldFlag>("FieldFlags", index);
                 obj.EntityFragments = ReadEntityFragments(fieldsData, "EntityFragmentID", index);
                 var handler = CoreFields.UpdateFields.GetHandler();
+
+                if (handler == null)
+                {
+                    packet.WriteLine("UPDATE_OBJECT: no UpdateFields handler for this build - create block skipped");
+                    return;
+                }
 
                 ReadCreateEntityFragmentData(obj, createObject, handler, fieldsData, flags, index);
 
