@@ -185,3 +185,35 @@ oraz `BaseEntity.cpp` / `Object.cpp` — tam jest dokladny zapis bloku wartosci.
 - 76 pakietów `ArgumentOutOfRangeException` (jeden pakiet ze złym `Data size`).
 - Fragmenty encji 1.60.1 (`HasFragmentUpdates`) — nieznany układ.
 - 14 881 „Updatefields not fully read” — nierozpoznany ogon bloku wartości.
+
+## Blok wartosci SMSG_UPDATE_OBJECT — stan po sesji (2026-11-13, wieczor)
+
+### Co zostalo ustalone z tc-forever i potwierdzone na snifie 70938
+1. **Fragmenty encji w Forever maja wlasna numeracje**: `BuildEntityFragments`
+   (`src/server/game/Entities/Object/BaseEntity.cpp:196`) zapisuje `id + 1` dla kazdego
+   nie-tagowego fragmentu (tagi 200+ bez zmian). Dlatego w pakiecie widzimy `33 26 CC CD`
+   (retail 32/38/204/205). W `WowCSEntityFragments1215` doszly wartosci `*_Classic`
+   (19, 21-25, 29, 32-36, 39) i `ToUniversal` tlumaczy je na wspolne.
+2. **Licznik fragmentow**: `u16` = `0x0300 | (n - 1)` (typ serializacji 3 + liczba-1);
+   `0xFF` konczy liste. W pakiecie 881: `00 03` → 4 fragmenty `33 26 CC CD FF`.
+3. **Blok wartosci gracza/jednostki**: po liscie fragmentow idzie `u32 TypeMask`
+   (bity `1 << TYPEID_*`: Object=0, Unit=5, Player=6, ActivePlayer=7, GameObject=8),
+   a potem pola w kolejnosci `ObjectData`, `UnitData`, `PlayerData`, `ActivePlayerData`,
+   `GameObjectData` — dokladnie jak `Player::BuildValuesUpdate` / `Creature::BuildValuesUpdate`.
+   Wczesniej ten blok nie byl czytany wcale (tylko `CGObject`), co dawalo
+   „Updatefields not fully read” na kazdym pakiecie z graczem.
+4. **PlayerData::WriteUpdate** ma naglowek 11 blokow (`WriteClassicChangesMaskHeader<11>`),
+   a pola ida w kolejnosci zapisu z emulatora (blok 32 trzyma m.in. TaxiMountAnimKitID,
+   blok 36 nazwe, 47 DeclinedNames, 51-52 PartyType, 54-228 QuestLog, 230-248 VisibleItems,
+   250-255 AvgItemLevel, 257-288 ForcedReactions, 290-305 VisibleEquipableSpells,
+   307-325 PlunderstormItemDisplayID). Zaimplementowane w `ReadUpdatePlayerData`.
+
+### Co jeszcze nie dziala
+- `ReadUpdateObjectData` czyta 4-bitowa maske zmian, ale w pakiecie 881 na pozycji maski
+  sa juz bajty UnitData — kolejnosc `ObjectData` w Forever wymaga jeszcze weryfikacji
+  (emulator pisze `u32 maska typow` i od razu `ObjectData::WriteUpdate`; w pakiecie 881
+  po masce widac `12 00 10 00 C1 00 00 48 ...`, co nie wyglada na 4 bity maski ObjectData).
+- `ReadUpdateUnitData` (8 blokow) i `ReadUpdateActivePlayerData` (14 blokow) sa zaimplementowane
+  dla 12.x i daja smieci dla Forever — trzeba je przepisac na `ClassicUnitDataBit` /
+  `ClassicActivePlayerDataBit` z `UpdateFields.cpp`.
+- Wynik sniffu 70938 bez zmian: 29 852 / 30 769 (97,02%) OK, 143 bledy.
