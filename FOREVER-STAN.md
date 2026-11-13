@@ -156,10 +156,32 @@ Ustalone z hexow pakietow 881 (127 B) i 802 (127 078 B) sniffu 70938:
 Efekt: `EndOfStream` w `SMSG_UPDATE_OBJECT` spadl ze **172 do 0** w sniffie
 14-02-23 (97,02% pakietow OK, 143 z bledami zamiast 302).
 
+## Blok wartosci: maski zmian (z kodu tc-forever)
+
+Zrodlo: `tc-forever/src/server/game/Entities/Object/Updates/UpdateFields.cpp`
+oraz `BaseEntity.cpp` / `Object.cpp` — tam jest dokladny zapis bloku wartosci.
+
+- `ObjectData::WriteUpdate` — **4 bity maski**, `FlushBits()`, potem
+  `EntryID` / `DynamicFlags` / `Scale`. Potwierdzone na pakiecie 881
+  (maska 0x7 -> `EntryID 0xCDCC2621`, `DynamicFlags 0x17FF`, `Scale 1.0`).
+- `PlayerData::WriteUpdate` — **11 blokow**: 11 bitow "ktore bloki sa zapisane",
+  potem po 32 bity kazdy zapisany blok (`WriteClassicChangesMaskHeader`).
+- `ActivePlayerData::WriteUpdate` — to samo, ale **14 blokow**.
+- `UnitData::WriteUpdate` — **8 blokow** (dopisac, gdy bedzie potrzebne).
+- `ClassicPlayerDataBit` / `ClassicUnitDataBit` / `ClassicActivePlayerDataBit`
+  to **mapy numerow bitow retail -> Classic** — daja dokladna kolejnosc pol.
+- Create (`BaseEntity::BuildCreateUpdateBlockForPlayer`): `u32 rozmiar`,
+  `u8 FieldFlags`, `BuildEntityFragments` = id + 1 dla nie-tagow + `0xFF`,
+  potem dla kazdego indirect `u8 1`, potem dane fragmentu.
+- Values (`Object::BuildEntityFragmentsForValuesUpdateForPlayerWithMask`):
+  `u8 FieldFlags`, `u8 0` (IdsChanged), `u8 contentsChangedMask`.
+
 ### Co zostaje
 
-- Blok gracza `IsOwned: true` — nadal `Updatefields not fully read`
-  (9 z 100 bajtow przeczytanych); potrzebny uklad pol gracza 1.60.1.
+- Blok gracza `IsOwned: true` — parser czyta juz naglowek maski gracza
+  (11 blokow) i wypisuje `PlayerChangedBits`; zostaje dopisanie pol wg
+  kolejnosci z `ClassicPlayerDataBit` i `PlayerData::WriteUpdate`.
+- `UnitData` — dopisac 8 blokow maski i kolejnosc pol (`ClassicUnitDataBit`).
 - 76 pakietów `ArgumentOutOfRangeException` (jeden pakiet ze złym `Data size`).
 - Fragmenty encji 1.60.1 (`HasFragmentUpdates`) — nieznany układ.
 - 14 881 „Updatefields not fully read” — nierozpoznany ogon bloku wartości.

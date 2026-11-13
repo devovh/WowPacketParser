@@ -4,6 +4,7 @@
 
 using System.CodeDom.Compiler;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
@@ -27,27 +28,22 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 
         public override IObjectData ReadUpdateObjectData(Packet packet, params object[] indexes)
         {
+            // Forever 1.60.1 - ObjectData::WriteUpdate z tc-forever
+            // (src/server/game/Entities/Object/Updates/UpdateFields.cpp:62):
+            // 4 bity maski, FlushBits, potem tylko ustawione pola. Pakiet 881 sniffu
+            // 70938: maska 0x7 -> EntryID 0xCDCC2621, DynamicFlags 0x17FF, Scale 1.0.
             var data = new ObjectData();
             packet.ResetBitReader();
-            var rawChangesMask = new int[1];
-            rawChangesMask[0] = (int)packet.ReadBits(4);
-            var changesMask = new BitArray(rawChangesMask);
-
+            var changesMask = packet.ReadBits("ObjectChangesMask", 4);
             packet.ResetBitReader();
-            if (changesMask[0])
+            if ((changesMask & 1) != 0)
             {
-                if (changesMask[1])
-                {
+                if ((changesMask & 2) != 0)
                     data.EntryID = packet.ReadInt32("EntryID", indexes);
-                }
-                if (changesMask[2])
-                {
+                if ((changesMask & 4) != 0)
                     data.DynamicFlags = packet.ReadUInt32("DynamicFlags", indexes);
-                }
-                if (changesMask[3])
-                {
+                if ((changesMask & 8) != 0)
                     data.Scale = packet.ReadSingle("Scale", indexes);
-                }
             }
             return data;
         }
@@ -1597,14 +1593,35 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             return data;
         }
 
+        /// <summary>
+        /// Forever 1.60.1 (build 70338-70938) - PlayerData::WriteUpdate z tc-forever
+        /// (src/server/game/Entities/Object/Updates/UpdateFields.cpp:2847).
+        ///
+        /// Naglowek maski: 11 bitow "ktore bloki sa zapisane", potem po 32 bity kazdy
+        /// zapisany blok. Dalej - juz bez bitow - po kolei pola wszystkich 11 blokow,
+        /// tylko te ustawione w masce. Numery bitow sa klasyczne (ClassicPlayerDataBit),
+        /// a bloki liczymy tak, jak je zapisuje WriteClassicChangesMaskHeader.
+        /// </summary>
         public override IPlayerData ReadUpdatePlayerData(Packet packet, params object[] indexes)
         {
-            // Forever 1.60.1: [u32 AvatarMask][u32 AvatarTail][pola gracza][liczniki][sub-fragmenty].
-            // AvatarMask 0 = gracz bez awatara (NPC/martwy), ale blok portretu i tak jest.
             var data = new PlayerData();
             packet.ResetBitReader();
-            packet.ReadUInt32("AvatarMask", indexes);
-            packet.ReadUInt32("AvatarTail", indexes);
+
+            const int BlockCount = 11;
+            var blocksMask = packet.ReadBits("PlayerBlocksMask", BlockCount);
+            var blocks = new uint[BlockCount];
+            for (var i = 0; i < BlockCount; ++i)
+                if ((blocksMask & (1UL << i)) != 0)
+                    blocks[i] = packet.ReadUInt32("PlayerBlock", indexes, i);
+
+            bool Changed(int bit) => (blocks[bit / 32] & (1u << (bit % 32))) != 0;
+            var changed = new List<int>();
+            for (var bit = 0; bit < BlockCount * 32; ++bit)
+                if (Changed(bit))
+                    changed.Add(bit);
+            packet.AddValue("PlayerChangedBits", string.Join(",", changed), indexes);
+
+            packet.ResetBitReader();
             return data;
         }
 
@@ -3919,8 +3936,24 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 
         public override IActivePlayerData ReadUpdateActivePlayerData(Packet packet, params object[] indexes)
         {
-            // Forever 1.60.1: bez masek zmian - pelny blok wartosci.
+            // Forever 1.60.1: naglowek maski jak w PlayerData, ale 14 blokow
+            // (ActivePlayerData::WriteUpdate, UpdateFields.cpp:5881).
             var data = new ActivePlayerData();
+            packet.ResetBitReader();
+
+            const int BlockCount = 14;
+            var blocksMask = packet.ReadBits("ActivePlayerBlocksMask", BlockCount);
+            var blocks = new uint[BlockCount];
+            for (var i = 0; i < BlockCount; ++i)
+                if ((blocksMask & (1UL << i)) != 0)
+                    blocks[i] = packet.ReadUInt32("ActivePlayerBlock", indexes, i);
+
+            var changed = new List<int>();
+            for (var bit = 0; bit < BlockCount * 32; ++bit)
+                if ((blocks[bit / 32] & (1u << (bit % 32))) != 0)
+                    changed.Add(bit);
+            packet.AddValue("ActivePlayerChangedBits", string.Join(",", changed), indexes);
+
             packet.ResetBitReader();
             for (var i = 0; i < 105; ++i)
                 data.InvSlots[i] = packet.ReadPackedGuid128("InvSlots", indexes, i);
