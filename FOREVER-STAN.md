@@ -138,9 +138,28 @@ Narzędzia analizy: `tools/chat_bits.py`, `tools/chat_layout.py`.
 | forevercore-70888 | 26 875 | **26 021 (96,82%)** | 248 |
 | 70862 (312 210) | 312 210 | **290 824 (93,15%)** | 10 335 |
 
+## Blok wartosci: fragmenty encji i blok gracza (sesja 2026-11-13)
+
+Ustalone z hexow pakietow 881 (127 B) i 802 (127 078 B) sniffu 70938:
+
+- Naglowek `SMSG_UPDATE_OBJECT`: `u16 MapID`, `u32 NumObjUpdates`, bity
+  (`IsEndOfBatch`, `HasRemovedObjects`), `u32 Data size`, potem obiekty.
+- Obiekt: `u8 UpdateType`, packed GUID128, `u32 UpdateFieldSize`, blok wartosci.
+- Blok wartosci Forever: `u8` bitow (`IsOwned`, `HasFragmentUpdates`), a gdy
+  `HasFragmentUpdates`:
+  **`u16 EntityFragmentCount`** (maska 0x1FF) i tyle bajtow `u8 fragmentID`
+  — **nie ma** `u8 ArchetypeSerializationType` ani terminatora `0xFF` z 12.x.
+- Po prefiksie **pola ida plasko, bez maski fragmentow** (gałąź
+  `ReadUpdateEntityFragmentDataForever` w UpdateHandler 12.x).
+- 0xFF w liscie fragmentow jest zwyklym (nieznanym) id, nie terminatorem.
+
+Efekt: `EndOfStream` w `SMSG_UPDATE_OBJECT` spadl ze **172 do 0** w sniffie
+14-02-23 (97,02% pakietow OK, 143 z bledami zamiast 302).
+
 ### Co zostaje
 
-- Blok gracza `IsOwned: true` — 172 pakiety `EndOfStream`.
+- Blok gracza `IsOwned: true` — nadal `Updatefields not fully read`
+  (9 z 100 bajtow przeczytanych); potrzebny uklad pol gracza 1.60.1.
 - 76 pakietów `ArgumentOutOfRangeException` (jeden pakiet ze złym `Data size`).
 - Fragmenty encji 1.60.1 (`HasFragmentUpdates`) — nieznany układ.
 - 14 881 „Updatefields not fully read” — nierozpoznany ogon bloku wartości.

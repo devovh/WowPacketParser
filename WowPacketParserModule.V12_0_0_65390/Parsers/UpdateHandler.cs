@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.PacketStructures;
@@ -20,6 +21,11 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
 {
     public static class UpdateHandler
     {
+        // Forever 1.60.1 (70338-70938) ma wlasny uklad bloku wartosci i fragmentow encji.
+        private static readonly bool IsForever =
+            ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 &&
+            ClientVersion.Build <= ClientVersionBuild.V1_60_1_70938;
+
         [HasSniffData] // in ReadCreateObjectBlock
         [Parser(Opcode.SMSG_UPDATE_OBJECT, ClientVersionBuild.V12_1_0_69214)]
         public static void HandleUpdateObject(Packet packet)
@@ -98,19 +104,47 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                             fieldsData.ReadBool("IsOwned", i);
                             if (fieldsData.ReadBool("HasFragmentUpdates", i))
                             {
-                                switch (fieldsData.ReadByte("ArchetypeSerializationType", i))
+                                if (IsForever)
                                 {
-                                    case 0:
-                                        fragments = ReadEntityFragments(fieldsData, "NewEntityFragmentID", i);
-                                        if (obj != null)
-                                            obj.EntityFragments = fragments;
-                                        break;
-                                    case 1:
-                                        fragments.AddRange(ReadEntityFragments(fieldsData, "NewEntityFragmentID", i));
-                                        foreach (var removedFragment in ReadEntityFragments(fieldsData, "RemovedEntityFragmentID", i))
-                                            fragments.RemoveAll(f => f.UniversalValue == removedFragment.UniversalValue);
-                                        fragments.Sort();
-                                        break;
+                                    // Forever (70338-70938): inna struktura niz 12.x.
+                                    // [u16 EntityFragmentCount][u8 fragmentID * count]
+                                    // zamiast [u8 ArchetypeSerializationType][id...][0xFF].
+                                    // Pakiet 881 sniffu 70938 (127 B) i 802 (127 078 B):
+                                    // fragmenty = 00 CGObject, 80 ? (znany), 00, 00, 00, 00, 06 ?
+                                    var fragmentCount = fieldsData.ReadUInt16("EntityFragmentCount", i) & 0x1FF;
+                                    fragments = new List<WowCSEntityFragment>();
+                                    for (var fragmentIndex = 0; fragmentIndex < fragmentCount; ++fragmentIndex)
+                                    {
+                                        var fragmentId = fieldsData.ReadByte("NewEntityFragmentID", i, fragmentIndex);
+                                        if (fragmentId == 0xFF)
+                                            break;
+                                        // Forever nie ma wartosci granicznej 0xFF - licznik jest
+                                        // wiarygodny, a nieznane id trafiaja do listy jako
+                                        // nieaktualizowalne (IsUpdateable = false), wiec nie zjadaja
+                                        // bitow maski.
+                                        if (!Enum.IsDefined(typeof(WowCSEntityFragments1215), (int)fragmentId))
+                                            fieldsData.AddValue("UnknownEntityFragmentID", fragmentId, i, fragmentIndex);
+                                        fragments.Add(new WowCSEntityFragment((WowCSEntityFragments1215)fragmentId));
+                                    }
+                                    if (obj != null)
+                                        obj.EntityFragments = fragments;
+                                }
+                                else
+                                {
+                                    switch (fieldsData.ReadByte("ArchetypeSerializationType", i))
+                                    {
+                                        case 0:
+                                            fragments = ReadEntityFragments(fieldsData, "NewEntityFragmentID", i);
+                                            if (obj != null)
+                                                obj.EntityFragments = fragments;
+                                            break;
+                                        case 1:
+                                            fragments.AddRange(ReadEntityFragments(fieldsData, "NewEntityFragmentID", i));
+                                            foreach (var removedFragment in ReadEntityFragments(fieldsData, "RemovedEntityFragmentID", i))
+                                                fragments.RemoveAll(f => f.UniversalValue == removedFragment.UniversalValue);
+                                            fragments.Sort();
+                                            break;
+                                    }
                                 }
                             }
 
@@ -120,7 +154,10 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                 break;
                             }
 
-                            ReadUpdateEntityFragmentData(obj, fragments, updateValues, handler, fieldsData, i);
+                            if (IsForever)
+                                ReadUpdateEntityFragmentDataForever(obj, fragments, updateValues, handler, fieldsData, i);
+                            else
+                                ReadUpdateEntityFragmentData(obj, fragments, updateValues, handler, fieldsData, i);
 
                             if (fieldsData.Position != fieldsData.Length)
                                 packet.WriteLine($"Updatefields not fully read! Current position: {fieldsData.Position} Length: {fieldsData.Length} Bytes remaining: {fieldsData.Length - fieldsData.Position}");
@@ -247,6 +284,35 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                     case WowCSEntityFragments.FHousingStorage_C: handler.ReadCreateHousingStorageData(fieldsData, flags, index); break;
                     case WowCSEntityFragments.FHousingFixture_C: handler.ReadCreateHousingFixtureData(fieldsData, flags, index); break;
                     case WowCSEntityFragments.PlayerInitiativeComponent_C: handler.ReadCreatePlayerInitiativeComponentData(fieldsData, flags, index); break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Forever (70338-70938) nie ma maski fragmentow w bloku wartosci: po prefiksie
+        /// (IsOwned, HasFragmentUpdates, licznik i lista fragmentow) pola ida plasko, tak jak
+        /// je czyta UpdateFieldsHandler dla tych buildow. Dlatego maski nie czytamy wcale.
+        /// </summary>
+        private static void ReadUpdateEntityFragmentDataForever(WoWObject obj, List<WowCSEntityFragment> fragments, UpdateValues updateValues, CoreParsers.UpdateFieldsHandlerBase handler, Packet fieldsData, int index)
+        {
+            foreach (var existingFragment in fragments)
+            {
+                if (!WowCSUtilities.IsUpdateable(existingFragment.UniversalValue))
+                    continue;
+
+                switch (existingFragment.UniversalValue)
+                {
+                    case WowCSEntityFragments.CGObject:
+                    {
+                        var data = handler.ReadUpdateObjectData(fieldsData, index);
+                        if (obj is { ObjectData: IMutableObjectData mut })
+                            mut.UpdateData(data);
+                        else if (obj != null)
+                            obj.ObjectData = data;
+
+                        updateValues.Fields.UpdateData(data);
+                        break;
+                    }
                 }
             }
         }

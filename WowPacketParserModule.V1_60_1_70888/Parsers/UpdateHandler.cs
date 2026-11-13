@@ -20,6 +20,9 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             (Action<Packet>)Delegate.CreateDelegate(typeof(Action<Packet>),
                 typeof(V12_0_0_65390.Parsers.UpdateHandler).GetMethod("HandleUpdateObject", BindingFlags.Public | BindingFlags.Static));
 
+        // Blok wartosci Forever (70338-70938) czyta V12_0_0_65390 z galezia IsForever:
+        // fragmenty encji to [u16 licznik][u8 id * licznik] zamiast [u8 archetyp][id...][0xFF],
+        // a same pola ida plasko (bez masek zmian). Szczegoly w UpdateHandler 12.x.
         [HasSniffData]
         [Parser(Opcode.SMSG_UPDATE_OBJECT)]
         public static void HandleUpdateObject(Packet packet)
