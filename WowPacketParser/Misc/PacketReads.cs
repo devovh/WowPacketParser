@@ -51,7 +51,7 @@ namespace WowPacketParser.Misc
             return ReadPackedUInt64(ReadByte());
         }
 
-        private ulong ReadPackedUInt64(byte mask)
+        public ulong ReadPackedUInt64(byte mask)
         {
             if (mask == 0)
                 return 0;
