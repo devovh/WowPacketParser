@@ -62,63 +62,53 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             var flags = packet.ReadUInt32("ChatFlags");
             packet.ReadSingle("DisplayTime");
             var spellId = packet.ReadInt32("SpellID");
-            // Po polach stalych zostaje 1 bajt (0x00) i 4 bajty znacznika tekstow
-            // (0x04 C0/80 98/54/.. 40). Dlugosci z bitow sa niemiarodajne, a teksty
-            // leza plasko na koncu pakietu - dlatego czytamy je jako jeden ciag znakow.
-            packet.ReadByte("UnkByte");
-            packet.ReadBytes("TextHeader", 4);
-
+            // Strumien bitowy Forever: 5 bajtow (40 bitow) po polach stalych.
+            // Uklad ustalony na 13 pakietach snu 70938:
+            //   [0:11]  SenderNameLength
+            //   [11:18] ChannelNameLength   (7 bitow)
+            //   [18:30] TextLength          (12 bitow)
+            //   [30:34] flagi               (4 bity)
+            //   [34:40] TargetNameLength    (6 bitow)
+            // W tym buildzie nie ma pol target/prefix z Chat::Write z TrinityCore.
             packet.ResetBitReader();
+            var senderNameLen = (int)packet.ReadBits("SenderNameLength", 11);
             var channelLen = (int)packet.ReadBits("ChannelNameLength", 7);
+            var textLen = (int)packet.ReadBits("TextLength", 12);
+            packet.ReadBits("ChatFlagsBits", 4);
+            var targetNameLen = (int)packet.ReadBits("TargetNameLength", 6);
             packet.ResetBitReader();
 
+            // Dlugosc tresci z bitow jest o 2-3 znaki za krotka dla kanalow General,
+            // wiec tresc liczymy z reszty pakietu: kanal + tresc wypelniaja wszystko
+            // miedzy polami stalymi a ogonem.
+            var rawText = packet.ReadBytes((int)(packet.DeclaredLength - packet.Position));
 
-            // Teksty leza plasko na koncu pakietu: kanal (np. "General - Orgrimmar")
-            // skleja sie z trescia, bo dlugosci z bitow sa niemiarodajne.
-            // Ogon na koncu: 0x01, ChatTag, u16, u32, u32, u32 (zmienny, 9+ bajtow).
-            var tailLen = (int)packet.DeclaredLength - (int)packet.Position;
-            var rawText = packet.ReadBytes(tailLen);
+            // Ogon na koncu pakietu: 0x01 <tag> <u16> <u32> <u32> 04 8C 6C 68.
+            // Ma 8 bajtow dla Trade i 7 dla General - rozpoznajemy go po 0x01
+            // na poczatku i odejmujemy od konca pakietu.
+            var textEnd = rawText.Length - 8;
+            if (textEnd > 0 && !(rawText[textEnd] == 0x01))
+                textEnd = rawText.Length - 7;
 
-            // Koniec tekstu: ostatni bajt, ktory nie jest czescia ogona. Ogon zaczyna sie
-            // od 0x01 i konczy sie stalymi 0x8C 0x6C 0x68 (0x04 0x8C 0x6C 0x68 dla innych).
-            var textEndIndex = rawText.Length;
-            if (rawText.Length >= 4 && rawText[rawText.Length - 3] == 0x8C && rawText[rawText.Length - 2] == 0x6C && rawText[rawText.Length - 1] == 0x68)
-            {
-                textEndIndex = rawText.Length - 3;
-                while (textEndIndex > 0 && rawText[textEndIndex - 1] != 0x01)
-                    --textEndIndex;
-                if (textEndIndex > 0)
-                    --textEndIndex;
+            var textStart = senderNameLen + targetNameLen;
+            if (textStart > textEnd)
+                textStart = 0;
 
-                // Kanal to "General - Orgrimmar" / "Trade - English 41" - konczy sie na
-                // malej literze, a tresc zaczyna sie od duzej litery, cyfry lub spacji.
-                // Kanal to "General - Orgrimmar" / "Trade - English 41": konczy sie na
-                // ostatniej malej literze przed ostatnim fragmentem, ktory jest nazwa
-                // (miasto lub jezyk + numer kanalu).
-                var channelCut = 0;
-                for (var i = textEndIndex - 1; i > 0; --i)
-                {
-                    var cur = rawText[i];
-                    if (cur >= (byte)'a' && cur <= (byte)'z')
-                    {
-                        channelCut = i + 1;
-                        break;
-                    }
-                }
+            if (textStart > 0)
+                packet.AddValue("SenderNameRaw", System.Text.Encoding.UTF8.GetString(rawText, 0, textStart));
 
-                channelCut = Math.Min(channelCut, textEndIndex);
-                if (channelCut > 0)
-                {
-                    packet.AddValue("Channel Name", System.Text.Encoding.UTF8.GetString(rawText, 0, channelCut));
-                    text.Text = System.Text.Encoding.UTF8.GetString(rawText, channelCut, textEndIndex - channelCut);
-                    textEndIndex = rawText.Length - 3;
-                }
-            }
+            var channelName = System.Text.Encoding.UTF8.GetString(rawText, textStart, Math.Min(channelLen, textEnd - textStart));
+            packet.AddValue("Channel Name", channelName);
 
-            if (text.Text == null)
-                text.Text = System.Text.Encoding.UTF8.GetString(rawText, 0, textEndIndex);
+            var msgStart = textStart + channelLen;
+            var msgLen = textEnd - msgStart;
+            if (msgLen < 0)
+                msgLen = 0;
+            text.Text = System.Text.Encoding.UTF8.GetString(rawText, msgStart, msgLen);
             packet.AddValue("Text", text.Text);
-            packet.AddValue("Tail", System.BitConverter.ToString(rawText, textEndIndex));
+            packet.AddValue("TextLengthBits", textLen);
+
+            packet.AddValue("Tail", System.BitConverter.ToString(rawText, textEnd));
 
             if (text.SenderGUID.GetObjectType() == ObjectType.Unit && text.SenderGUID.GetEntry() != 0)
                 Storage.CreatureTexts.Add(text.SenderGUID.GetEntry(), text, packet.TimeSpan);
