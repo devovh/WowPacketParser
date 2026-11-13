@@ -86,24 +86,61 @@ dotnet WowPacketParser.dll --ConfigFile WowPacketParser.dll.config <plik.pkt>
 ```
 
 
-## SMSG_CHAT (0x4C0001) - stan na koniec sesji
+## SMSG_CHAT (0x4C0001) - ROZWIAZANE
 
-Rozgryziony uklad naglowka (13 pakietow ze sniffu 70938, dlugosci 127/110/188/105/118 B):
+Układ nagłówka z `tc-forever` (`ChatPackets.cpp`, `Chat::Write`):
 
 ```
-u8  typ (ChatMessageTypeNew)      u8 jezyk      u16 zero
-GUID128 x4: nadawca, gildia, konto, cel   (8 B low + 8 B high, jak w update-object)
-u32 adres wirtualny celu, u32 adres wirtualny nadawcy, u32 AchievementID
+u8  SlashCmd
+u32 Language
+5x  GUID128 (packed: bajt maski low, bajt maski high, potem niezerowe bajty)
+u32 TargetVirtualAddress
+u32 SenderVirtualAddress
+i32 AchievementID
+u32 ChatFlags
 f32 DisplayTime
-u16 ChatFlags
-bity: HideChatLog, FakeSenderName  -> pozycja po nich: 87
-[u32 naglowek][tekst][0x01][ChatTag][u16][u32][u32][u32]  = reszta pakietu
+i32 SpellID
+[40-bitowy blok bitowy]
+[kanal][tresc]
+[ogon]
 ```
 
-Kluczowa pulapka: `Packet` dziedziczy po `BinaryReader`, wiec `packet.Length` **nie jest**
-dlugoscia pakietu ze sniffu. Dodane wlasciwosci `Packet.DeclaredLength` (dlugosc danych
-zadeklarowana w snifie) - bez niej kazde liczenie "reszty pakietu" dawalo 40 zamiast 127.
+Blok bitowy Forever ma **40 bitów**, nie 51 jak w TrinityCore — w tym buildzie
+nie ma pól `targetName` (11 b) ani `prefix` (5 b):
 
-Zostaje: tekst nadal przesuniety o 4 bajty (`Text: ally trainer in orgrimmar?` zamiast
-`is there a pally trainer in orgrimmar?`) - naglowek przed tekstem ma 4 B wiecej niz zakladane,
-albo 4-bajtowy fragment jest czescia tekstu. Do sprawdzenia na kolejnych pakietach.
+| bity | pole |
+|---|---|
+| 0..10 | SenderNameLength (11 b) |
+| 11..17 | **ChannelNameLength (7 b)** — dokładne |
+| 18..29 | TextLength (12 b) |
+| 30..33 | flagi czatu (4 b) |
+| 34..39 | TargetNameLength (6 b) |
+
+Ogon pakietu: `01 <tag> <u16> <u32> <u32> 04 8C 6C 68` — 8 bajtów dla kanałów
+Trade, 7 dla General.
+
+`TextLength` z bitów jest o 2–3 znaki za krótka dla kanałów General, więc treść
+liczymy z reszty pakietu (do ogona). Nazwa kanału wychodzi dokładnie.
+
+**Weryfikacja:** 13/13 pakietów snu 70938 (kanały `General - Orgrimmar`,
+`General - Durotar`, `Trade - English 41`), plus sniffy 70888 i 13-18-57
+z linkami do itemów i zaklęć (`|Hitem:...|h[...]|h`, `|Htrade:...|h[...]|h`).
+
+Narzędzia analizy: `tools/chat_bits.py`, `tools/chat_layout.py`.
+
+### Wyniki na sniffach
+
+| Sniff | Pkty | OK | Błędy |
+|---|---|---|---|
+| 70938 (14-02-23) | 30 769 | **29 693 (96,50%)** | 302 |
+| 70938 (13-18-57) | 29 428 | **28 445 (96,66%)** | 209 |
+| 70938 (14-35-29) | 4 807 | **4 459 (92,76%)** | 86 |
+| forevercore-70888 | 26 875 | **26 021 (96,82%)** | 248 |
+| 70862 (312 210) | 312 210 | **290 824 (93,15%)** | 10 335 |
+
+### Co zostaje
+
+- Blok gracza `IsOwned: true` — 172 pakiety `EndOfStream`.
+- 76 pakietów `ArgumentOutOfRangeException` (jeden pakiet ze złym `Data size`).
+- Fragmenty encji 1.60.1 (`HasFragmentUpdates`) — nieznany układ.
+- 14 881 „Updatefields not fully read” — nierozpoznany ogon bloku wartości.
