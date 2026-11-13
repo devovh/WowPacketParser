@@ -1850,7 +1850,8 @@ namespace WowPacketParser.Misc
                 case ClientVersionBuild.V1_60_1_70862:
                 case ClientVersionBuild.V1_60_1_70888:
                 case ClientVersionBuild.V1_60_1_70938:
-                    return ClientVersionBuild.V1_60_1_69876;
+                    // Forever ma wlasny modul parserow (numeracja wire), wiec definiuje go 70888
+                    return ClientVersionBuild.V1_60_1_70888;
                 case ClientVersionBuild.BattleNetV37165:
                     return ClientVersionBuild.BattleNetV37165;
                 case ClientVersionBuild.Zero:
@@ -1894,6 +1895,7 @@ namespace WowPacketParser.Misc
                 // Forever is based on 12.x, so lets fallback for now
                 // Do not add any version checks for Forever handlers in 12.x or before
                 case ClientVersionBuild.V1_60_1_69876:
+                case ClientVersionBuild.V1_60_1_70888:
                     return ClientVersionBuild.V12_0_0_65390;
                 default:
                     return ClientVersionBuild.Zero;

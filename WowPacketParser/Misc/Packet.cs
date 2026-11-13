@@ -25,6 +25,9 @@ namespace WowPacketParser.Misc
         public Packet(byte[] input, int opcode, DateTime time, Direction direction, int number, StringBuilder writer, string fileName)
             : base(new MemoryStream(input, 0, input.Length), Encoding.UTF8)
         {
+            DeclaredLength = input.Length;
+            if (System.Environment.GetEnvironmentVariable("WPP_PKTDBG") == "1")
+                Console.WriteLine($"[PKTDBG] opcode=0x{opcode:X6} inputLen={input.Length}");
             Opcode = opcode;
             Time = time;
             Direction = direction;
@@ -55,6 +58,9 @@ namespace WowPacketParser.Misc
             : this(input, opcode, time, direction, number, null, fileName)
         {
         }
+
+        /// <summary>Liczba bajtow danych pakietu zadeklarowana w snifie (nie mylic z BinaryReader.Length).</summary>
+        public int DeclaredLength { get; }
 
         public int Opcode { get; set; } // setter can't be private because it's used in multiple_packets
         public DateTime Time { get; }

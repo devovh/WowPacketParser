@@ -2988,6 +2988,7 @@ CMSG_ACCEPT_TRADE,
         SMSG_MOVE_UPDATE_WALK_SPEED,
         SMSG_MULTIPLE_MOVES,
         SMSG_MULTIPLE_PACKETS, // in 4.2.2 this opcode is different to SMSG_MULTIPLE_PACKETS_2 but both have handlers in client
+        SMSG_MULTIPLE_PACKETS_3, // Forever 1.60.1 (0x4E000D / 0x50000D), other number than SMSG_MULTIPLE_PACKETS in 4.3+
         SMSG_MULTIPLE_PACKETS_2,
         SMSG_MULTI_FLOOR_LEAVE_FLOOR,
         SMSG_MULTI_FLOOR_NEW_FLOOR,

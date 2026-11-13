@@ -82,6 +82,11 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                         var updateValues = new UpdateValues();
                         var updatefieldSize = packet.ReadUInt32();
                         var handler = CoreFields.UpdateFields.GetHandler();
+                        if (handler == null)
+                        {
+                            packet.WriteLine("UPDATE_OBJECT: no UpdateFields handler for this build - values block skipped");
+                            break;
+                        }
                         updateValues.Fields = new();
                         using (var fieldsData = new Packet(packet.ReadBytes((int)updatefieldSize), packet.Opcode, packet.Time, packet.Direction, packet.Number, packet.Writer, packet.FileName))
                         {
@@ -258,6 +263,13 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                 if (WowCSUtilities.IsIndirect(existingFragment.UniversalValue))
                     ++fragmentBitCount;
             }
+
+            // Forever (build 70338-70938): jednostka bez zmienionych pol ma blok wartosci
+            // bez maski fragmentow. Lista fragmentow jest wtedy pusta (bitow 0-3), a maska
+            // (1-2 bajty) i tak nie zawiera nic, wiec jej odczyt zjadalby bajty sasiedniego
+            // obiektu. Dla wyzszych buildow zostaje dotychczasowe zachowanie.
+            if (ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 && ClientVersion.Build <= ClientVersionBuild.V1_60_1_70938 && fragmentBitCount <= 3)
+                return;
 
             var changedFragments = new BitArray(fieldsData.ReadBytes((fragmentBitCount + 7) / 8));
 

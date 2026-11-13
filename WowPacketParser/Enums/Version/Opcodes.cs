@@ -1354,7 +1354,7 @@ namespace WowPacketParser.Enums.Version
                 case ClientVersionBuild.V1_60_1_70862:
                 case ClientVersionBuild.V1_60_1_70888:
                 case ClientVersionBuild.V1_60_1_70938:
-                    return ClientVersionBuild.V1_60_1_69876;
+                    return ClientVersionBuild.V1_60_1_70888;
                 default:
                     return ClientVersionBuild.V3_3_5a_12340;
             }
@@ -1593,6 +1593,7 @@ namespace WowPacketParser.Enums.Version
                 case ClientVersionBuild.V5_5_3_64802:
                     return Opcodes_5_5_3.Opcodes(direction);
                 case ClientVersionBuild.V1_60_1_69876:
+                case ClientVersionBuild.V1_60_1_70888:
                     return Opcodes_1_60_1.Opcodes(direction);
                 default:
                     return Opcodes_3_3_5.Opcodes(direction);
