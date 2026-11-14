@@ -727,3 +727,57 @@ w żadnej znanej numeracji. Dalej widać poprawnie `CreatureDisplayID 146918`, `
 `HpMulti 1.35`, `EnergyMulti 1.0`, `Title "Great Windborne Cat Spirit"` — czyli od displaya
 w górę układ się zgadza. Brakuje jedynie tych 37 bajtów przed nim. Wymaga drugiego źródła
 (klient albo inny sniff z innym zestawem flag).
+
+### Sesja 2026-11-14 (cd. 11) — SMSG_PARTY_UPDATE
+
+Nowy plik: `ForeverPartyHandler.cs`. Układ z tc-forever `PartyPackets.cpp:584`
+(`PartyUpdate::Write`) **z gałęzią `Classic70291`**, której 12.x nie ma:
+
+    [i8 Classic70291_BeforeLeader]        <- po SequenceNum
+    [u64 Classic70291_BeforeMemberCount]  <- po PingRestriction
+
+Plus `WritePlayerInfo` (`PartyPackets.cpp:507`) czyta `VoiceStateID` jako **9 bitów**
+(`SizedCString::BitsSize<9>`), nie 6 jak retail.
+
+**Wynik: 12/12 pakietów czyta się w całości (0 niepełnych).** Wcześniej 12 zostało
+z 113 B reszty. Pakiet 43 B (Number 91120) domyka się co do bajtu — różnica 9 B to
+dokładnie `i8` + `u64`.
+
+Ogólny wynik bez zmian w liczbie OK (116 898), bo `not fully read` nie liczy się jako błąd,
+ale zniknęła cała kategoria `SMSG_PARTY_UPDATE` z listy niepełnych.
+
+**Czego się nie udało:** pakiety 150 B (jeden gracz, 10 sztuk) — pole `LeaverInfo` jest
+w Forever o ~2 bajty dłuższe niż w 12.x (43 B zamiast 41). Próbowałem `u16`, `u8+u8`,
+`u8+u16` na końcu — każde przesuwało tekst nazwy gracza o zły bajt. Zostawiłem
+`LeaverInfo` w układzie 12.x; pakiet czyta się do końca, ale `Name` wychodzi przycięte
+(„Imperato" zamiast „Imperator"). Do domknięcia potrzebny drugi wariant tego pakietu.
+
+### Sesja 2026-11-14 (cd. 12) — seria drobnych opcodów (niepełne odczyty 29 → 24)
+
+Cztery nowe poprawki, każda potwierdzona bajtowo:
+
+| opcode | co było źle | plik |
+|---|---|---|
+| `SMSG_HEALTH_UPDATE` | emulator pisze `[Guid][int64]` = 15 B, serwer Forever 16 B: `[Guid][u32 Unknown=1][u32 Health][u8 pad]` | `ForeverMiscHandler.cs` |
+| `CMSG_VOICE_CHAT_LOGIN` | brak handlera (tc-forever ma `STATUS_UNHANDLED`); 8 B = 2 × u32 | `ForeverMiscHandler.cs` |
+| `SMSG_SEASON_INFO` | Forever dokłada 2 × `i32` **przed** bitami; parser 12.x czytał bity z 8. `i32` i zostawało 8 B | `ForeverSeasonHandler.cs` (nowy) |
+| `CMSG_QUERY_NEIGHBORHOOD_INFO` | `PackedGuid128` zajmuje 3 B, a pole to zwykłe `u32` (4 B) | `ForeverHousingHandler.cs` (nowy) |
+
+Wynik: **116 907 OK (97,753 %), 460 błędów, 24 niepełne odczyty** (było 29).
+Sekwencja tej sesji: 116 898 → 116 901 (HEALTH) → 116 902 (VOICE) → 116 903 (SEASON) → 116 907 (HOUSING).
+
+**Zablokowane, z uzasadnieniem:**
+
+- `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` (4 szt., 170 B) — emulator pisze 10 B (`[Guid][i32][i32]`),
+  serwer 170 B. W danych siedzą adresy pamięci procesu (`0x6AEC7898`, `0x6AF848D4` powtarzane
+  wielokrotnie) — pakiet wycieka pamięć serwera, nie ma czego parsować.
+- `SMSG_AUTH_RESPONSE` (1 szt., 378 B) — `SuccessInfo` z `VirtualRealms` + `AvailableClasses` +
+  `Templates`. W danych widać `"CAMWOW EU5 Realm 5 PvE"`. Do odtworzenia potrzebny pełny
+  `AuthSuccessInfo` z Forever, którego emulator nie ma w tej formie.
+- `SMSG_GET_ACCOUNT_CHARACTER_LIST_RESULT` (1 szt., 59 B) — tekst `"ImperatorAlfa"` (13 znaków),
+  a bity `NameLen/RealmNameLen` (6+9) dają 36/256. Forever ma tu inny podział bitów; jeden
+  pakiet nie wystarcza.
+- `SMSG_ACCOUNT_MOUNT_UPDATE` (1 szt., 31 B) — po nagłówku zostaje 17 B, w których są dwa
+  przebiegi `0x80 … 13 00`; brak drugiego wariantu do porównania.
+- `SMSG_REQUEST_PVP_REWARDS_RESPONSE` (310 B), `SMSG_RATED_PVP_INFO` (666 B) — duże struktury
+  bez odpowiednika w emulatorze w tej wersji.
