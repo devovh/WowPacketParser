@@ -738,7 +738,10 @@ namespace WowPacketParser.Misc
         private static string FormatFloat(float value)
         {
             if (!Settings.DebugReads)
-                return string.Format("{0:F20}", value).Substring(0, 20).TrimEnd('0').TrimEnd('.');
+            {
+                var formatted = string.Format("{0:F20}", value);
+                return formatted.Substring(0, Math.Min(20, formatted.Length)).TrimEnd('0').TrimEnd('.');
+            }
 
             var bytes = BitConverter.GetBytes(value);
             return value + " (0x" + BitConverter.ToString(bytes) + ")";
