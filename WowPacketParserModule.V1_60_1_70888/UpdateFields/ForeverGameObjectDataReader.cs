@@ -29,6 +29,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
         public static GameObjectData Read(Packet packet, params object[] indexes)
         {
             var data = new GameObjectData();
+            var is70938 = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938;
             packet.ResetBitReader();
 
             var bits = (uint)packet.ReadBits("GameObjectChangesMask", 28);
@@ -39,6 +40,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             if (Changed(0))
             {
                 if (Changed(1)) worldEffectIdsCount = (int)packet.ReadBits("StateWorldEffectIDsCount", 32);
+                if (is70938)
+                {
+                    data.StateWorldEffectIDs = new uint?[worldEffectIdsCount];
+                    for (var i = 0; i < worldEffectIdsCount; ++i)
+                        data.StateWorldEffectIDs[i] = packet.ReadUInt32("StateWorldEffectIDs", indexes, i);
+                }
             }
             packet.ResetBitReader();
 
@@ -53,7 +60,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             // --- wartosci ---
             if (Changed(0))
             {
-                for (var i = 0; i < worldEffectIdsCount; ++i)
+                for (var i = 0; !is70938 && i < worldEffectIdsCount; ++i)
                     packet.ReadUInt32("StateWorldEffectIDs", indexes, i);
 
                 if (Changed(2))
@@ -89,16 +96,27 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 if (Changed(21)) data.CustomParam = packet.ReadUInt32("CustomParam", indexes);
                 // serwer zapisuje Level drugi raz pod changesMask[21] (patrz GameObjectData::WriteUpdate) -
                 // tylko gdy bit 21 jest zapalony I nie byl juz uzyty jako pole Level.
+                if (is70938)
+                {
+                    if (Changed(22)) data.Level = packet.ReadInt32("LevelLate", indexes);
+                if (Changed(23)) data.AnimGroupInstance = packet.ReadUInt32("AnimGroupInstance", indexes);
+                if (Changed(24)) data.UiWidgetItemID = packet.ReadUInt32("UiWidgetItemID", indexes);
+                if (Changed(25)) data.UiWidgetItemQuality = packet.ReadUInt32("UiWidgetItemQuality", indexes);
+                if (Changed(26)) data.UiWidgetItemCount = packet.ReadUInt32("UiWidgetItemCount", indexes);
+                }
+                else
+                {
                 if (Changed(22)) data.AnimGroupInstance = packet.ReadUInt32("AnimGroupInstance", indexes);
                 if (Changed(23)) data.UiWidgetItemID = packet.ReadUInt32("UiWidgetItemID", indexes);
                 if (Changed(24)) data.UiWidgetItemQuality = packet.ReadUInt32("UiWidgetItemQuality", indexes);
                 if (Changed(25)) data.UiWidgetItemCount = packet.ReadUInt32("UiWidgetItemCount", indexes);
+                }
             }
 
-            var hasAssistActionData = packet.ReadBit("HasAssistActionData", indexes);
+            var hasAssistActionData = (!is70938 || Changed(0)) && packet.ReadBit("HasAssistActionData", indexes);
             packet.ResetBitReader();
 
-            if (Changed(0) && Changed(26) && hasAssistActionData)
+            if (Changed(0) && Changed(is70938 ? 27 : 26) && hasAssistActionData)
                 data.AssistActionData = UpdateFieldsHandler.ReadUpdateGameObjectAssistActionData(packet, indexes, "AssistActionData");
 
             return data;

@@ -111,7 +111,7 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                 // Patrz Player::BuildValuesUpdate / Creature::BuildValuesUpdate w tc-forever.
                                 // Uwaga: maska jest tylko pod flaga HasFragmentUpdates - poza nia blok
                                 // wartosci ma 3 bajty (IsOwned, HasFragmentUpdates, ObjectChangesMask).
-                                if (IsForever)
+                                if (IsForever && ClientVersion.Build != ClientVersionBuild.V1_60_1_70938)
                                 {
                                     fragments = ReadForeverValuesTypeMask(fieldsData, i);
                                     if (obj != null)
@@ -119,6 +119,8 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                     break;
                                 }
 
+                                // Build 70938 uses serialization type + fragment IDs + 0xFF,
+                                // followed by the changed-fragment mask, as in this reader.
                                 switch (fieldsData.ReadByte("ArchetypeSerializationType", i))
                                 {
                                     case 0:
@@ -132,6 +134,10 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                             fragments.RemoveAll(f => f.UniversalValue == removedFragment.UniversalValue);
                                         fragments.Sort();
                                         break;
+                                    default:
+                                        if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+                                            throw new InvalidOperationException("Unknown entity fragment serialization type for build 70938.");
+                                        break;
                                 }
                             }
 
@@ -141,13 +147,17 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                 break;
                             }
 
-                            if (IsForever)
+                            if (IsForever && ClientVersion.Build != ClientVersionBuild.V1_60_1_70938)
                                 ReadUpdateEntityFragmentDataForever(obj, fragments, updateValues, handler, fieldsData, i);
                             else
                                 ReadUpdateEntityFragmentData(obj, fragments, updateValues, handler, fieldsData, i);
 
                             if (fieldsData.Position != fieldsData.Length)
+                            {
+                                if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+                                    throw new InvalidOperationException($"70938 update fields have {fieldsData.Length - fieldsData.Position} unread bytes.");
                                 packet.WriteLine($"Updatefields not fully read! Current position: {fieldsData.Position} Length: {fieldsData.Length} Bytes remaining: {fieldsData.Length - fieldsData.Position}");
+                            }
                         }
                         updateObject.Updated.Add(new UpdateObject{Guid = guid, Values = updateValues, TextStartOffset = partWriter.StartOffset, TextLength = partWriter.Length, Text = partWriter.Text});
                         break;
@@ -396,7 +406,7 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
             // bez maski fragmentow. Lista fragmentow jest wtedy pusta (bitow 0-3), a maska
             // (1-2 bajty) i tak nie zawiera nic, wiec jej odczyt zjadalby bajty sasiedniego
             // obiektu. Dla wyzszych buildow zostaje dotychczasowe zachowanie.
-            if (ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 && ClientVersion.Build <= ClientVersionBuild.V1_60_1_70938 && fragmentBitCount <= 3)
+            if (ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 && ClientVersion.Build < ClientVersionBuild.V1_60_1_70938 && fragmentBitCount <= 3)
                 return;
 
             var changedFragments = new BitArray(fieldsData.ReadBytes((fragmentBitCount + 7) / 8));
@@ -533,7 +543,11 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                 ReadCreateEntityFragmentData(obj, createObject, handler, fieldsData, flags, index);
 
                 if (fieldsData.Position != fieldsData.Length)
+                {
+                    if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+                        throw new InvalidOperationException($"70938 update fields have {fieldsData.Length - fieldsData.Position} unread bytes.");
                     packet.WriteLine($"Updatefields not fully read! Current position: {fieldsData.Position} Length: {fieldsData.Length} Bytes remaining: {fieldsData.Length - fieldsData.Position}");
+                }
             }
 
             if (obj is AreaTriggerCreateProperties createProperties)

@@ -3,6 +3,7 @@
 // </auto-generated>
 
 using System.CodeDom.Compiler;
+using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Store.Objects.UpdateFields;
 
@@ -11,7 +12,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
     [GeneratedCode("UpdateFieldCodeGenerator.Formats.WowPacketParserHandler", "1.0.0.0")]
     public class ActivePlayerData : IActivePlayerData
     {
-        public WowGuid[] InvSlots { get; } = new WowGuid[105];
+        public WowGuid[] InvSlots { get; } = new WowGuid[ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 ? 145 : 105];
         public WowGuid FarsightObject { get; set; }
         public WowGuid SummonedBattlePetGUID { get; set; }
         public System.Nullable<ulong> Coinage { get; set; }
@@ -181,4 +182,3 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
         public IChallengeModeData ChallengeModeData { get; set; }
     }
 }
-

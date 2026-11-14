@@ -246,6 +246,8 @@ namespace WowPacketParser.Enums
                 case WowCSEntityFragments.PlayerInitiativeComponent_C:
                     return true;
                 case WowCSEntityFragments.FVendor_C:
+                    if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+                        return false;
                     return (ClientVersion.AddedInVersion(ClientBranch.Retail, ClientVersionBuild.V11_0_7_58630) && ClientVersion.RemovedInVersion(ClientBranch.Retail, ClientVersionBuild.V11_2_7_64632)) ||
                         ClientVersion.AddedInVersion(ClientBranch.Classic, ClientVersionBuild.V1_15_8_63829) ||
                         ClientVersion.AddedInVersion(ClientBranch.MoP, ClientVersionBuild.V5_5_0_61735) ||

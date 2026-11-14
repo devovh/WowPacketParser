@@ -38,6 +38,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
         public static UnitData Read(Packet packet, params object[] indexes)
         {
             var data = new UnitData();
+            var is70938 = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938;
             packet.ResetBitReader();
 
             // --- 1. naglowek maski zmian ---
@@ -45,7 +46,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             var classicBlocks = new ulong[4];
             for (var i = 0; i < BlockCount; ++i)
                 if ((blocksMask & (1UL << i)) != 0)
-                    classicBlocks[i / 2] |= (ulong)packet.ReadUInt32("UnitBlock", indexes, i) << (32 * (i % 2));
+                    classicBlocks[i / 2] |= (is70938 ? packet.ReadBits("UnitBlock", 32, indexes, i) : (ulong)packet.ReadUInt32("UnitBlock", indexes, i)) << (32 * (i % 2));
 
             // Maska w numeracji TC: ta sama informacja, ale pod numerami pol, ktore czyta kod 12.x.
             var tcBlocks = ForeverClassicBitRemap.ToRetailBits(classicBlocks, TcBitCount,
@@ -68,15 +69,21 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
 
             // --- 3. bity pol ---
             var worldEffectIdsCount = 0;
-            if (Changed(0))
+            if (is70938 || Changed(0))
             {
                 if (Changed(1)) data.Field_314 = packet.ReadBit("Field_314", indexes);
                 if (Changed(2)) worldEffectIdsCount = (int)packet.ReadBits("StateWorldEffectIDsCount", 32);
+                if (is70938)
+                {
+                    data.StateWorldEffectIDs = new uint?[worldEffectIdsCount];
+                    for (var i = 0; i < worldEffectIdsCount; ++i)
+                        data.StateWorldEffectIDs[i] = packet.ReadUInt32("StateWorldEffectIDs", indexes, i);
+                }
             }
             packet.ResetBitReader();
 
             // --- 4. maski dynamicznych list ---
-            if (Changed(0))
+            if (is70938 || Changed(0))
             {
                 if (Changed(3)) data.PassiveSpells.ReadUpdateMask(packet);
                 if (Changed(4)) data.WorldEffects.ReadUpdateMask(packet);
@@ -85,9 +92,9 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             packet.ResetBitReader();
 
             // --- 5. wartosci ---
-            if (Changed(0))
+            if (is70938 || Changed(0))
             {
-                for (var i = 0; i < worldEffectIdsCount; ++i)
+                for (var i = 0; !is70938 && i < worldEffectIdsCount; ++i)
                     packet.ReadUInt32("StateWorldEffectIDs", indexes, i);
 
                 if (Changed(3))
@@ -134,7 +141,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 if (Changed(31)) data.ClassId = packet.ReadByte("ClassId", indexes);
             }
 
-            if (Changed(32))
+            if (is70938 || Changed(32))
             {
                 if (Changed(33)) data.PlayerClassId = packet.ReadByte("PlayerClassId", indexes);
                 if (Changed(34)) data.Sex = packet.ReadByte("Sex", indexes);
@@ -169,7 +176,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 if (Changed(63)) data.MinDamage = packet.ReadSingle("MinDamage", indexes);
             }
 
-            if (Changed(64))
+            if (is70938 || Changed(64))
             {
                 if (Changed(65)) data.MaxDamage = packet.ReadSingle("MaxDamage", indexes);
                 if (Changed(66)) data.MinOffHandDamage = packet.ReadSingle("MinOffHandDamage", indexes);
@@ -177,8 +184,17 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 if (Changed(68)) data.StandState = packet.ReadByte("StandState", indexes);
                 if (Changed(69)) data.PetTalentPoints = packet.ReadByte("PetTalentPoints", indexes);
                 // Classic zamienia 70 i 71: VisFlags <-> AnimTier
-                if (Changed(70)) data.VisFlags = packet.ReadByte("VisFlags", indexes);
+                if (is70938)
+                {
+                    if (Changed(71)) data.AnimTier = packet.ReadByte("AnimTier", indexes);
+                    if (Changed(70)) data.VisFlags = packet.ReadByte("VisFlags", indexes);
+                    if (ClassicBit(72)) packet.ReadByte("UnknownStandState", indexes);
+                }
+                else
+                {
+                    if (Changed(70)) data.VisFlags = packet.ReadByte("VisFlags", indexes);
                 if (Changed(71)) data.AnimTier = packet.ReadByte("AnimTier", indexes);
+                }
                 if (Changed(72)) data.PetNumber = packet.ReadUInt32("PetNumber", indexes);
                 if (Changed(73)) data.PetNameTimestamp = packet.ReadUInt32("PetNameTimestamp", indexes);
                 if (Changed(74)) data.PetExperience = packet.ReadUInt32("PetExperience", indexes);
@@ -207,17 +223,25 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 if (Changed(95)) data.AttackPowerModSupport = packet.ReadInt32("AttackPowerModSupport", indexes);
             }
 
-            if (Changed(96))
+            if (is70938 || Changed(96))
             {
                 if (Changed(97)) data.RangedAttackPower = packet.ReadInt32("RangedAttackPower", indexes);
                 if (Changed(98)) data.RangedAttackPowerModPos = packet.ReadInt32("RangedAttackPowerModPos", indexes);
                 if (Changed(99)) data.RangedAttackPowerModNeg = packet.ReadInt32("RangedAttackPowerModNeg", indexes);
                 if (Changed(100)) data.RangedAttackPowerMultiplier = packet.ReadSingle("RangedAttackPowerMultiplier", indexes);
                 if (Changed(101)) data.RangedAttackPowerModSupport = packet.ReadInt32("RangedAttackPowerModSupport", indexes);
+                if (is70938)
+                {
+                    if (ClassicBit(105)) packet.ReadInt32("UnknownBeforeMainHandWeaponAttackPower", indexes);
+                }
                 if (Changed(102)) data.MainHandWeaponAttackPower = packet.ReadInt32("MainHandWeaponAttackPower", indexes);
                 if (Changed(103)) data.OffHandWeaponAttackPower = packet.ReadInt32("OffHandWeaponAttackPower", indexes);
                 if (Changed(104)) data.RangedWeaponAttackPower = packet.ReadInt32("RangedWeaponAttackPower", indexes);
                 if (Changed(105)) data.SetAttackSpeedAura = packet.ReadInt32("SetAttackSpeedAura", indexes);
+                if (is70938)
+                {
+                    if (ClassicBit(110)) packet.ReadInt32("UnknownBeforeLifesteal", indexes);
+                }
                 if (Changed(106)) data.Lifesteal = packet.ReadSingle("Lifesteal", indexes);
                 if (Changed(107)) data.MinRangedDamage = packet.ReadSingle("MinRangedDamage", indexes);
                 if (Changed(108)) data.MaxRangedDamage = packet.ReadSingle("MaxRangedDamage", indexes);
@@ -238,20 +262,35 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 if (Changed(123)) data.LookAtControllerID = packet.ReadInt32("LookAtControllerID", indexes);
                 if (Changed(124)) data.PerksVendorItemID = packet.ReadInt32("PerksVendorItemID", indexes);
                 if (Changed(125)) data.TaxiNodesID = packet.ReadInt32("TaxiNodesID", indexes);
+                if (is70938)
+                {
+                    for (uint bit = 132; bit <= 134; ++bit)
+                        if (ClassicBit(bit)) packet.ReadInt32("UnknownOwner", indexes, bit);
+                }
                 if (Changed(126)) data.GuildGUID = packet.ReadPackedGuid128("GuildGUID", indexes);
                 if (Changed(127)) data.FlightCapabilityID = packet.ReadInt32("FlightCapabilityID", indexes);
             }
 
             var hasAssistActionData = false;
-            if (Changed(128))
+            if (is70938 || Changed(128))
             {
                 if (Changed(129)) data.GlideEventSpeedDivisor = packet.ReadSingle("GlideEventSpeedDivisor", indexes);
                 if (Changed(130)) data.DriveCapabilityID = packet.ReadInt32("DriveCapabilityID", indexes);
                 if (Changed(131)) data.MaxHealthModifierFlatNeg = packet.ReadInt32("MaxHealthModifierFlatNeg", indexes);
                 if (Changed(132)) data.MaxHealthModifierFlatPos = packet.ReadInt32("MaxHealthModifierFlatPos", indexes);
                 if (Changed(133)) data.SilencedSchoolMask = packet.ReadUInt32("SilencedSchoolMask", indexes);
+                if (is70938)
+                {
+                    if (ClassicBit(142)) packet.ReadSingle("UnknownOwnerFloat", indexes);
+                    if (ClassicBit(143)) throw new NotSupportedException("70938 owner-list updates have no verified layout.");
+                }
                 if (Changed(134)) data.CurrentAreaID = packet.ReadUInt32("CurrentAreaID", indexes);
                 if (Changed(230)) packet.ReadPackedGuid128("ClassicComboTarget", indexes);
+                if (is70938)
+                {
+                    if (ClassicBit(146)) packet.ReadInt32("UnknownAfterCombo", indexes);
+                    if (ClassicBit(147)) packet.ReadSingle("UnknownAfterComboFloat", indexes);
+                }
                 if (Changed(135)) data.NameplateDistanceMod = packet.ReadSingle("NameplateDistanceMod", indexes);
                 if (Changed(136)) data.AutoAttackRangeMod = packet.ReadSingle("AutoAttackRangeMod", indexes);
                 if (Changed(137)) data.NameplateAttachToGUID = packet.ReadPackedGuid128("NameplateAttachToGUID", indexes);
@@ -260,9 +299,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 hasAssistActionData = packet.ReadBit("HasAssistActionData", indexes);
             packet.ResetBitReader();
 
-            if (Changed(128))
+            if (is70938 || Changed(128))
                 if (Changed(138) && hasAssistActionData)
-                    packet.AddValue("AssistActionData", "<skipped>", indexes);
+                    if (is70938)
+                        data.AssistActionData = UpdateFieldsHandler.ReadUpdateUnitAssistActionData(packet, indexes, "AssistActionData");
+                    else
+                        packet.AddValue("AssistActionData", "<skipped>", indexes);
 
             if (Changed(139))
             {

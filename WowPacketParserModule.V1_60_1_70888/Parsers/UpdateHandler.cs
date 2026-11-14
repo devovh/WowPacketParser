@@ -37,7 +37,7 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             {
                 Handler1200(packet);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ClientVersion.Build != ClientVersionBuild.V1_60_1_70938)
             {
                 packet.WriteLine("SMSG_UPDATE_OBJECT: " + ex.GetType().Name + ": " + ex.Message);
             }

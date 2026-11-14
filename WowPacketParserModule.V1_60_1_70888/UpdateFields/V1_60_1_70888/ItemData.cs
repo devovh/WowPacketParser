@@ -3,6 +3,7 @@
 // </auto-generated>
 
 using System.CodeDom.Compiler;
+using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Store.Objects.UpdateFields;
 
@@ -19,7 +20,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
         public System.Nullable<uint> Expiration { get; set; }
         public System.Nullable<int>[] SpellCharges { get; } = new System.Nullable<int>[5];
         public System.Nullable<uint> DynamicFlags { get; set; }
-        public IItemEnchantment[] Enchantment { get; } = new IItemEnchantment[13];
+        public IItemEnchantment[] Enchantment { get; } = new IItemEnchantment[ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 ? 14 : 13];
         public System.Nullable<uint> Durability { get; set; }
         public System.Nullable<uint> MaxDurability { get; set; }
         public System.Nullable<uint> CreatePlayedTime { get; set; }
@@ -34,4 +35,3 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
         public DynamicUpdateField<ISocketedGem> Gems { get; } = new();
     }
 }
-
