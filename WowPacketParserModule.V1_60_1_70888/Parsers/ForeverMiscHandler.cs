@@ -22,7 +22,9 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         public static void HandleHealthUpdate(Packet packet)
         {
             packet.ReadPackedGuid128("Guid");
-            packet.ReadInt64("Health");
+            packet.ReadUInt32("ClassicUnknown");
+            packet.ReadUInt32("Health");
+            packet.ReadByte("ClassicPadding");
         }
 
         /// <summary>
@@ -50,6 +52,18 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                 packet.ReadInt32("MountSpellIDs", i);
                 packet.AddValue("Flags", flags[i], i);
             }
+        }
+        /// <summary>
+        /// CMSG_VOICE_CHAT_LOGIN (0x44013C). tc-forever ma ten opcode jako STATUS_UNHANDLED
+        /// (Opcodes.cpp:1171), więc nie ma wzorca z emulatora. Z 8-bajtowego pakietu
+        /// widac tylko dwa u32 (1 i 0x417070) - czytamy je jako nieznane pola,
+        /// żeby pakiet nie zostawał nieprzeczytany.
+        /// </summary>
+        [Parser(Opcode.CMSG_VOICE_CHAT_LOGIN)]
+        public static void HandleVoiceChatLogin(Packet packet)
+        {
+            packet.ReadUInt32("ClassicUnknown1");
+            packet.ReadUInt32("ClassicUnknown2");
         }
     }
 }
