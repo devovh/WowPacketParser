@@ -77,8 +77,9 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                     namesAlt[i] = packet.ReadCString("NameAlt", e, i);
             }
 
-            // Forever: tyle samo flag co w retail (4 x u32).
-            for (var i = 0; i < 4; ++i)
+            var isForever70938 = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938;
+            var typeFlagsCount = isForever70938 ? 3 : 4;
+            for (var i = 0; i < typeFlagsCount; ++i)
                 packet.ReadUInt32("TypeFlags", e, i);
 
             packet.ReadByteE<CreatureType>("CreatureType", e);
@@ -100,8 +101,8 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
 
             packet.ReadSingle("HpMulti", e);
             packet.ReadSingle("EnergyMulti", e);
-            packet.ReadUInt32("QuestItems", e);
-            packet.ReadUInt32("QuestCurrencies", e);
+            var questItemsCount = packet.ReadUInt32("QuestItems", e);
+            var questCurrenciesCount = packet.ReadUInt32("QuestCurrencies", e);
 
             for (var i = 0; i < 8; ++i)
                 packet.ReadInt32("UnkInt32", e, i);
@@ -112,6 +113,14 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                 packet.ReadCString("TitleAlt", e);
             if (cursorNameLen > 1)
                 packet.ReadCString("CursorName", e);
+
+            if (isForever70938)
+            {
+                for (var i = 0; i < questItemsCount; ++i)
+                    packet.ReadUInt32("QuestItemID", e, i);
+                for (var i = 0; i < questCurrenciesCount; ++i)
+                    packet.ReadUInt32("QuestCurrencyID", e, i);
+            }
 
             packet.AddSniffData(StoreNameType.Unit, (int)entry, "QUERY_RESPONSE");
         }
