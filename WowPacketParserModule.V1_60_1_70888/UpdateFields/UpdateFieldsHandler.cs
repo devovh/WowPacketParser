@@ -988,103 +988,9 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 
         public override IUnitData ReadUpdateUnitData(Packet packet, params object[] indexes)
         {
-            // Forever 1.60.1 nie uzywa masek zmian 12.x w bloku wartosci.
-            // Blok to [u32 liczba pol][u32 ogon][wartosci] - te same pola co
-            // ReadCreateObjectData/ReadCreateUnitData, tylko bez bitowego prefiksu create.
-            var data = new UnitData();
-            packet.ResetBitReader();
-            packet.ReadUInt32("UnitFieldCount", indexes);
-            packet.ReadUInt32("UnitFieldCountTail", indexes);
-
-            data.Health = packet.ReadInt64("Health", indexes);
-            data.MaxHealth = packet.ReadInt64("MaxHealth", indexes);
-            data.AuraState = packet.ReadUInt32("AuraState", indexes);
-
-            for (var i = 0; i < 10; ++i)
-                data.Power[i] = packet.ReadInt32("Power", indexes, i);
-
-            for (var i = 0; i < 10; ++i)
-                data.MaxPower[i] = packet.ReadInt32("MaxPower", indexes, i);
-
-            for (var i = 0; i < 10; ++i)
-                data.PowerRegenFlatModifier[i] = packet.ReadSingle("PowerRegenFlatModifier", indexes, i);
-
-            for (var i = 0; i < 10; ++i)
-                data.PowerRegenInterruptedFlatModifier[i] = packet.ReadSingle("PowerRegenInterruptedFlatModifier", indexes, i);
-
-            data.MaxHealth = data.MaxHealth;
-
-            // --- dalej dokladnie w kolejnosci ReadCreateUnitData (z pominięciem pol gracza) ---
-            data.Level = packet.ReadInt32("Level", indexes);
-            data.EffectiveLevel = packet.ReadInt32("EffectiveLevel", indexes);
-            data.ContentTuningID = packet.ReadInt32("ContentTuningID", indexes);
-            data.ScalingLevelMin = packet.ReadInt32("ScalingLevelMin", indexes);
-            data.ScalingLevelMax = packet.ReadInt32("ScalingLevelMax", indexes);
-            data.ScalingLevelDelta = packet.ReadInt32("ScalingLevelDelta", indexes);
-            data.ScalingFactionGroup = packet.ReadByte("ScalingFactionGroup", indexes);
-            data.FactionTemplate = packet.ReadInt32("FactionTemplate", indexes);
-
-            for (var i = 0; i < 3; ++i)
-                data.VirtualItems[i] = ReadUpdateVisibleItem(packet, indexes, "VirtualItems", i);
-
-            data.Flags = packet.ReadUInt32("Flags", indexes);
-            data.Flags2 = packet.ReadUInt32("Flags2", indexes);
-            data.Flags3 = packet.ReadUInt32("Flags3", indexes);
-            data.Flags4 = packet.ReadUInt32("Flags4", indexes);
-
-            for (var i = 0; i < 2; ++i)
-                data.AttackRoundBaseTime[i] = packet.ReadUInt32("AttackRoundBaseTime", indexes, i);
-
-            data.RangedAttackRoundBaseTime = packet.ReadUInt32("RangedAttackRoundBaseTime", indexes);
-            data.BoundingRadius = packet.ReadSingle("BoundingRadius", indexes);
-            data.CombatReach = packet.ReadSingle("CombatReach", indexes);
-            data.DisplayScale = packet.ReadSingle("DisplayScale", indexes);
-            data.CreatureFamily = packet.ReadInt32("CreatureFamily", indexes);
-            data.CreatureType = packet.ReadByte("CreatureType", indexes);
-            data.OverrideCreatureType = packet.ReadByte("OverrideCreatureType", indexes);
-            data.MountDisplayID = packet.ReadInt32("MountDisplayID", indexes);
-            data.CosmeticMountDisplayID = packet.ReadInt32("CosmeticMountDisplayID", indexes);
-            data.MinDamage = packet.ReadSingle("MinDamage", indexes);
-            data.MaxDamage = packet.ReadSingle("MaxDamage", indexes);
-            data.MinOffHandDamage = packet.ReadSingle("MinOffHandDamage", indexes);
-            data.MaxOffHandDamage = packet.ReadSingle("MaxOffHandDamage", indexes);
-            data.StandState = packet.ReadByte("StandState", indexes);
-            data.PetTalentPoints = packet.ReadByte("PetTalentPoints", indexes);
-            data.VisFlags = packet.ReadByte("VisFlags", indexes);
-            data.AnimTier = packet.ReadByte("AnimTier", indexes);
-            data.PetNumber = packet.ReadUInt32("PetNumber", indexes);
-            data.PetNameTimestamp = packet.ReadUInt32("PetNameTimestamp", indexes);
-            data.PetExperience = packet.ReadUInt32("PetExperience", indexes);
-            data.PetNextLevelExperience = packet.ReadUInt32("PetNextLevelExperience", indexes);
-            data.ModCastingSpeed = packet.ReadSingle("ModCastingSpeed", indexes);
-            data.ModCastingSpeedNeg = packet.ReadSingle("ModCastingSpeedNeg", indexes);
-            data.ModSpellHaste = packet.ReadSingle("ModSpellHaste", indexes);
-            data.ModHaste = packet.ReadSingle("ModHaste", indexes);
-            data.ModRangedHaste = packet.ReadSingle("ModRangedHaste", indexes);
-            data.ModHasteRegen = packet.ReadSingle("ModHasteRegen", indexes);
-            data.ModTimeRate = packet.ReadSingle("ModTimeRate", indexes);
-            data.CreatedBySpell = packet.ReadInt32("CreatedBySpell", indexes);
-            data.EmoteState = packet.ReadInt32("EmoteState", indexes);
-
-            for (var i = 0; i < 5; ++i)
-                data.Stats[i] = packet.ReadInt32("Stats", indexes, i);
-
-            for (var i = 0; i < 5; ++i)
-                data.StatPosBuff[i] = packet.ReadInt32("StatPosBuff", indexes, i);
-
-            for (var i = 0; i < 5; ++i)
-                data.StatNegBuff[i] = packet.ReadInt32("StatNegBuff", indexes, i);
-
-            for (var i = 0; i < 7; ++i)
-                data.Resistances[i] = packet.ReadInt32("Resistances", indexes, i);
-
-            for (var i = 0; i < 7; ++i)
-                data.BonusResistanceMods[i] = packet.ReadInt32("BonusResistanceMods", indexes, i);
-
-            for (var i = 0; i < 7; ++i)
-                data.ManaCostModifier[i] = packet.ReadInt32("ManaCostModifier", indexes, i);
-
-            return data;
+            // Forever 1.60.1 (70338-70938): UnitData::WriteUpdate z tc-forever
+            // (src/server/game/Entities/Object/Updates/UpdateFields.cpp:1405), przepisane 1:1.
+            return ForeverUnitDataReader.Read(packet, indexes);
         }
 
         public static IChrCustomizationChoice ReadCreateChrCustomizationChoice(Packet packet, params object[] indexes)
@@ -4195,39 +4101,8 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 
         public override IGameObjectData ReadUpdateGameObjectData(Packet packet, params object[] indexes)
         {
-            // Forever 1.60.1: blok wartosci jest plaski - te same pola co przy tworzeniu,
-            // bez masek zmian i bez bitowego prefiksu. Uklad: [wartosci][flaga AssistAction].
-            var data = new GameObjectData();
-            packet.ResetBitReader();
-            data.DisplayID = packet.ReadInt32("DisplayID", indexes);
-            data.SpellVisualID = packet.ReadUInt32("SpellVisualID", indexes);
-            data.StateSpellVisualID = packet.ReadUInt32("StateSpellVisualID", indexes);
-            data.SpawnTrackingStateAnimID = packet.ReadUInt32("SpawnTrackingStateAnimID", indexes);
-            data.SpawnTrackingStateAnimKitID = packet.ReadUInt32("SpawnTrackingStateAnimKitID", indexes);
-            data.StateWorldEffectsQuestObjectiveID = packet.ReadUInt32("StateWorldEffectsQuestObjectiveID", indexes);
-            data.CreatedBy = packet.ReadPackedGuid128("CreatedBy", indexes);
-            data.GuildGUID = packet.ReadPackedGuid128("GuildGUID", indexes);
-            data.Flags = packet.ReadUInt32("Flags", indexes);
-            data.FlagsB = packet.ReadUInt32("FlagsB", indexes);
-            data.ParentRotation = packet.ReadQuaternion("ParentRotation", indexes);
-            data.FactionTemplate = packet.ReadInt32("FactionTemplate", indexes);
-            data.State = packet.ReadSByte("State", indexes);
-            data.TypeID = packet.ReadSByte("TypeID", indexes);
-            data.PercentHealth = packet.ReadByte("PercentHealth", indexes);
-            data.ArtKit = packet.ReadUInt32("ArtKit", indexes);
-            data.CustomParam = packet.ReadUInt32("CustomParam", indexes);
-            data.Level = packet.ReadInt32("Level", indexes);
-            data.AnimGroupInstance = packet.ReadUInt32("AnimGroupInstance", indexes);
-            data.UiWidgetItemID = packet.ReadUInt32("UiWidgetItemID", indexes);
-            data.UiWidgetItemQuality = packet.ReadUInt32("UiWidgetItemQuality", indexes);
-            data.UiWidgetItemCount = packet.ReadUInt32("UiWidgetItemCount", indexes);
-            packet.ResetBitReader();
-            var hasAssistActionData = packet.ReadBit("HasAssistActionData", indexes);
-            if (hasAssistActionData)
-            {
-                data.AssistActionData = ReadUpdateGameObjectAssistActionData(packet, indexes, "AssistActionData");
-            }
-            return data;
+            // Forever 1.60.1: GameObjectData::WriteUpdate z tc-forever (UpdateFields.cpp:7576)
+            return ForeverGameObjectDataReader.Read(packet, indexes);
         }
 
         public override IDynamicObjectData ReadCreateDynamicObjectData(Packet packet, UpdateFieldFlag flags, params object[] indexes)

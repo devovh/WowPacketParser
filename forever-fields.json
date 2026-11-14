@@ -1,0 +1,7313 @@
+{
+ "UnitData": {
+  "lines": [
+   1405,
+   2125
+  ],
+  "nodes": 162,
+  "tree": {
+   "type": "block",
+   "children": [
+    {
+     "type": "bit",
+     "line": 1414,
+     "expr": "false"
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 1418,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[1]",
+       "line": 1420,
+       "children": [
+        {
+         "type": "bit",
+         "line": 1422,
+         "expr": "Field_314"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[2]",
+       "line": 1424,
+       "children": [
+        {
+         "type": "bits",
+         "line": 1427,
+         "expr": "stateWorldEffectIDs->size()",
+         "count": "32"
+        },
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < stateWorldEffectIDs->size(); ++i",
+         "line": 1428,
+         "children": [
+          {
+           "type": "field",
+           "line": 1430,
+           "ctype": "uint32",
+           "expr": "(*stateWorldEffectIDs)[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "flush",
+     "line": 1434
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 1435,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[3]",
+       "line": 1437,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 1440,
+         "name": "PassiveSpells",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 1442,
+         "name": "PassiveSpells",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[4]",
+       "line": 1444,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 1447,
+         "name": "WorldEffects",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 1449,
+         "name": "WorldEffects",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[5]",
+       "line": 1451,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 1454,
+         "name": "ChannelObjects",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 1456,
+         "name": "ChannelObjects",
+         "bits": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "flush",
+     "line": 1459
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 1460,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[3]",
+       "line": 1462,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < PassiveSpells.size(); ++i",
+         "line": 1464,
+         "children": [
+          {
+           "type": "if",
+           "cond": "PassiveSpells.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 1466,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 1468,
+             "name": "PassiveSpells",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[4]",
+       "line": 1472,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < WorldEffects.size(); ++i",
+         "line": 1474,
+         "children": [
+          {
+           "type": "if",
+           "cond": "WorldEffects.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 1476,
+           "children": [
+            {
+             "type": "field",
+             "line": 1478,
+             "ctype": "int32",
+             "expr": "WorldEffects[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[5]",
+       "line": 1482,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < ChannelObjects.size(); ++i",
+         "line": 1484,
+         "children": [
+          {
+           "type": "if",
+           "cond": "ChannelObjects.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 1486,
+           "children": [
+            {
+             "type": "field",
+             "line": 1488,
+             "ctype": "raw",
+             "expr": "ChannelObjects[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[6]",
+       "line": 1492,
+       "children": [
+        {
+         "type": "field",
+         "line": 1494,
+         "ctype": "int32",
+         "expr": "ViewerDependentValue<DisplayIDTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[7]",
+       "line": 1496,
+       "children": [
+        {
+         "type": "field",
+         "line": 1498,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<NpcFlagsTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[8]",
+       "line": 1500,
+       "children": [
+        {
+         "type": "field",
+         "line": 1502,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<NpcFlags2Tag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[9]",
+       "line": 1504,
+       "children": [
+        {
+         "type": "field",
+         "line": 1506,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<StateSpellVisualIDTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[10]",
+       "line": 1508,
+       "children": [
+        {
+         "type": "field",
+         "line": 1510,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<StateAnimIDTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[11]",
+       "line": 1512,
+       "children": [
+        {
+         "type": "field",
+         "line": 1514,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<StateAnimKitIDTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[12]",
+       "line": 1516,
+       "children": [
+        {
+         "type": "field",
+         "line": 1518,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<StateWorldEffectsQuestObjectiveIDTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[13]",
+       "line": 1520,
+       "children": [
+        {
+         "type": "field",
+         "line": 1522,
+         "ctype": "int32",
+         "expr": "SpellOverrideNameID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[14]",
+       "line": 1524,
+       "children": [
+        {
+         "type": "field",
+         "line": 1526,
+         "ctype": "raw",
+         "expr": "*Charm"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[15]",
+       "line": 1528,
+       "children": [
+        {
+         "type": "field",
+         "line": 1530,
+         "ctype": "raw",
+         "expr": "*Summon"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[16]",
+       "line": 1532,
+       "children": [
+        {
+         "type": "field",
+         "line": 1534,
+         "ctype": "raw",
+         "expr": "*Critter"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[17]",
+       "line": 1536,
+       "children": [
+        {
+         "type": "field",
+         "line": 1538,
+         "ctype": "raw",
+         "expr": "*CharmedBy"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[18]",
+       "line": 1540,
+       "children": [
+        {
+         "type": "field",
+         "line": 1542,
+         "ctype": "raw",
+         "expr": "*SummonedBy"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[19]",
+       "line": 1544,
+       "children": [
+        {
+         "type": "field",
+         "line": 1546,
+         "ctype": "raw",
+         "expr": "*CreatedBy"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[20]",
+       "line": 1548,
+       "children": [
+        {
+         "type": "field",
+         "line": 1550,
+         "ctype": "raw",
+         "expr": "*DemonCreator"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[21]",
+       "line": 1552,
+       "children": [
+        {
+         "type": "field",
+         "line": 1554,
+         "ctype": "raw",
+         "expr": "*LookAtControllerTarget"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[22]",
+       "line": 1556,
+       "children": [
+        {
+         "type": "field",
+         "line": 1558,
+         "ctype": "raw",
+         "expr": "*Target"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[23]",
+       "line": 1560,
+       "children": [
+        {
+         "type": "field",
+         "line": 1562,
+         "ctype": "raw",
+         "expr": "*BattlePetCompanionGUID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[24]",
+       "line": 1564,
+       "children": [
+        {
+         "type": "field",
+         "line": 1566,
+         "ctype": "uint64",
+         "expr": "BattlePetDBID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[25]",
+       "line": 1568,
+       "children": [
+        {
+         "type": "field",
+         "line": 1570,
+         "ctype": "raw",
+         "expr": "*BattlePetAttachedToDecorGUID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[26]",
+       "line": 1572,
+       "children": [
+        {
+         "type": "field",
+         "line": 1574,
+         "ctype": "raw",
+         "expr": "*BattlePetDecorHouseGUID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[27]",
+       "line": 1576,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 1578,
+         "name": "ChannelData",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[28]",
+       "line": 1580,
+       "children": [
+        {
+         "type": "field",
+         "line": 1582,
+         "ctype": "int8",
+         "expr": "SpellEmpowerStage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[29]",
+       "line": 1584,
+       "children": [
+        {
+         "type": "field",
+         "line": 1586,
+         "ctype": "uint32",
+         "expr": "SummonedByHomeRealm"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[30]",
+       "line": 1588,
+       "children": [
+        {
+         "type": "field",
+         "line": 1590,
+         "ctype": "uint8",
+         "expr": "Race"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[31]",
+       "line": 1592,
+       "children": [
+        {
+         "type": "field",
+         "line": 1594,
+         "ctype": "uint8",
+         "expr": "ClientClassId(uint8(Race), uint8(ClassId), owner)"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[32]",
+     "line": 1597,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[33]",
+       "line": 1599,
+       "children": [
+        {
+         "type": "field",
+         "line": 1601,
+         "ctype": "uint8",
+         "expr": "PlayerClassId"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[34]",
+       "line": 1603,
+       "children": [
+        {
+         "type": "field",
+         "line": 1605,
+         "ctype": "uint8",
+         "expr": "Sex"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[35]",
+       "line": 1607,
+       "children": [
+        {
+         "type": "field",
+         "line": 1609,
+         "ctype": "uint8",
+         "expr": "CreatureType"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[36]",
+       "line": 1611,
+       "children": [
+        {
+         "type": "field",
+         "line": 1613,
+         "ctype": "uint8",
+         "expr": "DisplayPower"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[37]",
+       "line": 1615,
+       "children": [
+        {
+         "type": "field",
+         "line": 1617,
+         "ctype": "uint32",
+         "expr": "OverrideDisplayPowerID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[38]",
+       "line": 1619,
+       "children": [
+        {
+         "type": "field",
+         "line": 1621,
+         "ctype": "int64",
+         "expr": "Health"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[39]",
+       "line": 1623,
+       "children": [
+        {
+         "type": "field",
+         "line": 1625,
+         "ctype": "int64",
+         "expr": "MaxHealth"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[40]",
+       "line": 1627,
+       "children": [
+        {
+         "type": "field",
+         "line": 1629,
+         "ctype": "int32",
+         "expr": "Level"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[41]",
+       "line": 1631,
+       "children": [
+        {
+         "type": "field",
+         "line": 1633,
+         "ctype": "int32",
+         "expr": "EffectiveLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[42]",
+       "line": 1635,
+       "children": [
+        {
+         "type": "field",
+         "line": 1637,
+         "ctype": "int32",
+         "expr": "ContentTuningID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[43]",
+       "line": 1639,
+       "children": [
+        {
+         "type": "field",
+         "line": 1641,
+         "ctype": "int32",
+         "expr": "ScalingLevelMin"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[44]",
+       "line": 1643,
+       "children": [
+        {
+         "type": "field",
+         "line": 1645,
+         "ctype": "int32",
+         "expr": "ScalingLevelMax"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[45]",
+       "line": 1647,
+       "children": [
+        {
+         "type": "field",
+         "line": 1649,
+         "ctype": "int32",
+         "expr": "ScalingLevelDelta"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[46]",
+       "line": 1651,
+       "children": [
+        {
+         "type": "field",
+         "line": 1653,
+         "ctype": "uint8",
+         "expr": "ScalingFactionGroup"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[47]",
+       "line": 1655,
+       "children": [
+        {
+         "type": "field",
+         "line": 1657,
+         "ctype": "int32",
+         "expr": "ViewerDependentValue<FactionTemplateTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[48]",
+       "line": 1659,
+       "children": [
+        {
+         "type": "field",
+         "line": 1661,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<FlagsTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[49]",
+       "line": 1663,
+       "children": [
+        {
+         "type": "field",
+         "line": 1665,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<Flags2Tag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[50]",
+       "line": 1667,
+       "children": [
+        {
+         "type": "field",
+         "line": 1669,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<Flags3Tag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[51]",
+       "line": 1671,
+       "children": [
+        {
+         "type": "field",
+         "line": 1673,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<Flags4Tag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[52]",
+       "line": 1675,
+       "children": [
+        {
+         "type": "field",
+         "line": 1677,
+         "ctype": "uint32",
+         "expr": "ViewerDependentValue<AuraStateTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[53]",
+       "line": 1679,
+       "children": [
+        {
+         "type": "field",
+         "line": 1681,
+         "ctype": "uint32",
+         "expr": "RangedAttackRoundBaseTime"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[54]",
+       "line": 1683,
+       "children": [
+        {
+         "type": "field",
+         "line": 1685,
+         "ctype": "float",
+         "expr": "BoundingRadius"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[55]",
+       "line": 1687,
+       "children": [
+        {
+         "type": "field",
+         "line": 1689,
+         "ctype": "float",
+         "expr": "CombatReach"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[56]",
+       "line": 1691,
+       "children": [
+        {
+         "type": "field",
+         "line": 1693,
+         "ctype": "float",
+         "expr": "DisplayScale"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[57]",
+       "line": 1695,
+       "children": [
+        {
+         "type": "field",
+         "line": 1697,
+         "ctype": "int32",
+         "expr": "CreatureFamily"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[58]",
+       "line": 1699,
+       "children": [
+        {
+         "type": "field",
+         "line": 1701,
+         "ctype": "uint8",
+         "expr": "OverrideCreatureType"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[59]",
+       "line": 1703,
+       "children": [
+        {
+         "type": "field",
+         "line": 1705,
+         "ctype": "int32",
+         "expr": "NativeDisplayID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[60]",
+       "line": 1707,
+       "children": [
+        {
+         "type": "field",
+         "line": 1709,
+         "ctype": "float",
+         "expr": "NativeXDisplayScale"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[61]",
+       "line": 1711,
+       "children": [
+        {
+         "type": "field",
+         "line": 1713,
+         "ctype": "int32",
+         "expr": "MountDisplayID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[62]",
+       "line": 1715,
+       "children": [
+        {
+         "type": "field",
+         "line": 1717,
+         "ctype": "int32",
+         "expr": "CosmeticMountDisplayID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[63]",
+       "line": 1719,
+       "children": [
+        {
+         "type": "field",
+         "line": 1721,
+         "ctype": "float",
+         "expr": "MinDamage"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[64]",
+     "line": 1724,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[65]",
+       "line": 1726,
+       "children": [
+        {
+         "type": "field",
+         "line": 1728,
+         "ctype": "float",
+         "expr": "MaxDamage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[66]",
+       "line": 1730,
+       "children": [
+        {
+         "type": "field",
+         "line": 1732,
+         "ctype": "float",
+         "expr": "MinOffHandDamage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[67]",
+       "line": 1734,
+       "children": [
+        {
+         "type": "field",
+         "line": 1736,
+         "ctype": "float",
+         "expr": "MaxOffHandDamage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[68]",
+       "line": 1738,
+       "children": [
+        {
+         "type": "field",
+         "line": 1740,
+         "ctype": "uint8",
+         "expr": "StandState"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[69]",
+       "line": 1742,
+       "children": [
+        {
+         "type": "field",
+         "line": 1744,
+         "ctype": "uint8",
+         "expr": "PetTalentPoints"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[71]",
+       "line": 1747,
+       "children": [
+        {
+         "type": "field",
+         "line": 1749,
+         "ctype": "uint8",
+         "expr": "AnimTier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[70]",
+       "line": 1751,
+       "children": [
+        {
+         "type": "field",
+         "line": 1753,
+         "ctype": "uint8",
+         "expr": "VisFlags"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[72]",
+       "line": 1755,
+       "children": [
+        {
+         "type": "field",
+         "line": 1757,
+         "ctype": "uint32",
+         "expr": "PetNumber"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[73]",
+       "line": 1759,
+       "children": [
+        {
+         "type": "field",
+         "line": 1761,
+         "ctype": "uint32",
+         "expr": "PetNameTimestamp"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[74]",
+       "line": 1763,
+       "children": [
+        {
+         "type": "field",
+         "line": 1765,
+         "ctype": "uint32",
+         "expr": "PetExperience"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[75]",
+       "line": 1767,
+       "children": [
+        {
+         "type": "field",
+         "line": 1769,
+         "ctype": "uint32",
+         "expr": "PetNextLevelExperience"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[76]",
+       "line": 1771,
+       "children": [
+        {
+         "type": "field",
+         "line": 1773,
+         "ctype": "float",
+         "expr": "ModCastingSpeed"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[77]",
+       "line": 1775,
+       "children": [
+        {
+         "type": "field",
+         "line": 1777,
+         "ctype": "float",
+         "expr": "ModCastingSpeedNeg != 0.0f ? float(ModCastingSpeedNeg) : 1.0f"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[78]",
+       "line": 1779,
+       "children": [
+        {
+         "type": "field",
+         "line": 1781,
+         "ctype": "float",
+         "expr": "ModSpellHaste"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[79]",
+       "line": 1783,
+       "children": [
+        {
+         "type": "field",
+         "line": 1785,
+         "ctype": "float",
+         "expr": "ModHaste"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[80]",
+       "line": 1787,
+       "children": [
+        {
+         "type": "field",
+         "line": 1789,
+         "ctype": "float",
+         "expr": "ModRangedHaste"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[81]",
+       "line": 1791,
+       "children": [
+        {
+         "type": "field",
+         "line": 1793,
+         "ctype": "float",
+         "expr": "ModHasteRegen"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[82]",
+       "line": 1795,
+       "children": [
+        {
+         "type": "field",
+         "line": 1797,
+         "ctype": "float",
+         "expr": "ModTimeRate"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[83]",
+       "line": 1799,
+       "children": [
+        {
+         "type": "field",
+         "line": 1801,
+         "ctype": "int32",
+         "expr": "CreatedBySpell"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[84]",
+       "line": 1803,
+       "children": [
+        {
+         "type": "field",
+         "line": 1805,
+         "ctype": "int32",
+         "expr": "EmoteState"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[231]",
+       "line": 1807,
+       "children": [
+        {
+         "type": "field",
+         "line": 1809,
+         "ctype": "int16",
+         "expr": "ClassicTrainingPointsUsed"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[232]",
+       "line": 1811,
+       "children": [
+        {
+         "type": "field",
+         "line": 1813,
+         "ctype": "int16",
+         "expr": "ClassicTrainingPointsTotal"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[85]",
+       "line": 1815,
+       "children": [
+        {
+         "type": "field",
+         "line": 1817,
+         "ctype": "int32",
+         "expr": "BaseMana"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[86]",
+       "line": 1819,
+       "children": [
+        {
+         "type": "field",
+         "line": 1821,
+         "ctype": "int32",
+         "expr": "BaseHealth"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[87]",
+       "line": 1823,
+       "children": [
+        {
+         "type": "field",
+         "line": 1825,
+         "ctype": "uint8",
+         "expr": "SheatheState"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[88]",
+       "line": 1827,
+       "children": [
+        {
+         "type": "field",
+         "line": 1829,
+         "ctype": "uint8",
+         "expr": "ViewerDependentValue<PvpFlagsTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[89]",
+       "line": 1831,
+       "children": [
+        {
+         "type": "field",
+         "line": 1833,
+         "ctype": "uint8",
+         "expr": "PetFlags"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[90]",
+       "line": 1835,
+       "children": [
+        {
+         "type": "field",
+         "line": 1837,
+         "ctype": "uint8",
+         "expr": "ShapeshiftForm"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[91]",
+       "line": 1839,
+       "children": [
+        {
+         "type": "field",
+         "line": 1841,
+         "ctype": "int32",
+         "expr": "AttackPower"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[92]",
+       "line": 1843,
+       "children": [
+        {
+         "type": "field",
+         "line": 1845,
+         "ctype": "int32",
+         "expr": "AttackPowerModPos"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[93]",
+       "line": 1847,
+       "children": [
+        {
+         "type": "field",
+         "line": 1849,
+         "ctype": "int32",
+         "expr": "AttackPowerModNeg"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[94]",
+       "line": 1851,
+       "children": [
+        {
+         "type": "field",
+         "line": 1853,
+         "ctype": "float",
+         "expr": "AttackPowerMultiplier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[95]",
+       "line": 1855,
+       "children": [
+        {
+         "type": "field",
+         "line": 1857,
+         "ctype": "int32",
+         "expr": "AttackPowerModSupport"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[96]",
+     "line": 1860,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[97]",
+       "line": 1862,
+       "children": [
+        {
+         "type": "field",
+         "line": 1864,
+         "ctype": "int32",
+         "expr": "RangedAttackPower"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[98]",
+       "line": 1866,
+       "children": [
+        {
+         "type": "field",
+         "line": 1868,
+         "ctype": "int32",
+         "expr": "RangedAttackPowerModPos"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[99]",
+       "line": 1870,
+       "children": [
+        {
+         "type": "field",
+         "line": 1872,
+         "ctype": "int32",
+         "expr": "RangedAttackPowerModNeg"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[100]",
+       "line": 1874,
+       "children": [
+        {
+         "type": "field",
+         "line": 1876,
+         "ctype": "float",
+         "expr": "RangedAttackPowerMultiplier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[101]",
+       "line": 1878,
+       "children": [
+        {
+         "type": "field",
+         "line": 1880,
+         "ctype": "int32",
+         "expr": "RangedAttackPowerModSupport"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[102]",
+       "line": 1882,
+       "children": [
+        {
+         "type": "field",
+         "line": 1884,
+         "ctype": "int32",
+         "expr": "MainHandWeaponAttackPower"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[103]",
+       "line": 1886,
+       "children": [
+        {
+         "type": "field",
+         "line": 1888,
+         "ctype": "int32",
+         "expr": "OffHandWeaponAttackPower"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[104]",
+       "line": 1890,
+       "children": [
+        {
+         "type": "field",
+         "line": 1892,
+         "ctype": "int32",
+         "expr": "RangedWeaponAttackPower"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[105]",
+       "line": 1894,
+       "children": [
+        {
+         "type": "field",
+         "line": 1896,
+         "ctype": "int32",
+         "expr": "SetAttackSpeedAura"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[106]",
+       "line": 1898,
+       "children": [
+        {
+         "type": "field",
+         "line": 1900,
+         "ctype": "float",
+         "expr": "Lifesteal"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[107]",
+       "line": 1902,
+       "children": [
+        {
+         "type": "field",
+         "line": 1904,
+         "ctype": "float",
+         "expr": "MinRangedDamage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[108]",
+       "line": 1906,
+       "children": [
+        {
+         "type": "field",
+         "line": 1908,
+         "ctype": "float",
+         "expr": "MaxRangedDamage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[109]",
+       "line": 1910,
+       "children": [
+        {
+         "type": "field",
+         "line": 1912,
+         "ctype": "float",
+         "expr": "ManaCostMultiplier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[110]",
+       "line": 1914,
+       "children": [
+        {
+         "type": "field",
+         "line": 1916,
+         "ctype": "float",
+         "expr": "MaxHealthModifier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[111]",
+       "line": 1918,
+       "children": [
+        {
+         "type": "field",
+         "line": 1920,
+         "ctype": "float",
+         "expr": "HoverHeight"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[112]",
+       "line": 1922,
+       "children": [
+        {
+         "type": "field",
+         "line": 1924,
+         "ctype": "int32",
+         "expr": "MinItemLevelCutoff"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[113]",
+       "line": 1926,
+       "children": [
+        {
+         "type": "field",
+         "line": 1928,
+         "ctype": "int32",
+         "expr": "MinItemLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[114]",
+       "line": 1930,
+       "children": [
+        {
+         "type": "field",
+         "line": 1932,
+         "ctype": "int32",
+         "expr": "MaxItemLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[115]",
+       "line": 1934,
+       "children": [
+        {
+         "type": "field",
+         "line": 1936,
+         "ctype": "int32",
+         "expr": "AzeriteItemLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[116]",
+       "line": 1938,
+       "children": [
+        {
+         "type": "field",
+         "line": 1940,
+         "ctype": "int32",
+         "expr": "WildBattlePetLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[117]",
+       "line": 1942,
+       "children": [
+        {
+         "type": "field",
+         "line": 1944,
+         "ctype": "int32",
+         "expr": "BattlePetCompanionExperience"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[118]",
+       "line": 1946,
+       "children": [
+        {
+         "type": "field",
+         "line": 1948,
+         "ctype": "uint32",
+         "expr": "BattlePetCompanionNameTimestamp"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[119]",
+       "line": 1950,
+       "children": [
+        {
+         "type": "field",
+         "line": 1952,
+         "ctype": "int32",
+         "expr": "ViewerDependentValue<InteractSpellIDTag>::GetValue(this, receiver, owner)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[120]",
+       "line": 1954,
+       "children": [
+        {
+         "type": "field",
+         "line": 1956,
+         "ctype": "int32",
+         "expr": "ScaleDuration"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[121]",
+       "line": 1958,
+       "children": [
+        {
+         "type": "field",
+         "line": 1960,
+         "ctype": "int32",
+         "expr": "LooksLikeMountID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[122]",
+       "line": 1962,
+       "children": [
+        {
+         "type": "field",
+         "line": 1964,
+         "ctype": "int32",
+         "expr": "LooksLikeCreatureID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[123]",
+       "line": 1966,
+       "children": [
+        {
+         "type": "field",
+         "line": 1968,
+         "ctype": "int32",
+         "expr": "LookAtControllerID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[124]",
+       "line": 1970,
+       "children": [
+        {
+         "type": "field",
+         "line": 1972,
+         "ctype": "int32",
+         "expr": "PerksVendorItemID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[125]",
+       "line": 1974,
+       "children": [
+        {
+         "type": "field",
+         "line": 1976,
+         "ctype": "int32",
+         "expr": "TaxiNodesID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[126]",
+       "line": 1978,
+       "children": [
+        {
+         "type": "field",
+         "line": 1980,
+         "ctype": "raw",
+         "expr": "*GuildGUID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[127]",
+       "line": 1982,
+       "children": [
+        {
+         "type": "field",
+         "line": 1984,
+         "ctype": "int32",
+         "expr": "FlightCapabilityID"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[128]",
+     "line": 1987,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[129]",
+       "line": 1989,
+       "children": [
+        {
+         "type": "field",
+         "line": 1991,
+         "ctype": "float",
+         "expr": "GlideEventSpeedDivisor"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[130]",
+       "line": 1993,
+       "children": [
+        {
+         "type": "field",
+         "line": 1995,
+         "ctype": "int32",
+         "expr": "DriveCapabilityID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[131]",
+       "line": 1997,
+       "children": [
+        {
+         "type": "field",
+         "line": 1999,
+         "ctype": "int32",
+         "expr": "MaxHealthModifierFlatNeg"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[132]",
+       "line": 2001,
+       "children": [
+        {
+         "type": "field",
+         "line": 2003,
+         "ctype": "int32",
+         "expr": "MaxHealthModifierFlatPos"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[133]",
+       "line": 2005,
+       "children": [
+        {
+         "type": "field",
+         "line": 2007,
+         "ctype": "uint32",
+         "expr": "SilencedSchoolMask"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[134]",
+       "line": 2009,
+       "children": [
+        {
+         "type": "field",
+         "line": 2011,
+         "ctype": "uint32",
+         "expr": "CurrentAreaID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[230]",
+       "line": 2013,
+       "children": [
+        {
+         "type": "field",
+         "line": 2015,
+         "ctype": "raw",
+         "expr": "*ClassicComboTarget"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[135]",
+       "line": 2017,
+       "children": [
+        {
+         "type": "field",
+         "line": 2019,
+         "ctype": "float",
+         "expr": "NameplateDistanceMod"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[136]",
+       "line": 2021,
+       "children": [
+        {
+         "type": "field",
+         "line": 2023,
+         "ctype": "float",
+         "expr": "AutoAttackRangeMod"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[137]",
+       "line": 2025,
+       "children": [
+        {
+         "type": "field",
+         "line": 2027,
+         "ctype": "raw",
+         "expr": "*NameplateAttachToGUID"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "bit",
+     "line": 2031,
+     "expr": "AssistActionData.has_value()"
+    },
+    {
+     "type": "flush",
+     "line": 2032
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[128]",
+     "line": 2033,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[138]",
+       "line": 2035,
+       "children": [
+        {
+         "type": "if",
+         "cond": "AssistActionData.has_value()",
+         "line": 2037,
+         "children": [
+          {
+           "type": "optitem",
+           "line": 2039,
+           "name": "AssistActionData",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[139]",
+     "line": 2043,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 10; ++i",
+       "line": 2045,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[140 + i]",
+         "line": 2047,
+         "children": [
+          {
+           "type": "field",
+           "line": 2049,
+           "ctype": "int32",
+           "expr": "Power[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[150 + i]",
+         "line": 2051,
+         "children": [
+          {
+           "type": "field",
+           "line": 2053,
+           "ctype": "int32",
+           "expr": "MaxPower[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[160 + i]",
+         "line": 2055,
+         "children": [
+          {
+           "type": "field",
+           "line": 2057,
+           "ctype": "float",
+           "expr": "PowerRegenFlatModifier[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[170 + i]",
+         "line": 2059,
+         "children": [
+          {
+           "type": "field",
+           "line": 2061,
+           "ctype": "float",
+           "expr": "PowerRegenInterruptedFlatModifier[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[180]",
+     "line": 2065,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 3; ++i",
+       "line": 2067,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[181 + i]",
+         "line": 2069,
+         "children": [
+          {
+           "type": "dynitem",
+           "line": 2071,
+           "name": "VirtualItems",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[184]",
+     "line": 2075,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 2; ++i",
+       "line": 2077,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[185 + i]",
+         "line": 2079,
+         "children": [
+          {
+           "type": "field",
+           "line": 2081,
+           "ctype": "uint32",
+           "expr": "AttackRoundBaseTime[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[187]",
+     "line": 2085,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 5; ++i",
+       "line": 2087,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[188 + i]",
+         "line": 2089,
+         "children": [
+          {
+           "type": "field",
+           "line": 2091,
+           "ctype": "int32",
+           "expr": "Stats[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[193 + i]",
+         "line": 2093,
+         "children": [
+          {
+           "type": "field",
+           "line": 2095,
+           "ctype": "int32",
+           "expr": "StatPosBuff[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[198 + i]",
+         "line": 2097,
+         "children": [
+          {
+           "type": "field",
+           "line": 2099,
+           "ctype": "int32",
+           "expr": "StatNegBuff[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[203 + i]",
+         "line": 2101,
+         "children": [
+          {
+           "type": "field",
+           "line": 2103,
+           "ctype": "int32",
+           "expr": "StatSupportBuff[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[208]",
+     "line": 2107,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 7; ++i",
+       "line": 2109,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[209 + i]",
+         "line": 2111,
+         "children": [
+          {
+           "type": "field",
+           "line": 2113,
+           "ctype": "int32",
+           "expr": "Resistances[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[216 + i]",
+         "line": 2115,
+         "children": [
+          {
+           "type": "field",
+           "line": 2117,
+           "ctype": "int32",
+           "expr": "BonusResistanceMods[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[223 + i]",
+         "line": 2119,
+         "children": [
+          {
+           "type": "field",
+           "line": 2121,
+           "ctype": "int32",
+           "expr": "ManaCostModifier[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "PlayerData": {
+  "lines": [
+   2847,
+   3222
+  ],
+  "nodes": 70,
+  "tree": {
+   "type": "block",
+   "children": [
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 2853,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[1]",
+       "line": 2855,
+       "children": [
+        {
+         "type": "bit",
+         "line": 2857,
+         "expr": "HasQuestSession"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[2]",
+       "line": 2859,
+       "children": [
+        {
+         "type": "bit",
+         "line": 2861,
+         "expr": "HasLevelLink"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[3]",
+       "line": 2863,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 2866,
+         "name": "Customizations",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 2868,
+         "name": "Customizations",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[4]",
+       "line": 2870,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 2873,
+         "name": "RandomCustomizations",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 2875,
+         "name": "RandomCustomizations",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[5]",
+       "line": 2877,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 2880,
+         "name": "QuestSessionQuestLog",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 2882,
+         "name": "QuestSessionQuestLog",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[6]",
+       "line": 2884,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 2887,
+         "name": "ArenaCooldowns",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 2889,
+         "name": "ArenaCooldowns",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[7]",
+       "line": 2891,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 2894,
+         "name": "PetNames",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 2896,
+         "name": "PetNames",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[8]",
+       "line": 2898,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 2901,
+         "name": "VisualItemReplacements",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 2903,
+         "name": "VisualItemReplacements",
+         "bits": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "flush",
+     "line": 2906
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 2907,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[3]",
+       "line": 2909,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < Customizations.size(); ++i",
+         "line": 2911,
+         "children": [
+          {
+           "type": "if",
+           "cond": "Customizations.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 2913,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 2915,
+             "name": "Customizations",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[4]",
+       "line": 2919,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < RandomCustomizations.size(); ++i",
+         "line": 2921,
+         "children": [
+          {
+           "type": "if",
+           "cond": "RandomCustomizations.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 2923,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 2925,
+             "name": "RandomCustomizations",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[5]",
+       "line": 2929,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < QuestSessionQuestLog.size(); ++i",
+         "line": 2931,
+         "children": [
+          {
+           "type": "if",
+           "cond": "QuestSessionQuestLog.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 2933,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 2938,
+             "name": "QuestSessionQuestLog",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[6]",
+       "line": 2942,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < ArenaCooldowns.size(); ++i",
+         "line": 2944,
+         "children": [
+          {
+           "type": "if",
+           "cond": "ArenaCooldowns.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 2946,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 2948,
+             "name": "ArenaCooldowns",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[7]",
+       "line": 2952,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < PetNames.size(); ++i",
+         "line": 2954,
+         "children": [
+          {
+           "type": "if",
+           "cond": "PetNames.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 2956,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 2958,
+             "name": "PetNames",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[8]",
+       "line": 2962,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < VisualItemReplacements.size(); ++i",
+         "line": 2964,
+         "children": [
+          {
+           "type": "if",
+           "cond": "VisualItemReplacements.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 2966,
+           "children": [
+            {
+             "type": "field",
+             "line": 2968,
+             "ctype": "int32",
+             "expr": "VisualItemReplacements[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[9]",
+       "line": 2972,
+       "children": [
+        {
+         "type": "field",
+         "line": 2974,
+         "ctype": "raw",
+         "expr": "*DuelArbiter"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[10]",
+       "line": 2976,
+       "children": [
+        {
+         "type": "field",
+         "line": 2978,
+         "ctype": "raw",
+         "expr": "*WowAccount"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[11]",
+       "line": 2980,
+       "children": [
+        {
+         "type": "field",
+         "line": 2982,
+         "ctype": "raw",
+         "expr": "*BnetAccount"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[12]",
+       "line": 2984,
+       "children": [
+        {
+         "type": "field",
+         "line": 2986,
+         "ctype": "uint64",
+         "expr": "GuildClubMemberID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[13]",
+       "line": 2988,
+       "children": [
+        {
+         "type": "field",
+         "line": 2990,
+         "ctype": "raw",
+         "expr": "*LootTargetGUID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[14]",
+       "line": 2992,
+       "children": [
+        {
+         "type": "field",
+         "line": 2994,
+         "ctype": "uint32",
+         "expr": "PlayerFlags"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[15]",
+       "line": 2996,
+       "children": [
+        {
+         "type": "field",
+         "line": 2998,
+         "ctype": "uint32",
+         "expr": "PlayerFlagsEx"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[16]",
+       "line": 3000,
+       "children": [
+        {
+         "type": "field",
+         "line": 3002,
+         "ctype": "uint32",
+         "expr": "GuildRankID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[17]",
+       "line": 3004,
+       "children": [
+        {
+         "type": "field",
+         "line": 3006,
+         "ctype": "uint32",
+         "expr": "GuildDeleteDate"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[18]",
+       "line": 3008,
+       "children": [
+        {
+         "type": "field",
+         "line": 3010,
+         "ctype": "int32",
+         "expr": "GuildLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[19]",
+       "line": 3012,
+       "children": [
+        {
+         "type": "field",
+         "line": 3014,
+         "ctype": "uint8",
+         "expr": "NativeSex"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[20]",
+       "line": 3016,
+       "children": [
+        {
+         "type": "field",
+         "line": 3018,
+         "ctype": "uint8",
+         "expr": "Inebriation"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[21]",
+       "line": 3020,
+       "children": [
+        {
+         "type": "field",
+         "line": 3022,
+         "ctype": "uint8",
+         "expr": "PvpTitle"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[22]",
+       "line": 3024,
+       "children": [
+        {
+         "type": "field",
+         "line": 3026,
+         "ctype": "uint8",
+         "expr": "ArenaFaction"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[23]",
+       "line": 3028,
+       "children": [
+        {
+         "type": "field",
+         "line": 3030,
+         "ctype": "uint32",
+         "expr": "DuelTeam"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[24]",
+       "line": 3032,
+       "children": [
+        {
+         "type": "field",
+         "line": 3034,
+         "ctype": "int32",
+         "expr": "GuildTimeStamp"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[25]",
+       "line": 3036,
+       "children": []
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[26]",
+       "line": 3040,
+       "children": [
+        {
+         "type": "field",
+         "line": 3042,
+         "ctype": "int32",
+         "expr": "PlayerTitle"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[27]",
+       "line": 3044,
+       "children": [
+        {
+         "type": "field",
+         "line": 3046,
+         "ctype": "int32",
+         "expr": "FakeInebriation"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[28]",
+       "line": 3048,
+       "children": [
+        {
+         "type": "field",
+         "line": 3050,
+         "ctype": "uint32",
+         "expr": "VirtualPlayerRealm"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[29]",
+       "line": 3052,
+       "children": [
+        {
+         "type": "field",
+         "line": 3054,
+         "ctype": "uint32",
+         "expr": "CurrentSpecID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[30]",
+       "line": 3056,
+       "children": [
+        {
+         "type": "field",
+         "line": 3058,
+         "ctype": "int32",
+         "expr": "CurrentCombatTraitConfigSubTreeID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[31]",
+       "line": 3060,
+       "children": [
+        {
+         "type": "field",
+         "line": 3062,
+         "ctype": "int32",
+         "expr": "TaxiMountAnimKitID"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[32]",
+     "line": 3065,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[33]",
+       "line": 3067,
+       "children": [
+        {
+         "type": "field",
+         "line": 3069,
+         "ctype": "uint8",
+         "expr": "CurrentBattlePetBreedQuality"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[34]",
+       "line": 3071,
+       "children": [
+        {
+         "type": "field",
+         "line": 3073,
+         "ctype": "int32",
+         "expr": "HonorLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[35]",
+       "line": 3075,
+       "children": [
+        {
+         "type": "field",
+         "line": 3077,
+         "ctype": "int64",
+         "expr": "LogoutTime"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[37]",
+       "line": 3079,
+       "children": [
+        {
+         "type": "field",
+         "line": 3081,
+         "ctype": "int32",
+         "expr": "OfferedAdvJournalQuestID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[38]",
+       "line": 3083,
+       "children": [
+        {
+         "type": "field",
+         "line": 3085,
+         "ctype": "int32",
+         "expr": "OfferedScriptQuestID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[39]",
+       "line": 3087,
+       "children": [
+        {
+         "type": "field",
+         "line": 3089,
+         "ctype": "int32",
+         "expr": "CurrentBattlePetSpeciesID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[40]",
+       "line": 3091,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 3093,
+         "name": "CtrOptions",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[41]",
+       "line": 3095,
+       "children": [
+        {
+         "type": "field",
+         "line": 3097,
+         "ctype": "int32",
+         "expr": "CovenantID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[42]",
+       "line": 3099,
+       "children": [
+        {
+         "type": "field",
+         "line": 3101,
+         "ctype": "int32",
+         "expr": "SoulbindID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[43]",
+       "line": 3103,
+       "children": [
+        {
+         "type": "field",
+         "line": 3105,
+         "ctype": "raw",
+         "expr": "*DungeonScore"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[44]",
+       "line": 3107,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 3109,
+         "name": "LeaverInfo",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[45]",
+       "line": 3111,
+       "children": [
+        {
+         "type": "field",
+         "line": 3113,
+         "ctype": "raw",
+         "expr": "*SpectateTarget"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[46]",
+       "line": 3115,
+       "children": [
+        {
+         "type": "field",
+         "line": 3117,
+         "ctype": "int32",
+         "expr": "WorldLootObjectInventorySwapSlot"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[48]",
+       "line": 3119,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 3121,
+         "name": "PersonalTabard",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[49]",
+       "line": 3123,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 3125,
+         "name": "NpcAsPlayerInfo",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[36]",
+       "line": 3127,
+       "children": [
+        {
+         "type": "bits",
+         "line": 3129,
+         "expr": "Name->size()",
+         "count": "6"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "bit",
+     "line": 3133,
+     "expr": "DeclinedNames.has_value()"
+    },
+    {
+     "type": "flush",
+     "line": 3134
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[32]",
+     "line": 3135,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[36]",
+       "line": 3137,
+       "children": [
+        {
+         "type": "field",
+         "line": 3139,
+         "ctype": "raw",
+         "expr": "WorldPackets::SizedString::Data(*Name)"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[47]",
+       "line": 3141,
+       "children": [
+        {
+         "type": "if",
+         "cond": "DeclinedNames.has_value()",
+         "line": 3143,
+         "children": [
+          {
+           "type": "optitem",
+           "line": 3145,
+           "name": "DeclinedNames",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[50]",
+     "line": 3149,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 2; ++i",
+       "line": 3151,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[51 + i]",
+         "line": 3153,
+         "children": [
+          {
+           "type": "field",
+           "line": 3155,
+           "ctype": "uint8",
+           "expr": "PartyType[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[53]",
+     "line": 3159,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 175; ++i",
+       "line": 3161,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[54 + i]",
+         "line": 3163,
+         "children": [
+          {
+           "type": "dynitem",
+           "line": 3168,
+           "name": "QuestLog",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[229]",
+     "line": 3172,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 19; ++i",
+       "line": 3174,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[230 + i]",
+         "line": 3176,
+         "children": [
+          {
+           "type": "dynitem",
+           "line": 3178,
+           "name": "VisibleItems",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[249]",
+     "line": 3182,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 6; ++i",
+       "line": 3184,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[250 + i]",
+         "line": 3186,
+         "children": [
+          {
+           "type": "field",
+           "line": 3188,
+           "ctype": "float",
+           "expr": "AvgItemLevel[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[256]",
+     "line": 3192,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 32; ++i",
+       "line": 3194,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[257 + i]",
+         "line": 3196,
+         "children": [
+          {
+           "type": "dynitem",
+           "line": 3198,
+           "name": "ForcedReactions",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[289]",
+     "line": 3202,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 16; ++i",
+       "line": 3204,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[290 + i]",
+         "line": 3206,
+         "children": [
+          {
+           "type": "field",
+           "line": 3208,
+           "ctype": "raw",
+           "expr": "VisibleEquipableSpells[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[306]",
+     "line": 3212,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 19; ++i",
+       "line": 3214,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[307 + i]",
+         "line": 3216,
+         "children": [
+          {
+           "type": "field",
+           "line": 3218,
+           "ctype": "uint32",
+           "expr": "PlunderstormItemDisplayID[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "ActivePlayerData": {
+  "lines": [
+   5881,
+   7315
+  ],
+  "nodes": 260,
+  "tree": {
+   "type": "block",
+   "children": [
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 5889,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[1]",
+       "line": 5891,
+       "children": [
+        {
+         "type": "bit",
+         "line": 5893,
+         "expr": "BackpackAutoSortDisabled"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[2]",
+       "line": 5895,
+       "children": [
+        {
+         "type": "bit",
+         "line": 5897,
+         "expr": "BackpackSellJunkDisabled"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[3]",
+       "line": 5899,
+       "children": [
+        {
+         "type": "bit",
+         "line": 5901,
+         "expr": "BankAutoSortDisabled"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[4]",
+       "line": 5903,
+       "children": [
+        {
+         "type": "bit",
+         "line": 5905,
+         "expr": "SortBagsRightToLeft"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[5]",
+       "line": 5907,
+       "children": [
+        {
+         "type": "bit",
+         "line": 5909,
+         "expr": "InsertItemsLeftToRight"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[6]",
+       "line": 5911,
+       "children": [
+        {
+         "type": "bit",
+         "line": 5913,
+         "expr": "HasPerksProgramPendingReward"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[7]",
+       "line": 5915,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 5918,
+         "name": "KnownTitles",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 5920,
+         "name": "KnownTitles",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[8]",
+       "line": 5922,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 5925,
+         "name": "CharacterDataElements",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 5927,
+         "name": "CharacterDataElements",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[9]",
+       "line": 5929,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 5932,
+         "name": "AccountDataElements",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 5934,
+         "name": "AccountDataElements",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[10]",
+       "line": 5936,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 5939,
+         "name": "PvpInfo",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 5941,
+         "name": "PvpInfo",
+         "bits": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[50]",
+     "line": 5944,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 1; ++i",
+       "line": 5946,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[51]",
+         "line": 5948,
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[52]",
+     "line": 5957,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 1; ++i",
+       "line": 5959,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[53]",
+         "line": 5961,
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[54]",
+     "line": 5970,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 1; ++i",
+       "line": 5972,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[55]",
+         "line": 5974,
+         "children": []
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[50]",
+     "line": 5983,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 1; ++i",
+       "line": 5985,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[51]",
+         "line": 5987,
+         "children": [
+          {
+           "type": "for",
+           "cond": "uint32 j = 0; j < ResearchSites[i].size(); ++j",
+           "line": 5989,
+           "children": [
+            {
+             "type": "if",
+             "cond": "ResearchSites[i].HasChanged(j) || ignoreNestedChangesMask",
+             "line": 5991,
+             "children": [
+              {
+               "type": "field",
+               "line": 5993,
+               "ctype": "uint16",
+               "expr": "ResearchSites[i][j]"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[52]",
+     "line": 5999,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 1; ++i",
+       "line": 6001,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[53]",
+         "line": 6003,
+         "children": [
+          {
+           "type": "for",
+           "cond": "uint32 j = 0; j < ResearchSiteProgress[i].size(); ++j",
+           "line": 6005,
+           "children": [
+            {
+             "type": "if",
+             "cond": "ResearchSiteProgress[i].HasChanged(j) || ignoreNestedChangesMask",
+             "line": 6007,
+             "children": [
+              {
+               "type": "field",
+               "line": 6009,
+               "ctype": "uint32",
+               "expr": "ResearchSiteProgress[i][j]"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[54]",
+     "line": 6015,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 1; ++i",
+       "line": 6017,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[55]",
+         "line": 6019,
+         "children": [
+          {
+           "type": "for",
+           "cond": "uint32 j = 0; j < Research[i].size(); ++j",
+           "line": 6021,
+           "children": [
+            {
+             "type": "if",
+             "cond": "Research[i].HasChanged(j) || ignoreNestedChangesMask",
+             "line": 6023,
+             "children": []
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "flush",
+     "line": 6031
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 6032,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[11]",
+       "line": 6034,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6037,
+         "name": "DailyQuestsCompleted",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6039,
+         "name": "DailyQuestsCompleted",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[12]",
+       "line": 6041,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6044,
+         "name": "Field_1328",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6046,
+         "name": "Field_1328",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[13]",
+       "line": 6048,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6051,
+         "name": "AvailableQuestLineXQuestIDs",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6053,
+         "name": "AvailableQuestLineXQuestIDs",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[14]",
+       "line": 6055,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6058,
+         "name": "Heirlooms",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6060,
+         "name": "Heirlooms",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[15]",
+       "line": 6062,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6065,
+         "name": "HeirloomFlags",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6067,
+         "name": "HeirloomFlags",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[16]",
+       "line": 6069,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6072,
+         "name": "Toys",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6074,
+         "name": "Toys",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[17]",
+       "line": 6076,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6079,
+         "name": "ToyFlags",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6081,
+         "name": "ToyFlags",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[18]",
+       "line": 6083,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6086,
+         "name": "Transmog",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6088,
+         "name": "Transmog",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[19]",
+       "line": 6090,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6093,
+         "name": "ConditionalTransmog",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6095,
+         "name": "ConditionalTransmog",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[20]",
+       "line": 6097,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6100,
+         "name": "SelfResSpells",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6102,
+         "name": "SelfResSpells",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[21]",
+       "line": 6104,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6107,
+         "name": "RuneforgePowers",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6109,
+         "name": "RuneforgePowers",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[22]",
+       "line": 6111,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6114,
+         "name": "TransmogIllusions",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6116,
+         "name": "TransmogIllusions",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[23]",
+       "line": 6118,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6121,
+         "name": "WarbandScenes",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6123,
+         "name": "WarbandScenes",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[24]",
+       "line": 6125,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6128,
+         "name": "HouseRooms",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6130,
+         "name": "HouseRooms",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[25]",
+       "line": 6132,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6135,
+         "name": "HouseExteriorComponents",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6137,
+         "name": "HouseExteriorComponents",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[26]",
+       "line": 6139,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6142,
+         "name": "HouseThemes",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6144,
+         "name": "HouseThemes",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[27]",
+       "line": 6146,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6149,
+         "name": "HouseRoomComponentTextures",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6151,
+         "name": "HouseRoomComponentTextures",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[28]",
+       "line": 6153,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6156,
+         "name": "HouseTypes",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6158,
+         "name": "HouseTypes",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[29]",
+       "line": 6160,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6163,
+         "name": "UnlockedTransmogOutfits",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6165,
+         "name": "UnlockedTransmogOutfits",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[30]",
+       "line": 6167,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6170,
+         "name": "CharacterRestrictions",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6172,
+         "name": "CharacterRestrictions",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[31]",
+       "line": 6174,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6177,
+         "name": "SpellPctModByLabel",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6179,
+         "name": "SpellPctModByLabel",
+         "bits": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[32]",
+     "line": 6182,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[33]",
+       "line": 6184,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6187,
+         "name": "SpellFlatModByLabel",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6189,
+         "name": "SpellFlatModByLabel",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[34]",
+       "line": 6191,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6194,
+         "name": "SpellPctModPVPByLabel",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6196,
+         "name": "SpellPctModPVPByLabel",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[35]",
+       "line": 6198,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6201,
+         "name": "SpellFlatModPVPByLabel",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6203,
+         "name": "SpellFlatModPVPByLabel",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[36]",
+       "line": 6205,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6208,
+         "name": "MawPowers",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6210,
+         "name": "MawPowers",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[37]",
+       "line": 6212,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6215,
+         "name": "MultiFloorExploration",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6217,
+         "name": "MultiFloorExploration",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[38]",
+       "line": 6219,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6222,
+         "name": "RecipeProgression",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6224,
+         "name": "RecipeProgression",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[39]",
+       "line": 6226,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6229,
+         "name": "ReplayedQuests",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6231,
+         "name": "ReplayedQuests",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[40]",
+       "line": 6233,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6236,
+         "name": "TaskQuests",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6238,
+         "name": "TaskQuests",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[41]",
+       "line": 6240,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6243,
+         "name": "DisabledSpells",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6245,
+         "name": "DisabledSpells",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[42]",
+       "line": 6247,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6250,
+         "name": "CraftingOrders",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6252,
+         "name": "CraftingOrders",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[43]",
+       "line": 6254,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6257,
+         "name": "PersonalCraftingOrderCounts",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6259,
+         "name": "PersonalCraftingOrderCounts",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[44]",
+       "line": 6261,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6264,
+         "name": "NpcCraftingOrders",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6266,
+         "name": "NpcCraftingOrders",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[45]",
+       "line": 6268,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6271,
+         "name": "CategoryCooldownMods",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6273,
+         "name": "CategoryCooldownMods",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[46]",
+       "line": 6275,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6278,
+         "name": "WeeklySpellUses",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6280,
+         "name": "WeeklySpellUses",
+         "bits": "32"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[47]",
+       "line": 6282,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6285,
+         "name": "TrackedCollectableSources",
+         "bits": "32"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6287,
+         "name": "TrackedCollectableSources",
+         "bits": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "flush",
+     "line": 6290
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[0]",
+     "line": 6291,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[7]",
+       "line": 6293,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < KnownTitles.size(); ++i",
+         "line": 6295,
+         "children": [
+          {
+           "type": "if",
+           "cond": "KnownTitles.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6297,
+           "children": [
+            {
+             "type": "field",
+             "line": 6299,
+             "ctype": "uint64",
+             "expr": "KnownTitles[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[8]",
+       "line": 6303,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < CharacterDataElements.size(); ++i",
+         "line": 6305,
+         "children": [
+          {
+           "type": "if",
+           "cond": "CharacterDataElements.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6307,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6309,
+             "name": "CharacterDataElements",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[9]",
+       "line": 6313,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < AccountDataElements.size(); ++i",
+         "line": 6315,
+         "children": [
+          {
+           "type": "if",
+           "cond": "AccountDataElements.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6317,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6319,
+             "name": "AccountDataElements",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[10]",
+       "line": 6323,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < PvpInfo.size(); ++i",
+         "line": 6325,
+         "children": [
+          {
+           "type": "if",
+           "cond": "PvpInfo.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6327,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6329,
+             "name": "PvpInfo",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[11]",
+       "line": 6333,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < DailyQuestsCompleted.size(); ++i",
+         "line": 6335,
+         "children": [
+          {
+           "type": "if",
+           "cond": "DailyQuestsCompleted.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6337,
+           "children": [
+            {
+             "type": "field",
+             "line": 6339,
+             "ctype": "int32",
+             "expr": "DailyQuestsCompleted[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[12]",
+       "line": 6343,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < Field_1328.size(); ++i",
+         "line": 6345,
+         "children": [
+          {
+           "type": "if",
+           "cond": "Field_1328.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6347,
+           "children": [
+            {
+             "type": "field",
+             "line": 6349,
+             "ctype": "int32",
+             "expr": "Field_1328[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[13]",
+       "line": 6353,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < AvailableQuestLineXQuestIDs.size(); ++i",
+         "line": 6355,
+         "children": [
+          {
+           "type": "if",
+           "cond": "AvailableQuestLineXQuestIDs.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6357,
+           "children": [
+            {
+             "type": "field",
+             "line": 6359,
+             "ctype": "int32",
+             "expr": "AvailableQuestLineXQuestIDs[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[14]",
+       "line": 6363,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < Heirlooms.size(); ++i",
+         "line": 6365,
+         "children": [
+          {
+           "type": "if",
+           "cond": "Heirlooms.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6367,
+           "children": [
+            {
+             "type": "field",
+             "line": 6369,
+             "ctype": "int32",
+             "expr": "Heirlooms[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[15]",
+       "line": 6373,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < HeirloomFlags.size(); ++i",
+         "line": 6375,
+         "children": [
+          {
+           "type": "if",
+           "cond": "HeirloomFlags.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6377,
+           "children": [
+            {
+             "type": "field",
+             "line": 6379,
+             "ctype": "uint32",
+             "expr": "HeirloomFlags[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[16]",
+       "line": 6383,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < Toys.size(); ++i",
+         "line": 6385,
+         "children": [
+          {
+           "type": "if",
+           "cond": "Toys.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6387,
+           "children": [
+            {
+             "type": "field",
+             "line": 6389,
+             "ctype": "int32",
+             "expr": "Toys[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[17]",
+       "line": 6393,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < ToyFlags.size(); ++i",
+         "line": 6395,
+         "children": [
+          {
+           "type": "if",
+           "cond": "ToyFlags.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6397,
+           "children": [
+            {
+             "type": "field",
+             "line": 6399,
+             "ctype": "uint32",
+             "expr": "ToyFlags[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[18]",
+       "line": 6403,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < Transmog.size(); ++i",
+         "line": 6405,
+         "children": [
+          {
+           "type": "if",
+           "cond": "Transmog.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6407,
+           "children": [
+            {
+             "type": "field",
+             "line": 6409,
+             "ctype": "uint32",
+             "expr": "Transmog[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[19]",
+       "line": 6413,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < ConditionalTransmog.size(); ++i",
+         "line": 6415,
+         "children": [
+          {
+           "type": "if",
+           "cond": "ConditionalTransmog.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6417,
+           "children": [
+            {
+             "type": "field",
+             "line": 6419,
+             "ctype": "int32",
+             "expr": "ConditionalTransmog[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[20]",
+       "line": 6423,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < SelfResSpells.size(); ++i",
+         "line": 6425,
+         "children": [
+          {
+           "type": "if",
+           "cond": "SelfResSpells.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6427,
+           "children": [
+            {
+             "type": "field",
+             "line": 6429,
+             "ctype": "int32",
+             "expr": "SelfResSpells[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[21]",
+       "line": 6433,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < RuneforgePowers.size(); ++i",
+         "line": 6435,
+         "children": [
+          {
+           "type": "if",
+           "cond": "RuneforgePowers.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6437,
+           "children": [
+            {
+             "type": "field",
+             "line": 6439,
+             "ctype": "uint32",
+             "expr": "RuneforgePowers[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[22]",
+       "line": 6443,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < TransmogIllusions.size(); ++i",
+         "line": 6445,
+         "children": [
+          {
+           "type": "if",
+           "cond": "TransmogIllusions.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6447,
+           "children": [
+            {
+             "type": "field",
+             "line": 6449,
+             "ctype": "uint32",
+             "expr": "TransmogIllusions[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[23]",
+       "line": 6453,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < WarbandScenes.size(); ++i",
+         "line": 6455,
+         "children": [
+          {
+           "type": "if",
+           "cond": "WarbandScenes.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6457,
+           "children": [
+            {
+             "type": "field",
+             "line": 6459,
+             "ctype": "uint32",
+             "expr": "WarbandScenes[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[24]",
+       "line": 6463,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < HouseRooms.size(); ++i",
+         "line": 6465,
+         "children": [
+          {
+           "type": "if",
+           "cond": "HouseRooms.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6467,
+           "children": [
+            {
+             "type": "field",
+             "line": 6469,
+             "ctype": "uint32",
+             "expr": "HouseRooms[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[25]",
+       "line": 6473,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < HouseExteriorComponents.size(); ++i",
+         "line": 6475,
+         "children": [
+          {
+           "type": "if",
+           "cond": "HouseExteriorComponents.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6477,
+           "children": [
+            {
+             "type": "field",
+             "line": 6479,
+             "ctype": "uint32",
+             "expr": "HouseExteriorComponents[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[26]",
+       "line": 6483,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < HouseThemes.size(); ++i",
+         "line": 6485,
+         "children": [
+          {
+           "type": "if",
+           "cond": "HouseThemes.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6487,
+           "children": [
+            {
+             "type": "field",
+             "line": 6489,
+             "ctype": "uint32",
+             "expr": "HouseThemes[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[27]",
+       "line": 6493,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < HouseRoomComponentTextures.size(); ++i",
+         "line": 6495,
+         "children": [
+          {
+           "type": "if",
+           "cond": "HouseRoomComponentTextures.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6497,
+           "children": [
+            {
+             "type": "field",
+             "line": 6499,
+             "ctype": "uint32",
+             "expr": "HouseRoomComponentTextures[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[28]",
+       "line": 6503,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < HouseTypes.size(); ++i",
+         "line": 6505,
+         "children": [
+          {
+           "type": "if",
+           "cond": "HouseTypes.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6507,
+           "children": [
+            {
+             "type": "field",
+             "line": 6509,
+             "ctype": "uint32",
+             "expr": "HouseTypes[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[29]",
+       "line": 6513,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < UnlockedTransmogOutfits.size(); ++i",
+         "line": 6515,
+         "children": [
+          {
+           "type": "if",
+           "cond": "UnlockedTransmogOutfits.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6517,
+           "children": [
+            {
+             "type": "field",
+             "line": 6519,
+             "ctype": "int32",
+             "expr": "UnlockedTransmogOutfits[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[30]",
+       "line": 6523,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < CharacterRestrictions.size(); ++i",
+         "line": 6525,
+         "children": [
+          {
+           "type": "if",
+           "cond": "CharacterRestrictions.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6527,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6529,
+             "name": "CharacterRestrictions",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[31]",
+       "line": 6533,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < SpellPctModByLabel.size(); ++i",
+         "line": 6535,
+         "children": [
+          {
+           "type": "if",
+           "cond": "SpellPctModByLabel.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6537,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6539,
+             "name": "SpellPctModByLabel",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[32]",
+     "line": 6544,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[33]",
+       "line": 6546,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < SpellFlatModByLabel.size(); ++i",
+         "line": 6548,
+         "children": [
+          {
+           "type": "if",
+           "cond": "SpellFlatModByLabel.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6550,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6552,
+             "name": "SpellFlatModByLabel",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[34]",
+       "line": 6556,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < SpellPctModPVPByLabel.size(); ++i",
+         "line": 6558,
+         "children": [
+          {
+           "type": "if",
+           "cond": "SpellPctModPVPByLabel.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6560,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6562,
+             "name": "SpellPctModPVPByLabel",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[35]",
+       "line": 6566,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < SpellFlatModPVPByLabel.size(); ++i",
+         "line": 6568,
+         "children": [
+          {
+           "type": "if",
+           "cond": "SpellFlatModPVPByLabel.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6570,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6572,
+             "name": "SpellFlatModPVPByLabel",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[36]",
+       "line": 6576,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < MawPowers.size(); ++i",
+         "line": 6578,
+         "children": [
+          {
+           "type": "if",
+           "cond": "MawPowers.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6580,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6582,
+             "name": "MawPowers",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[37]",
+       "line": 6586,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < MultiFloorExploration.size(); ++i",
+         "line": 6588,
+         "children": [
+          {
+           "type": "if",
+           "cond": "MultiFloorExploration.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6590,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6592,
+             "name": "MultiFloorExploration",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[38]",
+       "line": 6596,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < RecipeProgression.size(); ++i",
+         "line": 6598,
+         "children": [
+          {
+           "type": "if",
+           "cond": "RecipeProgression.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6600,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6602,
+             "name": "RecipeProgression",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[39]",
+       "line": 6606,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < ReplayedQuests.size(); ++i",
+         "line": 6608,
+         "children": [
+          {
+           "type": "if",
+           "cond": "ReplayedQuests.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6610,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6612,
+             "name": "ReplayedQuests",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[40]",
+       "line": 6616,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < TaskQuests.size(); ++i",
+         "line": 6618,
+         "children": [
+          {
+           "type": "if",
+           "cond": "TaskQuests.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6620,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6622,
+             "name": "TaskQuests",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[41]",
+       "line": 6626,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < DisabledSpells.size(); ++i",
+         "line": 6628,
+         "children": [
+          {
+           "type": "if",
+           "cond": "DisabledSpells.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6630,
+           "children": [
+            {
+             "type": "field",
+             "line": 6632,
+             "ctype": "int32",
+             "expr": "DisabledSpells[i]"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[42]",
+       "line": 6636,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < CraftingOrders.size(); ++i",
+         "line": 6638,
+         "children": [
+          {
+           "type": "if",
+           "cond": "CraftingOrders.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6640,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6642,
+             "name": "CraftingOrders",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[43]",
+       "line": 6646,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < PersonalCraftingOrderCounts.size(); ++i",
+         "line": 6648,
+         "children": [
+          {
+           "type": "if",
+           "cond": "PersonalCraftingOrderCounts.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6650,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6652,
+             "name": "PersonalCraftingOrderCounts",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[44]",
+       "line": 6656,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < NpcCraftingOrders.size(); ++i",
+         "line": 6658,
+         "children": [
+          {
+           "type": "if",
+           "cond": "NpcCraftingOrders.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6660,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6662,
+             "name": "NpcCraftingOrders",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[45]",
+       "line": 6666,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < CategoryCooldownMods.size(); ++i",
+         "line": 6668,
+         "children": [
+          {
+           "type": "if",
+           "cond": "CategoryCooldownMods.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6670,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6672,
+             "name": "CategoryCooldownMods",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[46]",
+       "line": 6676,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < WeeklySpellUses.size(); ++i",
+         "line": 6678,
+         "children": [
+          {
+           "type": "if",
+           "cond": "WeeklySpellUses.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6680,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6682,
+             "name": "WeeklySpellUses",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[47]",
+       "line": 6686,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < TrackedCollectableSources.size(); ++i",
+         "line": 6688,
+         "children": [
+          {
+           "type": "if",
+           "cond": "TrackedCollectableSources.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6690,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6692,
+             "name": "TrackedCollectableSources",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "flush",
+     "line": 6697
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[32]",
+     "line": 6698,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[48]",
+       "line": 6705,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6708,
+         "name": "CharacterBankTabSettings",
+         "bits": "4"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6710,
+         "name": "CharacterBankTabSettings",
+         "bits": "4"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[49]",
+       "line": 6712,
+       "children": [
+        {
+         "type": "dynmask",
+         "line": 6715,
+         "name": "AccountBankTabSettings",
+         "bits": "3"
+        },
+        {
+         "type": "dynmask_full",
+         "line": 6717,
+         "name": "AccountBankTabSettings",
+         "bits": "3"
+        }
+       ]
+      },
+      {
+       "type": "flush",
+       "line": 6720
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[48]",
+       "line": 6721,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < CharacterBankTabSettings.size(); ++i",
+         "line": 6723,
+         "children": [
+          {
+           "type": "if",
+           "cond": "CharacterBankTabSettings.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6725,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6727,
+             "name": "CharacterBankTabSettings",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[49]",
+       "line": 6731,
+       "children": [
+        {
+         "type": "for",
+         "cond": "uint32 i = 0; i < AccountBankTabSettings.size(); ++i",
+         "line": 6733,
+         "children": [
+          {
+           "type": "if",
+           "cond": "AccountBankTabSettings.HasChanged(i) || ignoreNestedChangesMask",
+           "line": 6735,
+           "children": [
+            {
+             "type": "dynitem",
+             "line": 6737,
+             "name": "AccountBankTabSettings",
+             "args": "ignoreNestedChangesMask, data, receiver, owner"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[56]",
+       "line": 6741,
+       "children": [
+        {
+         "type": "field",
+         "line": 6743,
+         "ctype": "raw",
+         "expr": "*FarsightObject"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[57]",
+       "line": 6745,
+       "children": [
+        {
+         "type": "field",
+         "line": 6747,
+         "ctype": "raw",
+         "expr": "*SummonedBattlePetGUID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[58]",
+       "line": 6749,
+       "children": [
+        {
+         "type": "field",
+         "line": 6751,
+         "ctype": "uint64",
+         "expr": "Coinage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[59]",
+       "line": 6753,
+       "children": [
+        {
+         "type": "field",
+         "line": 6755,
+         "ctype": "uint64",
+         "expr": "AccountBankCoinage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[60]",
+       "line": 6757,
+       "children": [
+        {
+         "type": "field",
+         "line": 6759,
+         "ctype": "int32",
+         "expr": "XP"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[61]",
+       "line": 6761,
+       "children": [
+        {
+         "type": "field",
+         "line": 6763,
+         "ctype": "int32",
+         "expr": "NextLevelXP"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[62]",
+       "line": 6765,
+       "children": [
+        {
+         "type": "field",
+         "line": 6767,
+         "ctype": "int32",
+         "expr": "TrialXP"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[63]",
+       "line": 6769,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 6771,
+         "name": "Skill",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[64]",
+       "line": 6773,
+       "children": [
+        {
+         "type": "field",
+         "line": 6775,
+         "ctype": "int32",
+         "expr": "CharacterPoints"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[65]",
+       "line": 6777,
+       "children": [
+        {
+         "type": "field",
+         "line": 6779,
+         "ctype": "int32",
+         "expr": "MaxTalentTiers"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[66]",
+       "line": 6781,
+       "children": [
+        {
+         "type": "field",
+         "line": 6783,
+         "ctype": "uint32",
+         "expr": "TrackCreatureMask"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[67]",
+       "line": 6785,
+       "children": [
+        {
+         "type": "field",
+         "line": 6787,
+         "ctype": "float",
+         "expr": "MainhandExpertise"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[68]",
+       "line": 6789,
+       "children": [
+        {
+         "type": "field",
+         "line": 6791,
+         "ctype": "float",
+         "expr": "OffhandExpertise"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[69]",
+       "line": 6793,
+       "children": [
+        {
+         "type": "field",
+         "line": 6795,
+         "ctype": "float",
+         "expr": "RangedExpertise"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[70]",
+     "line": 6798,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[71]",
+       "line": 6800,
+       "children": [
+        {
+         "type": "field",
+         "line": 6802,
+         "ctype": "float",
+         "expr": "CombatRatingExpertise"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[72]",
+       "line": 6804,
+       "children": [
+        {
+         "type": "field",
+         "line": 6806,
+         "ctype": "float",
+         "expr": "BlockPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[73]",
+       "line": 6808,
+       "children": [
+        {
+         "type": "field",
+         "line": 6810,
+         "ctype": "float",
+         "expr": "DodgePercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[74]",
+       "line": 6812,
+       "children": [
+        {
+         "type": "field",
+         "line": 6814,
+         "ctype": "float",
+         "expr": "DodgePercentageFromAttribute"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[75]",
+       "line": 6816,
+       "children": [
+        {
+         "type": "field",
+         "line": 6818,
+         "ctype": "float",
+         "expr": "ParryPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[76]",
+       "line": 6820,
+       "children": [
+        {
+         "type": "field",
+         "line": 6822,
+         "ctype": "float",
+         "expr": "ParryPercentageFromAttribute"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[77]",
+       "line": 6824,
+       "children": [
+        {
+         "type": "field",
+         "line": 6826,
+         "ctype": "float",
+         "expr": "CritPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[78]",
+       "line": 6828,
+       "children": [
+        {
+         "type": "field",
+         "line": 6830,
+         "ctype": "float",
+         "expr": "RangedCritPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[79]",
+       "line": 6832,
+       "children": [
+        {
+         "type": "field",
+         "line": 6834,
+         "ctype": "float",
+         "expr": "OffhandCritPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[80]",
+       "line": 6836,
+       "children": [
+        {
+         "type": "field",
+         "line": 6838,
+         "ctype": "float",
+         "expr": "SpellCritPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[81]",
+       "line": 6840,
+       "children": [
+        {
+         "type": "field",
+         "line": 6842,
+         "ctype": "int32",
+         "expr": "ShieldBlock"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[82]",
+       "line": 6844,
+       "children": [
+        {
+         "type": "field",
+         "line": 6846,
+         "ctype": "float",
+         "expr": "ShieldBlockCritPercentage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[83]",
+       "line": 6848,
+       "children": [
+        {
+         "type": "field",
+         "line": 6850,
+         "ctype": "float",
+         "expr": "Mastery"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[84]",
+       "line": 6852,
+       "children": [
+        {
+         "type": "field",
+         "line": 6854,
+         "ctype": "float",
+         "expr": "Speed"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[85]",
+       "line": 6856,
+       "children": [
+        {
+         "type": "field",
+         "line": 6858,
+         "ctype": "float",
+         "expr": "Avoidance"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[86]",
+       "line": 6860,
+       "children": [
+        {
+         "type": "field",
+         "line": 6862,
+         "ctype": "float",
+         "expr": "Sturdiness"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[87]",
+       "line": 6864,
+       "children": [
+        {
+         "type": "field",
+         "line": 6866,
+         "ctype": "int32",
+         "expr": "Versatility"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[88]",
+       "line": 6868,
+       "children": [
+        {
+         "type": "field",
+         "line": 6870,
+         "ctype": "float",
+         "expr": "VersatilityBonus"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[89]",
+       "line": 6872,
+       "children": [
+        {
+         "type": "field",
+         "line": 6874,
+         "ctype": "float",
+         "expr": "PvpPowerDamage"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[90]",
+       "line": 6876,
+       "children": [
+        {
+         "type": "field",
+         "line": 6878,
+         "ctype": "float",
+         "expr": "PvpPowerHealing"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[91]",
+       "line": 6880,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 6882,
+         "name": "BitVectors",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[92]",
+       "line": 6884,
+       "children": [
+        {
+         "type": "field",
+         "line": 6886,
+         "ctype": "int32",
+         "expr": "ModHealingDonePos"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[93]",
+       "line": 6888,
+       "children": [
+        {
+         "type": "field",
+         "line": 6890,
+         "ctype": "float",
+         "expr": "ModHealingPercent"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[94]",
+       "line": 6892,
+       "children": [
+        {
+         "type": "field",
+         "line": 6894,
+         "ctype": "float",
+         "expr": "ModPeriodicHealingDonePercent"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[95]",
+       "line": 6896,
+       "children": [
+        {
+         "type": "field",
+         "line": 6898,
+         "ctype": "float",
+         "expr": "ModSpellPowerPercent"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[96]",
+       "line": 6900,
+       "children": [
+        {
+         "type": "field",
+         "line": 6902,
+         "ctype": "float",
+         "expr": "ModResiliencePercent"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[97]",
+       "line": 6904,
+       "children": [
+        {
+         "type": "field",
+         "line": 6906,
+         "ctype": "float",
+         "expr": "OverrideSpellPowerByAPPercent"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[98]",
+       "line": 6908,
+       "children": [
+        {
+         "type": "field",
+         "line": 6910,
+         "ctype": "float",
+         "expr": "OverrideAPBySpellPowerPercent"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[99]",
+       "line": 6912,
+       "children": [
+        {
+         "type": "field",
+         "line": 6914,
+         "ctype": "int32",
+         "expr": "ModTargetResistance"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[100]",
+       "line": 6916,
+       "children": [
+        {
+         "type": "field",
+         "line": 6918,
+         "ctype": "int32",
+         "expr": "ModTargetPhysicalResistance"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[101]",
+       "line": 6920,
+       "children": [
+        {
+         "type": "field",
+         "line": 6922,
+         "ctype": "uint32",
+         "expr": "LocalFlags"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[102]",
+     "line": 6925,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[103]",
+       "line": 6927,
+       "children": [
+        {
+         "type": "field",
+         "line": 6929,
+         "ctype": "uint8",
+         "expr": "GrantableLevels"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[104]",
+       "line": 6931,
+       "children": [
+        {
+         "type": "field",
+         "line": 6933,
+         "ctype": "uint8",
+         "expr": "MultiActionBars"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[105]",
+       "line": 6935,
+       "children": [
+        {
+         "type": "field",
+         "line": 6937,
+         "ctype": "uint8",
+         "expr": "LifetimeMaxRank"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[106]",
+       "line": 6939,
+       "children": [
+        {
+         "type": "field",
+         "line": 6941,
+         "ctype": "uint8",
+         "expr": "NumRespecs"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[107]",
+       "line": 6943,
+       "children": [
+        {
+         "type": "field",
+         "line": 6945,
+         "ctype": "uint32",
+         "expr": "PvpMedals"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[108]",
+       "line": 6947,
+       "children": [
+        {
+         "type": "field",
+         "line": 6949,
+         "ctype": "uint16",
+         "expr": "TodayHonorableKills"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[109]",
+       "line": 6951,
+       "children": [
+        {
+         "type": "field",
+         "line": 6953,
+         "ctype": "uint16",
+         "expr": "YesterdayHonorableKills"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[110]",
+       "line": 6955,
+       "children": [
+        {
+         "type": "field",
+         "line": 6957,
+         "ctype": "uint32",
+         "expr": "LifetimeHonorableKills"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[111]",
+       "line": 6959,
+       "children": [
+        {
+         "type": "field",
+         "line": 6961,
+         "ctype": "int32",
+         "expr": "WatchedFactionIndex"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[112]",
+       "line": 6963,
+       "children": [
+        {
+         "type": "field",
+         "line": 6965,
+         "ctype": "int32",
+         "expr": "MaxLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[113]",
+       "line": 6967,
+       "children": [
+        {
+         "type": "field",
+         "line": 6969,
+         "ctype": "int32",
+         "expr": "ScalingPlayerLevelDelta"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[114]",
+       "line": 6971,
+       "children": [
+        {
+         "type": "field",
+         "line": 6973,
+         "ctype": "int32",
+         "expr": "MaxCreatureScalingLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[115]",
+       "line": 6975,
+       "children": [
+        {
+         "type": "field",
+         "line": 6977,
+         "ctype": "uint8",
+         "expr": "TransmogCostMinScalingLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[117]",
+       "line": 6981,
+       "children": [
+        {
+         "type": "field",
+         "line": 6983,
+         "ctype": "float",
+         "expr": "UiHitModifier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[118]",
+       "line": 6985,
+       "children": [
+        {
+         "type": "field",
+         "line": 6987,
+         "ctype": "float",
+         "expr": "UiSpellHitModifier"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[119]",
+       "line": 6989,
+       "children": [
+        {
+         "type": "field",
+         "line": 6991,
+         "ctype": "int32",
+         "expr": "HomeRealmTimeOffset"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[120]",
+       "line": 6993,
+       "children": [
+        {
+         "type": "field",
+         "line": 6995,
+         "ctype": "float",
+         "expr": "ModPetHaste"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[121]",
+       "line": 6997,
+       "children": [
+        {
+         "type": "field",
+         "line": 6999,
+         "ctype": "int8",
+         "expr": "JailersTowerLevelMax"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[122]",
+       "line": 7001,
+       "children": [
+        {
+         "type": "field",
+         "line": 7003,
+         "ctype": "int8",
+         "expr": "JailersTowerLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[123]",
+       "line": 7005,
+       "children": [
+        {
+         "type": "field",
+         "line": 7007,
+         "ctype": "uint8",
+         "expr": "LocalRegenFlags"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[124]",
+       "line": 7009,
+       "children": [
+        {
+         "type": "field",
+         "line": 7011,
+         "ctype": "uint8",
+         "expr": "AuraVision"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[125]",
+       "line": 7013,
+       "children": [
+        {
+         "type": "field",
+         "line": 7015,
+         "ctype": "uint8",
+         "expr": "NumBackpackSlots"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[126]",
+       "line": 7017,
+       "children": [
+        {
+         "type": "field",
+         "line": 7019,
+         "ctype": "int32",
+         "expr": "OverrideSpellsID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[127]",
+       "line": 7021,
+       "children": [
+        {
+         "type": "field",
+         "line": 7023,
+         "ctype": "uint16",
+         "expr": "LootSpecID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[128]",
+       "line": 7025,
+       "children": [
+        {
+         "type": "field",
+         "line": 7027,
+         "ctype": "uint32",
+         "expr": "OverrideZonePVPType"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[129]",
+       "line": 7029,
+       "children": [
+        {
+         "type": "field",
+         "line": 7031,
+         "ctype": "int32",
+         "expr": "Honor"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[130]",
+       "line": 7033,
+       "children": [
+        {
+         "type": "field",
+         "line": 7035,
+         "ctype": "int32",
+         "expr": "HonorNextLevel"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[131]",
+       "line": 7037,
+       "children": [
+        {
+         "type": "field",
+         "line": 7039,
+         "ctype": "int32",
+         "expr": "PerksProgramCurrency"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[132]",
+       "line": 7041,
+       "children": [
+        {
+         "type": "field",
+         "line": 7043,
+         "ctype": "uint8",
+         "expr": "NumBankSlots"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[133]",
+       "line": 7045,
+       "children": [
+        {
+         "type": "field",
+         "line": 7047,
+         "ctype": "uint8",
+         "expr": "NumCharacterBankTabs"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[134]",
+     "line": 7050,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[135]",
+       "line": 7052,
+       "children": [
+        {
+         "type": "field",
+         "line": 7054,
+         "ctype": "uint8",
+         "expr": "NumAccountBankTabs"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[136]",
+       "line": 7056,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 7058,
+         "name": "ResearchHistory",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[137]",
+       "line": 7060,
+       "children": [
+        {
+         "type": "field",
+         "line": 7062,
+         "ctype": "raw",
+         "expr": "*FrozenPerksVendorItem"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[138]",
+       "line": 7064,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 7066,
+         "name": "DiscordInfo",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[140]",
+       "line": 7068,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 7070,
+         "name": "LevelLinkInfo",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[141]",
+       "line": 7072,
+       "children": [
+        {
+         "type": "field",
+         "line": 7074,
+         "ctype": "int32",
+         "expr": "UiChromieTimeExpansionID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[142]",
+       "line": 7076,
+       "children": [
+        {
+         "type": "field",
+         "line": 7078,
+         "ctype": "int32",
+         "expr": "TimerunningSeasonID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[143]",
+       "line": 7080,
+       "children": [
+        {
+         "type": "field",
+         "line": 7082,
+         "ctype": "int32",
+         "expr": "TransportServerTime"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[144]",
+       "line": 7084,
+       "children": [
+        {
+         "type": "field",
+         "line": 7086,
+         "ctype": "uint32",
+         "expr": "WeeklyRewardsPeriodSinceOrigin"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[145]",
+       "line": 7088,
+       "children": [
+        {
+         "type": "field",
+         "line": 7090,
+         "ctype": "int16",
+         "expr": "DEBUGSoulbindConduitRank"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[146]",
+       "line": 7092,
+       "children": [
+        {
+         "type": "field",
+         "line": 7094,
+         "ctype": "raw",
+         "expr": "*DungeonScore"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[147]",
+       "line": 7096,
+       "children": []
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[148]",
+       "line": 7100,
+       "children": [
+        {
+         "type": "field",
+         "line": 7102,
+         "ctype": "uint32",
+         "expr": "ActiveCombatTraitConfigID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[149]",
+       "line": 7104,
+       "children": [
+        {
+         "type": "field",
+         "line": 7106,
+         "ctype": "int32",
+         "expr": "ItemUpgradeHighOnehandWeaponItemID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[150]",
+       "line": 7108,
+       "children": [
+        {
+         "type": "field",
+         "line": 7110,
+         "ctype": "int32",
+         "expr": "ItemUpgradeHighFingerItemID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[151]",
+       "line": 7112,
+       "children": [
+        {
+         "type": "field",
+         "line": 7114,
+         "ctype": "float",
+         "expr": "ItemUpgradeHighFingerWatermark"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[152]",
+       "line": 7116,
+       "children": [
+        {
+         "type": "field",
+         "line": 7118,
+         "ctype": "int32",
+         "expr": "ItemUpgradeHighTrinketItemID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[153]",
+       "line": 7120,
+       "children": [
+        {
+         "type": "field",
+         "line": 7122,
+         "ctype": "float",
+         "expr": "ItemUpgradeHighTrinketWatermark"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[154]",
+       "line": 7124,
+       "children": [
+        {
+         "type": "field",
+         "line": 7126,
+         "ctype": "uint64",
+         "expr": "LootHistoryInstanceID"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[401]",
+       "line": 7128,
+       "children": [
+        {
+         "type": "field",
+         "line": 7130,
+         "ctype": "uint8",
+         "expr": "NumStableSlots"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[156]",
+       "line": 7132,
+       "children": [
+        {
+         "type": "field",
+         "line": 7134,
+         "ctype": "uint8",
+         "expr": "RequiredMountCapabilityFlags"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[158]",
+       "line": 7136,
+       "children": []
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[159]",
+       "line": 7140,
+       "children": []
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[161]",
+       "line": 7144,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 7146,
+         "name": "ViewedOutfit",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[162]",
+       "line": 7148,
+       "children": [
+        {
+         "type": "optitem",
+         "line": 7150,
+         "name": "TransmogMetadata",
+         "args": "ignoreNestedChangesMask, data, receiver, owner"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "classicGroup134)    // Classic group 134 also holds NumBankSlots/NumCharacterBankTabs (TC group 102",
+     "line": 7153,
+     "children": [
+      {
+       "type": "bit",
+       "line": 7155,
+       "expr": "QuestSession.has_value()"
+      },
+      {
+       "type": "bit",
+       "line": 7156,
+       "expr": "PetStable.has_value()"
+      },
+      {
+       "type": "bit",
+       "line": 7157,
+       "expr": "WalkInData.has_value()"
+      },
+      {
+       "type": "bit",
+       "line": 7158,
+       "expr": "ChallengeModeData.has_value()"
+      }
+     ]
+    },
+    {
+     "type": "bit",
+     "line": 7161,
+     "expr": "false"
+    },
+    {
+     "type": "flush",
+     "line": 7163
+    },
+    {
+     "type": "if",
+     "cond": "classicGroup134",
+     "line": 7164,
+     "children": [
+      {
+       "type": "if",
+       "cond": "changesMask[139]",
+       "line": 7166,
+       "children": [
+        {
+         "type": "if",
+         "cond": "QuestSession.has_value()",
+         "line": 7168,
+         "children": [
+          {
+           "type": "optitem",
+           "line": 7170,
+           "name": "QuestSession",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[155]",
+       "line": 7173,
+       "children": [
+        {
+         "type": "if",
+         "cond": "PetStable.has_value()",
+         "line": 7175,
+         "children": [
+          {
+           "type": "optitem",
+           "line": 7177,
+           "name": "PetStable",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[157]",
+       "line": 7180,
+       "children": [
+        {
+         "type": "if",
+         "cond": "WalkInData.has_value()",
+         "line": 7182,
+         "children": [
+          {
+           "type": "optitem",
+           "line": 7184,
+           "name": "WalkInData",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "type": "if",
+       "cond": "changesMask[160]",
+       "line": 7187,
+       "children": [
+        {
+         "type": "if",
+         "cond": "ChallengeModeData.has_value()",
+         "line": 7189,
+         "children": [
+          {
+           "type": "optitem",
+           "line": 7191,
+           "name": "ChallengeModeData",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[163]",
+     "line": 7195,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 108; ++i",
+       "line": 7197,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[164 + i]",
+         "line": 7199,
+         "children": [
+          {
+           "type": "field",
+           "line": 7201,
+           "ctype": "raw",
+           "expr": "InvSlots[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[272]",
+     "line": 7205,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 2; ++i",
+       "line": 7207,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[273 + i]",
+         "line": 7209,
+         "children": [
+          {
+           "type": "dynitem",
+           "line": 7211,
+           "name": "RestInfo",
+           "args": "ignoreNestedChangesMask, data, receiver, owner"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[275]",
+     "line": 7215,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 7; ++i",
+       "line": 7217,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[276 + i]",
+         "line": 7219,
+         "children": [
+          {
+           "type": "field",
+           "line": 7221,
+           "ctype": "int32",
+           "expr": "ModDamageDonePos[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[283 + i]",
+         "line": 7223,
+         "children": [
+          {
+           "type": "field",
+           "line": 7225,
+           "ctype": "int32",
+           "expr": "ModDamageDoneNeg[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[290 + i]",
+         "line": 7227,
+         "children": [
+          {
+           "type": "field",
+           "line": 7229,
+           "ctype": "float",
+           "expr": "ModDamageDonePercent[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[297 + i]",
+         "line": 7231,
+         "children": [
+          {
+           "type": "field",
+           "line": 7233,
+           "ctype": "float",
+           "expr": "ModHealingDonePercent[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[304]",
+     "line": 7237,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 3; ++i",
+       "line": 7239,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[305 + i]",
+         "line": 7241,
+         "children": [
+          {
+           "type": "field",
+           "line": 7243,
+           "ctype": "float",
+           "expr": "WeaponDmgMultipliers[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[308 + i]",
+         "line": 7245,
+         "children": [
+          {
+           "type": "field",
+           "line": 7247,
+           "ctype": "float",
+           "expr": "WeaponAtkSpeedMultipliers[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[311]",
+     "line": 7251,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 12; ++i",
+       "line": 7253,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[312 + i]",
+         "line": 7255,
+         "children": [
+          {
+           "type": "field",
+           "line": 7257,
+           "ctype": "uint32",
+           "expr": "BuybackPrice[i]"
+          }
+         ]
+        },
+        {
+         "type": "if",
+         "cond": "changesMask[324 + i]",
+         "line": 7259,
+         "children": [
+          {
+           "type": "field",
+           "line": 7261,
+           "ctype": "int64",
+           "expr": "BuybackTimestamp[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[336]",
+     "line": 7265,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 32; ++i",
+       "line": 7267,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[337 + i]",
+         "line": 7269,
+         "children": [
+          {
+           "type": "field",
+           "line": 7271,
+           "ctype": "int32",
+           "expr": "CombatRatings[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[369]",
+     "line": 7275,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 4; ++i",
+       "line": 7277,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[370 + i]",
+         "line": 7279,
+         "children": [
+          {
+           "type": "field",
+           "line": 7281,
+           "ctype": "uint32",
+           "expr": "NoReagentCostMask[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[374]",
+     "line": 7285,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 2; ++i",
+       "line": 7287,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[375 + i]",
+         "line": 7289,
+         "children": [
+          {
+           "type": "field",
+           "line": 7291,
+           "ctype": "int32",
+           "expr": "ProfessionSkillLine[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[377]",
+     "line": 7295,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 5; ++i",
+       "line": 7297,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[378 + i]",
+         "line": 7299,
+         "children": [
+          {
+           "type": "field",
+           "line": 7301,
+           "ctype": "uint32",
+           "expr": "BagSlotFlags[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "if",
+     "cond": "changesMask[383]",
+     "line": 7305,
+     "children": [
+      {
+       "type": "for",
+       "cond": "uint32 i = 0; i < 17; ++i",
+       "line": 7307,
+       "children": [
+        {
+         "type": "if",
+         "cond": "changesMask[384 + i]",
+         "line": 7309,
+         "children": [
+          {
+           "type": "field",
+           "line": 7311,
+           "ctype": "float",
+           "expr": "ItemUpgradeHighWatermark[i]"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

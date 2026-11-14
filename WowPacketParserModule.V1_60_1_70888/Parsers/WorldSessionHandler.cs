@@ -54,9 +54,10 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.SMSG_TUTORIAL_FLAGS)]
         public static void HandleTutorialFlags(Packet packet)
         {
-            var count = packet.ReadInt32("TutorialCount");
-
-            for (var i = 0; i < count; i++)
+            // Forever 1.60.1 nie wysyla naglowka z liczba flag - pakiet to od razu
+            // 32 bajty flag (8 x u32), po jednym bicie na poradnik. Zmierzone na
+            // obu sniffach: 0x47026A, Length 32, np. b3 91 f6 7b e7 0d a4 06 ...
+            for (var i = 0; i < 8; i++)
                 packet.ReadUInt32("TutorialFlag", i);
         }
 

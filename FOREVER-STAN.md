@@ -7,27 +7,42 @@ bloku wartości obiektów.
 
 | Sniff | Pkty | OK | Błędy | Pominięte | Bez struktury |
 |---|---|---|---|---|---|
-| dump_1.60.1.70938_2026-11-13_14-02-23.pkt | 30 769 | **29 680 (96,46%)** | 315 (1,02%) | 289 | 485 |
-| dump_1.60.1.70938_2026-11-13_13-18-57.pkt | 29 428 | **28 442 (96,65%)** | 212 (0,72%) | 201 | 573 |
-| forevercore-70888.pkt | 26 875 | **26 019 (96,82%)** | 250 (0,93%) | 193 | 413 |
-| dump_1.60.1.70938_2026-11-13_14-35-29.pkt | 4 807 | **4 459 (92,76%)** | 86 (1,79%) | 118 | 144 |
-| dump_1.60.1.70862_2026-11-07_12-13-01.pkt | 312 210 | **290 759 (93,13%)** | 10 400 (3,33%) | 6 853 | 4 198 |
+| dump_1.60.1.70938_2026-11-13_13-18-57.pkt | 29 428 | **28 454 (96,690%)** | 200 (0,680%) | 201 | 573 |
+| dump_1.60.1.70862_2026-11-07_12-13-01.pkt | 312 210 | **298 068 (95,470%)** | 3 091 (0,990%) | 6 853 | 4 198 |
 
-Punkt wyjścia przed pracą: 88,05% na sniffie 70862 (25 326 błędów `SMSG_UPDATE_OBJECT`)
-i 88,1% na 70938.
+Punkt wyjścia przed tą sesją: **96,598% / 227 błędów** (70938) i **95,074% /
+4 330 błędów** (70862). Po sesji: **−27 błędów** na 70938 i **−1 239 błędów**
+na 70862.
+
+> Uwaga: starsze wiersze w tej tabeli (96,46%, 93,13%) pochodziły z innego
+> etapu i innych plików wejściowych — aktualne są tylko dwa powyższe.
 
 ## Co zostało ustalone i naprawione
 
-### 1. Format bloku wartości: płaski, bez masek zmian
+### 1. Format bloku wartości: maski zmian 12.x z remapem bitów
 
-Forever **nie używa** masek zmian z 12.x. Blok wartości to te same pola co przy tworzeniu
-obiektu, w tej samej kolejności, bez bitowego prefiksu:
+**Aktualne (poprawione):** blok wartości Forever **używa masek zmian** — dokładnie tak
+jak 12.x, ale w numeracji bitów klienta klasycznego. Serwer (`tc-forever`,
+`src/server/game/Entities/Object/Updates/UpdateFields.cpp`) pisze przez
+`WriteClassicChangesMaskHeader<N>`: liczba bloków zależy od typu danych
+(`UnitData` 8, `PlayerData` 11, `ActivePlayerData` 14), potem tylko niezerowe bloki
+32-bitowe, potem bity pól.
 
-```
-[u32 licznik pol][u32 ogon][wartosci plasko]
-```
+Numery bitów różnią się od retailu, dlatego powstał `ForeverClassicBitRemap`
+(`UnitData(bit)`, `PlayerData(bit)`, `ActivePlayerData(bit)`), który tłumaczy
+numerację retail → Classic na podstawie `ClassicUnitDataBit70009`,
+`ClassicPlayerDataBit`, `ClassicActivePlayerDataBit` z emulatora.
 
-Dla jednostki: `UnitFieldCount: 22`, `UnitFieldCountTail: 193`.
+Dla `UnitData` jest jeszcze jeden bit po nagłówku maski (`IsBuild70291OrLater()`),
+którzy klient 70862/70938 zawsze wysyła jako `false`.
+
+Czytniki: `ForeverUnitDataReader.cs` (UnitData), `ForeverGameObjectDataReader.cs`
+(GameObjectData), `ReadUpdatePlayerData` / `ReadUpdateActivePlayerData`
+(już wcześniej w stylu masek).
+
+**Wcześniejszy (błędny) opis** — zostawiony dla historii: „blok wartości to te same
+pola co przy tworzeniu obiektu, bez masek zmian”. To nieprawda; dawało 88% i
+`Updatefields not fully read` na 45 tys. pakietów.
 
 ### 2. Ogon bloku (4 bajty) — rozstrzygnięte twardo, danymi z TDB
 
@@ -217,3 +232,71 @@ oraz `BaseEntity.cpp` / `Object.cpp` — tam jest dokladny zapis bloku wartosci.
   dla 12.x i daja smieci dla Forever — trzeba je przepisac na `ClassicUnitDataBit` /
   `ClassicActivePlayerDataBit` z `UpdateFields.cpp`.
 - Wynik sniffu 70938 bez zmian: 29 852 / 30 769 (97,02%) OK, 143 bledy.
+
+---
+
+## Sesja 2026-11-14: SMSG_CHAT (0x4C0001) i SMSG_TUTORIAL_FLAGS — zmierzone, poprawione
+
+### SMSG_CHAT — poprzedni opis w tym dokumencie był BŁĘDNY
+
+Wcześniejszy opis („13 pakietów, 40-bitowy blok bitowy, 5×GUID128, adresy wirtualne”)
+nie przechodził weryfikacji na pełnym sniffie. Zmierzone od zera na **118 pakietach**
+sniffu `dump_1.60.1.70862_2026-11-07_12-13-01.pkt`:
+
+```
+[0]   u8   typ wiadomości (ChatMessageTypeNew)
+[1]   u8   język
+[2]   u16  zero
+[4]   4 × GUID128  (nadawca, gildia, konto, cel) — packed: maska low, maska high, niezerowe bajty
+[36]  u32  ChatFlags
+[40]  u8   chanBitsHi
+[41]  u8   (chanBitsLo << 3) | flagi
+[42]  u8   długość tekstu × 4   (dolne 8 bitów — przy > 63 znakach następuje przepełnienie)
+[43]  u8   0x40
+[44]  kanał + treść, UTF-8, sklejone bez separatora
+[-]   ogon 8–10 B, kończy się na 04 8C 6C 68
+```
+
+Liczniki:
+
+- **kanał**: `chanBits = pre[4] * 32 + (pre[5] >> 3)`, długość kanału w **znakach** = `chanBits / 8`.
+  Walidacja 83/83 pakietów kanałowych (`General - The Barrens` = 21 znaków,
+  `Trade - English 41` = 18, `General - Orgrimmar` = 19).
+- **treść**: liczba **znaków** = `pre[6] / 4`. Bajt jest 8-bitowy, więc przy wiadomościach
+  dłuższych niż 63 znaki trzeba dobrać `+ 64·k`; wybieramy to `k`, po którym zostaje
+  prawidłowy ogon. Działa w 78/83; pozostałe 5 (najdłuższe, z UTF-8) bierzemy do początku
+  ogona rozpoznanego od końca pakietu.
+- **wpisy NPC i addonów** (`chanBits = 0`, np. `Barak Kodobane%s attempts to run away…`,
+  `ATLASFRV_F_SLC#v:1030001`, `RXPGComms^1^T^S…`) nie mają nazwy kanału — treść idzie
+  do końca pakietu (100% zgodności).
+
+Efekt: `SMSG_CHAT` 118/118 bez błędu (było 13/13 błędów).
+
+### SMSG_TUTORIAL_FLAGS — brak nagłówka z liczbą flag
+
+Pakiet (0x47026A, Length **32**) to od razu 8 × `u32` flag, bez `count`.
+Wcześniejszy parser czytał pierwsze `u32` jako licznik (`0x7BF691B3` = 2 079 756 723)
+i wywalał się na `EndOfStream` (2 wystąpienia w sniffie 70862).
+Po poprawce 8 flag czytanych bez błędu.
+
+### Wyniki
+
+| Sniff | Przed sesją | Po sesji |
+|---|---|---|
+| 70938 (13-18-57) | 28 119 (95,552%), 535 błędów | **28 427 (96,598%), 227 błędów** |
+| 70862 (312 210 pkt) | 296 802 (95,065%), 4 357 błędów | **296 829 (95,074%), 4 330 błędów** |
+
+Build: 0 błędów, 0 ostrzeżeń. Zmienione pliki:
+`WowPacketParserModule.V1_60_1_70888/Parsers/ChatHandler.cs`,
+`WowPacketParserModule.V1_60_1_70888/Parsers/WorldSessionHandler.cs`.
+
+### Co nadal zostaje
+
+- 5 najdłuższych wiadomości `SMSG_CHAT` (UTF-8, > 250 znaków) — licznik długości
+  ma przepełnienie, którego jednostki nie udało się ustalić; treść odzyskana
+  heurystycznie (do ogona), więc jest poprawna, ale nie wynika wprost z licznika.
+- `SMSG_UPDATE_OBJECT`: kolejność pól pod maską w bloku wartości (zablokowane — patrz
+  `RAPORT-FOREVER-UPDATE-OBJECT.md`).
+- `HandleNameQueryResponse` (23×), `ReadPlayerGuidLookupData` (25×),
+  `ReadRaceUnlockData` / `ReadClassUnlockData` / `HandleEnumCharactersResult` (po 2×)
+  — to teraz główne źródła pozostałych błędów w sniffie 70938.

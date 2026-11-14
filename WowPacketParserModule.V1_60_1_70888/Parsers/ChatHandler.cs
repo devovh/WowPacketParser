@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using WowPacketParser.Enums;
 using WowPacketParser.Misc;
 using WowPacketParser.Parsing;
@@ -9,33 +10,91 @@ using WowPacketParser.Store.Objects;
 namespace WowPacketParserModule.V1_60_1_70888.Parsers
 {
     /// <summary>
-    /// SMSG_CHAT dla Forever 1.60.1 (buildy 70338-70938).
+    /// SMSG_CHAT (0x4C0001) dla Forever 1.60.1 (buildy 70338-70938).
     ///
-    /// Uklad ustalony bajt po bajcie na 13 pakietach ze sniffu 70938 - dlugosci zgadzaja
-    /// sie dokladnie w kazdym z nich:
-    ///   u8   typ kanalu (ChatMessageTypeNew), u8 jezyka, u16 zero
-    ///   GUID128 x4: nadawca, gildia, konto, cel  (8 B nisko + 8 B wysoko, jak w update-object)
-    ///   u32  adres wirtualny celu, u32 adres wirtualny nadawcy, u32 AchievementID
-    ///   f32  DisplayTime
-    ///   u16  ChatFlags, bit HideChatLog, bit FakeSenderName
-    ///   strumien bitowy: dlugosc nadawcy (8 bit), odbiorcy (8), prefiksu addonu (8),
-    ///                    kanalu (8), tekstu (16) - wszystkie w bajtach
-    ///   teksty UTF-8: nadawca, odbiorca, prefiks addonu, kanal, tekst
-    ///   u8   ChatTag
-    ///   [u8][u8][u32][u32][u32] ogon - staly w kazdym pakiecie (0x01 0xEF 0x01 0x58 0x94 0x19 0x04 0x8C 0x6C 0x68)
+    /// Uklad ustalony bajt po bajcie na 118 pakietach ze sniffu 1.60.1.70862.
+    /// 113 z 118 rozklada sie dokladnie; 5 najdluzszych wiadomosci z UTF-8
+    /// rozpoznajemy po ogonie, nie po liczniku (opisane nizej).
+    ///
+    ///   [0]   u8   typ wiadomosci (ChatMessageTypeNew)
+    ///   [1]   u8   jezyk
+    ///   [2]   u16  zero
+    ///   [4]   4 x GUID128 (kolejno: nadawca, gildia, konto, cel)
+    ///   [36]  u32  ChatFlags
+    ///   [40]  u8   chanBitsHi
+    ///   [41]  u8   (chanBitsLo &lt;&lt; 3) | flagi
+    ///   [42]  u8   dlugosc tekstu * 4 (dolne 8 bitow - przy dlugosciach &gt; 63 znakow nastepuje przepelnienie)
+    ///   [43]  u8   0x40
+    ///   [44]  kanal i tresc w UTF-8, sklejone bez separatora
+    ///   [-]   ogon 8-10 B (dla wiadomosci kanalowych; konczy sie na 04 8C 6C 68)
+    ///
+    /// Liczniki:
+    ///   kanal: chanBits = pre[4] * 32 + (pre[5] &gt;&gt; 3), dlugosc kanalu w ZNAKACH = chanBits / 8
+    ///   tresc: liczba znakow = pre[6] / 4  (+ 64 * k przy przepelnieniu bajtu)
+    ///   Dla wpisow NPC/addonow (chanBits = 0) tresc idzie do konca pakietu.
     ///
     /// Numer 0x4C0001 jest w numeracji WIRE, wiec parser musi mieszkac w tym module.
     /// </summary>
     public static class ChatHandler
     {
-        // Forever (tc-forever, ObjectGuid.cpp) wysyla GUID-y 128-bitowe tak samo jak
-        // ReadPackedGuid128: bajt maski niskich 8 bajtow, bajt maski wysokich, potem
-        // tylko niezerowe bajty w kolejnosci od najmlodszego.
+        private static readonly byte[] TailMark = { 0x04, 0x8C, 0x6C, 0x68 };
+
+        // Forever (tc-forever, ObjectGuid.cpp) wysyla GUID-y tak jak ReadPackedGuid128:
+        // bajt maski niskich 8 bajtow, bajt maski wysokich, potem tylko niezerowe bajty
+        // w kolejnosci od najmlodszego.
         private static WowGuid128 ReadGuid128(Packet packet, string name, params object[] indexes)
         {
             var lowMask = packet.ReadByte(name + "LowMask", indexes);
             var highMask = packet.ReadByte(name + "HighMask", indexes);
             return new WowGuid128(packet.ReadPackedUInt64(lowMask), packet.ReadPackedUInt64(highMask));
+        }
+
+        /// <summary>
+        /// Przesuwa pozycje o <paramref name="chars"/> znakow UTF-8, zwraca nowa pozycje.
+        /// </summary>
+        private static int SkipChars(byte[] data, int pos, int chars)
+        {
+            int count = 0;
+            while (count < chars && pos < data.Length)
+            {
+                byte b = data[pos];
+                int len;
+                if (b < 0x80)
+                    len = 1;
+                else if ((b & 0xE0) == 0xC0)
+                    len = 2;
+                else if ((b & 0xF0) == 0xE0)
+                    len = 3;
+                else if ((b & 0xF8) == 0xF0)
+                    len = 4;
+                else
+                    len = 1;
+
+                if (pos + len > data.Length)
+                    len = data.Length - pos;
+
+                pos += len;
+                count++;
+            }
+
+            return pos;
+        }
+
+        /// <summary>
+        /// Czy od <paramref name="pos"/> do konca pakietu zostaje ogon: 8-10 bajtow,
+        /// konczacy sie na 04 8C 6C 68.
+        /// </summary>
+        private static bool IsTail(byte[] data, int pos)
+        {
+            int remaining = data.Length - pos;
+            if (remaining < 8 || remaining > 10)
+                return false;
+
+            for (int i = 0; i < TailMark.Length; i++)
+                if (data[data.Length - TailMark.Length + i] != TailMark[i])
+                    return false;
+
+            return true;
         }
 
         [Parser(Opcode.SMSG_CHAT)]
@@ -44,9 +103,6 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             var chatPacket = packet.Holder.Chat = new PacketChat();
             var text = new CreatureText();
 
-            // Uklad z serwera Forever (tc-forever, ChatPackets.cpp, Chat::Write):
-            //   u8 SlashCmd, u32 Language, 4x GUID128, u32 TargetVA, u32 SenderVA,
-            //   i32 AchievementID, u32 ChatFlags, f32 DisplayTime, i32 SpellID
             text.Type = (ChatMessageType)packet.ReadByteE<ChatMessageTypeNew>("SlashCmd");
             text.Language = (Language)packet.ReadUInt32E<Language>("Language");
 
@@ -54,63 +110,64 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             ReadGuid128(packet, "SenderGuildGUID");
             ReadGuid128(packet, "WowAccountGUID");
             text.ReceiverGUID = ReadGuid128(packet, "TargetGUID");
-            ReadGuid128(packet, "ChannelGUID");
 
-            packet.ReadUInt32("TargetVirtualAddress");
-            packet.ReadUInt32("SenderVirtualAddress");
-            var achievementId = packet.ReadUInt32("AchievementID");
             var flags = packet.ReadUInt32("ChatFlags");
-            packet.ReadSingle("DisplayTime");
-            var spellId = packet.ReadInt32("SpellID");
-            // Strumien bitowy Forever: 5 bajtow (40 bitow) po polach stalych.
-            // Uklad ustalony na 13 pakietach snu 70938:
-            //   [0:11]  SenderNameLength
-            //   [11:18] ChannelNameLength   (7 bitow)
-            //   [18:30] TextLength          (12 bitow)
-            //   [30:34] flagi               (4 bity)
-            //   [34:40] TargetNameLength    (6 bitow)
-            // W tym buildzie nie ma pol target/prefix z Chat::Write z TrinityCore.
-            packet.ResetBitReader();
-            var senderNameLen = (int)packet.ReadBits("SenderNameLength", 11);
-            var channelLen = (int)packet.ReadBits("ChannelNameLength", 7);
-            var textLen = (int)packet.ReadBits("TextLength", 12);
-            packet.ReadBits("ChatFlagsBits", 4);
-            var targetNameLen = (int)packet.ReadBits("TargetNameLength", 6);
-            packet.ResetBitReader();
+            var chanBitsHi = packet.ReadByte("ChannelBitsHigh");
+            var chanBitsLo = packet.ReadByte("ChannelBitsLowAndFlags");
+            var textLenTimes4 = packet.ReadByte("TextLengthTimes4");
+            packet.ReadByte("TextLengthHigh");
 
-            // Dlugosc tresci z bitow jest o 2-3 znaki za krotka dla kanalow General,
-            // wiec tresc liczymy z reszty pakietu: kanal + tresc wypelniaja wszystko
-            // miedzy polami stalymi a ogonem.
-            var rawText = packet.ReadBytes((int)(packet.DeclaredLength - packet.Position));
+            // Liczniki z naglowka (patrz opis klasy).
+            var channelChars = ((chanBitsHi * 32) + (chanBitsLo >> 3)) / 8;
+            var textCharsBase = textLenTimes4 / 4;
 
-            // Ogon na koncu pakietu: 0x01 <tag> <u16> <u32> <u32> 04 8C 6C 68.
-            // Ma 8 bajtow dla Trade i 7 dla General - rozpoznajemy go po 0x01
-            // na poczatku i odejmujemy od konca pakietu.
-            var textEnd = rawText.Length - 8;
-            if (textEnd > 0 && !(rawText[textEnd] == 0x01))
-                textEnd = rawText.Length - 7;
+            var data = packet.ReadBytes((int)(packet.DeclaredLength - packet.Position));
 
-            var textStart = senderNameLen + targetNameLen;
-            if (textStart > textEnd)
-                textStart = 0;
+            string channelName = string.Empty;
+            string message;
 
-            if (textStart > 0)
-                packet.AddValue("SenderNameRaw", System.Text.Encoding.UTF8.GetString(rawText, 0, textStart));
+            if (channelChars > 0 && channelChars < data.Length)
+            {
+                int channelEnd = SkipChars(data, 0, channelChars);
+                channelName = Encoding.UTF8.GetString(data, 0, channelEnd);
 
-            var channelName = System.Text.Encoding.UTF8.GetString(rawText, textStart, Math.Min(channelLen, textEnd - textStart));
-            packet.AddValue("Channel Name", channelName);
+                // Dlugosc tresci jest podana w bajcie jako (znaki * 4) &amp; 0xFF,
+                // wiec przy wiadomosciach dluzszych niz 63 znaki trzeba dobrac wielokrotnosc 64.
+                // Wybieramy ta, po ktorej zostaje prawidlowy ogon.
+                int messageEnd = -1;
+                for (int k = 0; k <= 8; k++)
+                {
+                    int chars = textCharsBase + (64 * k);
+                    int candidate = SkipChars(data, channelEnd, chars);
+                    if (IsTail(data, candidate))
+                    {
+                        messageEnd = candidate;
+                        break;
+                    }
+                }
 
-            var msgStart = textStart + channelLen;
-            var msgLen = textEnd - msgStart;
-            if (msgLen < 0)
-                msgLen = 0;
-            text.Text = System.Text.Encoding.UTF8.GetString(rawText, msgStart, msgLen);
-            packet.AddValue("Text", text.Text);
-            packet.AddValue("TextLengthBits", textLen);
+                // Gdy zaden wariant nie trafia w ogon (najdluzsze wiadomosci z UTF-8),
+                // tresc bierzemy do poczatku ogona rozpoznanego od konca pakietu.
+                if (messageEnd < 0)
+                {
+                    messageEnd = data.Length - 8;
+                    if (messageEnd < channelEnd)
+                        messageEnd = channelEnd;
+                }
+                message = Encoding.UTF8.GetString(data, channelEnd, messageEnd - channelEnd);
+                packet.AddValue("Channel Name", channelName);
+                packet.AddValue("Tail", BitConverter.ToString(data, messageEnd));
+            }
+            else
+            {
+                // Wpisy NPC i addonow: brak nazwy kanalu, tresc do konca pakietu.
+                message = Encoding.UTF8.GetString(data);
+            }
 
-            packet.AddValue("Tail", System.BitConverter.ToString(rawText, textEnd));
+            text.Text = message;
+            packet.AddValue("Text", message);
 
-            if (text.SenderGUID.GetObjectType() == ObjectType.Unit && text.SenderGUID.GetEntry() != 0)
+            if (text.SenderGUID != null && text.SenderGUID.GetObjectType() == ObjectType.Unit && text.SenderGUID.GetEntry() != 0)
                 Storage.CreatureTexts.Add(text.SenderGUID.GetEntry(), text, packet.TimeSpan);
             else if (text.ReceiverGUID != null && text.ReceiverGUID.GetObjectType() == ObjectType.Unit && text.ReceiverGUID.GetEntry() != 0)
                 Storage.CreatureTexts.Add(text.ReceiverGUID.GetEntry(), text, packet.TimeSpan);
@@ -122,6 +179,5 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             chatPacket.Type = (int)text.Type;
             chatPacket.Flags = flags;
         }
-
     }
 }

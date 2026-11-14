@@ -102,59 +102,36 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                             var fragments = obj?.EntityFragments ?? [new WowCSEntityFragment(WowCSEntityFragments1127.CGObject)];
 
                             fieldsData.ReadBool("IsOwned", i);
-                            if (fieldsData.ReadBool("HasFragmentUpdates", i))
+                            var hasFragmentUpdates = fieldsData.ReadBool("HasFragmentUpdates", i);
+                            if (hasFragmentUpdates)
                             {
+                                // Forever 1.60.1: zamiast listy identyfikatorow fragmentow idzie od razu
+                                // u32 maska typow (1<<0 Object, 1<<5 Unit, 1<<6 Player, 1<<7 ActivePlayer,
+                                // 1<<8 GameObject). Obecnosc bitu = dane tego typu sa w bloku.
+                                // Patrz Player::BuildValuesUpdate / Creature::BuildValuesUpdate w tc-forever.
+                                // Uwaga: maska jest tylko pod flaga HasFragmentUpdates - poza nia blok
+                                // wartosci ma 3 bajty (IsOwned, HasFragmentUpdates, ObjectChangesMask).
                                 if (IsForever)
                                 {
-                                    // Forever (70338-70938): inna struktura niz 12.x.
-                                    // [u16 EntityFragmentCount][u8 fragmentID * count]
-                                    // zamiast [u8 ArchetypeSerializationType][id...][0xFF].
-                                    // Pakiet 881 sniffu 70938 (127 B) i 802 (127 078 B):
-                                    // fragmenty = 00 CGObject, 80 ? (znany), 00, 00, 00, 00, 06 ?
-                                    // [u16 liczba][u8 id * liczba]; id sa w numeracji klienta Forever
-                                    // (retail + 1 dla nie-tagow, tagi bez zmian), wiec trafiaja
-                                    // wprost w WowCSEntityFragments1215 (*_Classic). W pakietach
-                                    // gorna polowa licznika jest smieciem, wiec bierzemy dolny bajt.
-                                    var rawCount = fieldsData.ReadUInt16("EntityFragmentCount", i);
-                                    // Licznik jest zawsze 0x0300 | n: gorny bajt to typ serializacji
-                                    // (3), dolna polowa to liczba fragmentow. W pakiecie 881 sa 4:
-                                    // 33 26 CC CD (5. bajt FF to terminator listy, nie id).
-                                    // Id sa w numeracji klienta Forever (retail + 1 dla nie-tagow,
-                                    // tagi bez zmian), wiec trafiaja wprost w
-                                    // WowCSEntityFragments1215 (*_Classic).
-                                    var fragmentCount = (rawCount & 0xFF) + 1;
-                                    fragments = new List<WowCSEntityFragment>();
-                                    for (var fragmentIndex = 0; fragmentIndex < fragmentCount; ++fragmentIndex)
-                                    {
-                                        var rawId = fieldsData.ReadByte("NewEntityFragmentID", i, fragmentIndex);
-                                        if (rawId == (byte)WowCSEntityFragments1215.End)
-                                            break;
-                                        if (!Enum.IsDefined(typeof(WowCSEntityFragments1215), (int)rawId))
-                                        {
-                                            fieldsData.AddValue("UnknownEntityFragmentID", rawId, i, fragmentIndex);
-                                            continue;
-                                        }
-                                        fragments.Add(new WowCSEntityFragment((WowCSEntityFragments1215)rawId));
-                                    }
+                                    fragments = ReadForeverValuesTypeMask(fieldsData, i);
                                     if (obj != null)
                                         obj.EntityFragments = fragments;
+                                    break;
                                 }
-                                else
+
+                                switch (fieldsData.ReadByte("ArchetypeSerializationType", i))
                                 {
-                                    switch (fieldsData.ReadByte("ArchetypeSerializationType", i))
-                                    {
-                                        case 0:
-                                            fragments = ReadEntityFragments(fieldsData, "NewEntityFragmentID", i);
-                                            if (obj != null)
-                                                obj.EntityFragments = fragments;
-                                            break;
-                                        case 1:
-                                            fragments.AddRange(ReadEntityFragments(fieldsData, "NewEntityFragmentID", i));
-                                            foreach (var removedFragment in ReadEntityFragments(fieldsData, "RemovedEntityFragmentID", i))
-                                                fragments.RemoveAll(f => f.UniversalValue == removedFragment.UniversalValue);
-                                            fragments.Sort();
-                                            break;
-                                    }
+                                    case 0:
+                                        fragments = ReadEntityFragments(fieldsData, "NewEntityFragmentID", i);
+                                        if (obj != null)
+                                            obj.EntityFragments = fragments;
+                                        break;
+                                    case 1:
+                                        fragments.AddRange(ReadEntityFragments(fieldsData, "NewEntityFragmentID", i));
+                                        foreach (var removedFragment in ReadEntityFragments(fieldsData, "RemovedEntityFragmentID", i))
+                                            fragments.RemoveAll(f => f.UniversalValue == removedFragment.UniversalValue);
+                                        fragments.Sort();
+                                        break;
                                 }
                             }
 
@@ -305,6 +282,25 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
         /// w tc-forever. Wczesniej ten blok nie byl czytany wcale, wiec kazdy pakiet z
         /// graczem/jednostka konczyl sie na "Updatefields not fully read".
         /// </summary>
+        /// <summary>
+        /// Forever 1.60.1: zamiast listy identyfikatorow fragmentow blok wartosci niesie
+        /// u32 maske typow - bit 1&lt;&lt;TYPEID_* oznacza, ze dane tego typu ida w bloku.
+        /// Kolejnosc czytania (Object, Unit, Player, ActivePlayer, GameObject) jest ta sama
+        /// co kolejnosc zapisu w BaseEntity::BuildValuesUpdateBlockForPlayer w tc-forever.
+        /// </summary>
+        private static List<WowCSEntityFragment> ReadForeverValuesTypeMask(Packet packet, int index)
+        {
+            var typeMask = packet.ReadUInt32("TypeMask", index);
+
+            var fragments = new List<WowCSEntityFragment>();
+            if ((typeMask & (1u << 0)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.CGObject));
+            if ((typeMask & (1u << 5)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_Unit));
+            if ((typeMask & (1u << 6)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_Player));
+            if ((typeMask & (1u << 7)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_ActivePlayer));
+            if ((typeMask & (1u << 8)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_GameObject));
+            return fragments;
+        }
+
         private static void ReadUpdateEntityFragmentDataForever(WoWObject obj, List<WowCSEntityFragment> fragments, UpdateValues updateValues, CoreParsers.UpdateFieldsHandlerBase handler, Packet fieldsData, int index)
         {
             foreach (var existingFragment in fragments)
@@ -331,14 +327,9 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                     case WowCSEntityFragments.Tag_Player:
                     case WowCSEntityFragments.Tag_GameObject:
                     {
-                        // Forever: dane fragmentu to u32 rozmiar, potem u32 maska typow
-                        // (TYPEID_OBJECT/UNIT/PLAYER/ACTIVEPLAYER/GAMEOBJECT) i dopiero pola
-                        // tych typow - patrz Player::BuildValuesUpdate w tc-forever.
-                        // Kolejnosc z emulatora (Player::BuildValuesUpdate): u32 maska typow,
-                        // potem pola tych typow. Bity maski to 1 << TYPEID_* (Object, Unit=5,
-                        // Player=6, ActivePlayer=7, GameObject=8), a nie 1<<0.. jak w 12.x.
+                        // Forever: dane typu to u32 rozmiar (tylko przy pierwszym typie), potem pola
+                        // (ObjectData, UnitData, PlayerData, ActivePlayerData, GameObjectData).
                         var typeMask = fieldsData.ReadUInt32("TypeMask", index);
-                        fieldsData.AddValue("DBGMASK", $"{typeMask:X}", index);
                         const uint TypeMaskObject = 1u << 0;
                         const uint TypeMaskUnit = 1u << 5;
                         const uint TypeMaskPlayer = 1u << 6;
