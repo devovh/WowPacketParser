@@ -1,11 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace WowPacketParser.Misc
 {
     public class DynamicUpdateField<T>
     {
+        // Resource limit for counts read from packets, before allocating storage.
+        private const uint MaxElementCount = 0x10000;
+
         private readonly List<T> _values = new List<T>();
         public BitArray UpdateMask { get; private set; } = new BitArray(0);
 
@@ -19,7 +23,10 @@ namespace WowPacketParser.Misc
 
         public void Resize(uint newSize)
         {
-            int newCount = (int)newSize; // this is stupid but packets have unsigned values in them and this method is intended to be used in packet readers
+            if (newSize > MaxElementCount)
+                throw new InvalidDataException($"Dynamic update field count {newSize} exceeds the supported limit {MaxElementCount}.");
+
+            int newCount = checked((int)newSize);
             int current = _values.Count;
             if (newCount < current)
                 _values.RemoveRange(newCount, current - newCount);
