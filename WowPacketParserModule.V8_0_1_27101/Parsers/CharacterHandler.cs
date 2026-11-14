@@ -107,6 +107,15 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
             packet.ReadBit("IsDeleted", idx);
             var bits15 = (int)packet.ReadBits(6);
 
+            var isForever70938 = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938;
+            var surnameLength = 0;
+            var unknownNameLength = 0;
+            if (isForever70938)
+            {
+                surnameLength = (int)packet.ReadBits(9);
+                unknownNameLength = (int)packet.ReadBits(9);
+            }
+
             var count = new int[5];
             for (var i = 0; i < 5; ++i)
                 count[i] = (int)packet.ReadBits(7);
@@ -133,6 +142,12 @@ namespace WowPacketParserModule.V8_0_1_27101.Parsers
                 packet.ReadInt32("TimerunningSeasonID", idx);
 
             data.Name = packet.ReadWoWString("Name", bits15, idx);
+
+            if (isForever70938)
+            {
+                packet.ReadWoWString("Surname", surnameLength, idx);
+                packet.ReadWoWString("UnknownName", unknownNameLength, idx);
+            }
 
             return data;
         }
