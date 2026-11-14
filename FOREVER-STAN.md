@@ -781,3 +781,59 @@ Sekwencja tej sesji: 116 898 → 116 901 (HEALTH) → 116 902 (VOICE) → 116 90
   przebiegi `0x80 … 13 00`; brak drugiego wariantu do porównania.
 - `SMSG_REQUEST_PVP_REWARDS_RESPONSE` (310 B), `SMSG_RATED_PVP_INFO` (666 B) — duże struktury
   bez odpowiednika w emulatorze w tej wersji.
+
+### Sesja 2026-11-14 (cd. 13) — UPDATE_OBJECT: pierwsze otwarcie bloku CreateObject2
+
+Dotąd `SMSG_UPDATE_OBJECT` był uznany za zablokowany. Ta sesja go otworzyła — nie
+skończyła, ale pierwszy blok da się czytać pole po polu.
+
+**Co zrobiono:** wyciągnięto surowe bajty pakietu Number 801 (127 078 B, 84 obiekty)
+prosto z `.pkt` skryptem node i rozłożono ręcznie.
+
+**Odkryty układ nagłówka bloku CreateObject2 w Forever** (pakiet 801, obiekt 0, gracz):
+
+| offset | pole | wartość |
+|---|---|---|
+| 11 | `UpdateType` u8 | 2 (CreateObject2) |
+| 12–18 | `Guid` packed 128 (2×u8 maska + bajty) | low 0xAC9D00, high 0x086C8C0000000000 → Player/0 R6947 |
+| 19 | `ObjectType` u8 | 7 (ActivePlayer) |
+| 20–23 | blok bitowy movementu (**24 bity**, nie 21) | HasPositionFragment, Stationary, EnablePortals, PlayHoverAnim |
+| 23–27 | `PauseTimesCount` u32 | 0 |
+| 27–34 | `Guid` **powtórzony** | low 0xAC9D00, high 0x086C8C0000000000 |
+| 34–70 | 36 B nieznane (spline/advflying dla CreateObject2) | |
+| 70–82 | `ObjectData.WriteCreate` | EntryID 0, DynamicFlags 0, Scale 1.0 |
+| 82–94 | 12 B | |
+| 231–243 | `ObjectData.WriteCreate` (drugi, właściwy) | EntryID 0, DynamicFlags 0, Scale 1.0 |
+| 243–267 | start `UnitData.WriteCreate` | DisplayID 54041, NpcFlags 0, NpcFlags2 0, StateSpellVisual 0, StateAnimID 1880, StateAnimKitID 0 |
+| 267–279 | `StateWorldEffectIDs.size` 0, `QuestObjectiveID` 0, `SpellOverrideNameID` 0 | |
+| 279–311 | 10 × `ObjectGuid` **16-bajtowych z ramką TC (u16 maska + bajty)** — wszystkie zerowe → po 2 bajty | |
+| 311–331 | `ChannelData.WriteCreate` = 20 B (`SpellID`, `SpellXSpellVisualID`, `ScriptVisualID`, `StartTimeMs`, `Duration`) | |
+| 331 | `SpellEmpowerStage` int8 | **-1** |
+| 332–336 | `SummonedByHomeRealm` u32 | 0 |
+| 336–342 | Race 5, ClassId 8, PlayerClassId 0, Sex 0, CreatureType 7, DisplayPower 0 | |
+| 342–346 | `OverrideDisplayPowerID` u32 | 0 |
+| 346–354 | `Health` int64 | 587 |
+| 354–434 | 10 × (`Power` i32, `MaxPower` i32) | 795/795, 0/5, reszta 0 |
+| 434–514 | 10 × (`PowerRegenFlatModifier` f32, `PowerRegenInterruptedFlatModifier` f32) — jest, bo FieldFlags ma Owner\|UnitAll | 14.5/2, reszta 0 |
+| 514–522 | `MaxHealth` int64 | 587 |
+| 522–526 | `Level` i32 | 16 |
+| 526–546 | EffectiveLevel, ContentTuningID, ScalingMin/Max/Delta | 0 |
+| 546 | `ScalingFactionGroup` u8 | 0 |
+| 547–551 | `FactionTemplate` i32 | 5 |
+| 551+ | `VirtualItems` — **NIE 32 bajty**, układ inny niż retail `VisibleItem` | brak zgodności |
+
+**Kluczowa różnica wobec tc-forever:** `ObjectGuid` w Create jest pisany przez
+`operator<<` z `ObjectGuid.cpp:1087` — **u16 maska + tylko niezerowe bajty**. Dla
+pustych guidów to 2 bajty, nie 16. Parser WPP czyta tam 16 bajtów na guid i rozjeżdża się.
+
+**Gdzie stanęło:** `VirtualItems`. W retail `VisibleItem` ma 32 bajty; w Forever po
+`FactionTemplate` (551) offset 647 ma `00 20 00 00` (8192), co nie pasuje do żadnego
+pola `VisibleItem`. Potrzebne drugie źródło — `struct VisibleItem` z Forever albo
+drugi sniff z innym zestawem itemów.
+
+**Wniosek na przyszłość:** ścieżka `HasFragmentUpdates: true` w ogóle nie jest używana
+w tych 12 pakietach — wszystkie idą przez `HasFragmentUpdates: false`, gdzie parser
+czyta tylko 3 bajty i nic więcej. Tam trzeba wpisać pełny czytnik Create dla
+`ObjectData` + `UnitData` + `PlayerData` + `ActivePlayerData`, z guidami po 2 bajty.
+To jest wykonalne i to jest następny krok — ale nie przez zgadywanie offsetów, a przez
+przepisanie `UnitData::WriteCreate` z `UpdateFields.cpp:1031-1300` linia po linii.
