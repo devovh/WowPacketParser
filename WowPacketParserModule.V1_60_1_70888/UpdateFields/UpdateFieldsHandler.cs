@@ -4069,21 +4069,27 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.FlagsB = packet.ReadUInt32("FlagsB", indexes);
             data.ParentRotation = packet.ReadQuaternion("ParentRotation", indexes);
             data.FactionTemplate = packet.ReadInt32("FactionTemplate", indexes);
+            // Forever 1.60.1 (tc-forever, GameObjectData::WriteCreate, UpdateFields.cpp:7515): klient Classic
+            // ma JEDNO pole wiecej niz retail - int32 Level na +0x74, tuz po FactionTemplate i PRZED State.
+            // Retail trzymal Level dopiero po CustomParam; serwer zapisuje je w obu miejscach z ta sama
+            // wartoscia, wiec czytamy oba i wypisujemy roznice jako diagnostyke przesuniecia pol.
+            data.Level = packet.ReadInt32("LevelEarly", indexes);
             data.State = packet.ReadSByte("State", indexes);
             data.TypeID = packet.ReadSByte("TypeID", indexes);
             data.PercentHealth = packet.ReadByte("PercentHealth", indexes);
             data.ArtKit = packet.ReadUInt32("ArtKit", indexes);
             data.CustomParam = packet.ReadUInt32("CustomParam", indexes);
-            data.Level = packet.ReadInt32("Level", indexes);
+            // Forever: licznik EnableDoodadSets idzie PRZED CustomParam, licznik WorldEffects po
+            // UiWidgetItemCount - o kolejnosci decyduje kolejnosc zapisu w emulatorze, nie rozmiar pola.
+            data.EnableDoodadSets.Resize(packet.ReadUInt32("EnableDoodadSetsCount", indexes));
+            var levelLate = packet.ReadInt32("Level", indexes);
+            if (data.Level != levelLate)
+                packet.WriteLine($"GameObjectData: LevelEarly ({data.Level}) != Level ({levelLate}) - mozliwe przesuniecie pola");
             data.AnimGroupInstance = packet.ReadUInt32("AnimGroupInstance", indexes);
             data.UiWidgetItemID = packet.ReadUInt32("UiWidgetItemID", indexes);
             data.UiWidgetItemQuality = packet.ReadUInt32("UiWidgetItemQuality", indexes);
             data.UiWidgetItemCount = packet.ReadUInt32("UiWidgetItemCount", indexes);
-            // Forever: liczniki list sa przed listami, a flaga AssistAction (bit) zamyka blok.
-            data.EnableDoodadSets.Resize(packet.ReadUInt32("EnableDoodadSetsCount", indexes));
             data.WorldEffects.Resize(packet.ReadUInt32("WorldEffectsCount", indexes));
-            packet.ResetBitReader();
-            hasAssistActionData = packet.ReadBit("HasAssistActionData", indexes);
             for (var i = 0; i < data.EnableDoodadSets.Count; ++i)
             {
                 data.EnableDoodadSets[i] = packet.ReadInt32("EnableDoodadSets", indexes, i);
@@ -4092,6 +4098,9 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             {
                 data.WorldEffects[i] = packet.ReadInt32("WorldEffects", indexes, i);
             }
+            // Flaga AssistAction jest BITEM na koncu bloku - czytamy ja przez bit reader (jak w emulatorze).
+            packet.ResetBitReader();
+            hasAssistActionData = packet.ReadBit("HasAssistActionData", indexes);
             if (hasAssistActionData)
             {
                 data.AssistActionData = ReadCreateGameObjectAssistActionData(packet, indexes, "AssistActionData");
