@@ -10,8 +10,8 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("ID", true)]
         public uint? ID;
 
-        [DBFieldName("AllowableRace")]
-        public long? AllowableRace;
+        [DBFieldName("AllowableRace", 2)]
+        public int?[] AllowableRace;
 
         [DBFieldName("Description")]
         public string Description;

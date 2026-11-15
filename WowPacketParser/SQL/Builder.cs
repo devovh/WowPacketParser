@@ -117,13 +117,16 @@ namespace WowPacketParser.SQL
                     if (attr.Gameobjects)
                         parameters.Add(gameObjects);
 
+                    // Spawn rows address their rows as @CGUID+n / @OGUID+n, which only means
+                    // anything if the delta variables exist in the file they end up in. When the
+                    // builders are split by target database, only the world file gets them.
+                    if (Settings.SplitSQLFile && (attr.Units || attr.Gameobjects))
+                        continue;
+
                     Trace.WriteLine($"{currentBuilder}/{totalCount} - Write {method.Name}");
                     try
                     {
                         string produced = method.Invoke(null, parameters.ToArray()).ToString();
-                        if (produced.Contains("RangeAttackTime"))
-                            System.IO.File.AppendAllText(@"C:\Users\devov\AppData\Local\Temp\q\prod.txt",
-                                method.Name + " unknown=" + (produced.Split("UNKNOWN").Length - 1) + " len=" + produced.Length + "\n" + produced.Substring(0, System.Math.Min(240, produced.Length)) + "\n");
                         store.WriteData(produced);
                     }
                     catch (TargetInvocationException e)

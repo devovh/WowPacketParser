@@ -3998,7 +3998,9 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
             ItemSearchNameHotfix1200 hotfix = new ItemSearchNameHotfix1200();
 
             hotfix.ID = entry;
-            hotfix.AllowableRace = packet.ReadInt64("AllowableRace", indexes);
+            hotfix.AllowableRace = new int?[2];
+            for (int i = 0; i < 2; i++)
+                hotfix.AllowableRace[i] = packet.ReadInt32("AllowableRace", indexes, i);
             hotfix.Display = packet.ReadCString("Display", indexes);
             hotfix.OverallQualityID = packet.ReadByte("OverallQualityID", indexes);
             hotfix.ExpansionID = packet.ReadInt32("ExpansionID", indexes);
@@ -4144,7 +4146,9 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
             ItemSparseHotfix1200 hotfix = new ItemSparseHotfix1200();
 
             hotfix.ID = entry;
-            hotfix.AllowableRace = packet.ReadInt64("AllowableRace", indexes);
+            hotfix.AllowableRace = new int?[2];
+            for (int i = 0; i < 2; i++)
+                hotfix.AllowableRace[i] = packet.ReadInt32("AllowableRace", indexes, i);
             hotfix.Description = packet.ReadCString("Description", indexes);
             hotfix.Display3 = packet.ReadCString("Display3", indexes);
             hotfix.Display2 = packet.ReadCString("Display2", indexes);
