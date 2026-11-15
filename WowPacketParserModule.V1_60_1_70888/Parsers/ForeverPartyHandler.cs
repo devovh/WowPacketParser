@@ -70,7 +70,9 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                 packet.ReadTime64("LastPenaltyTime", i, "LeaverInfo");
                 packet.ReadTime64("LeaverExpirationTime", i, "LeaverInfo");
                 packet.ReadInt32("Flags", i, "LeaverInfo");
-                
+                packet.ResetBitReader();
+                packet.ReadBit("LeaverStatus", i, "LeaverInfo");
+                packet.ResetBitReader();
 
                 packet.ReadWoWString("Name", playerNameLength, i);
                 packet.ReadDynamicString("VoiceStateID", voiceStateLength, i);
@@ -91,16 +93,41 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                 packet.ReadTime64("StartTime", "ChallengeMode");
                 packet.ReadPackedGuid128("KeystoneOwnerGUID", "ChallengeMode");
                 packet.ReadPackedGuid128("LeaverGUID", "ChallengeMode");
+                packet.ReadUInt32("InstanceAbandonVoteCooldown", "ChallengeMode");
+                packet.ReadBit("IsActive", "ChallengeMode");
+                packet.ReadBit("HasRestrictions", "ChallengeMode");
+                packet.ReadBit("CanVoteAbandon", "ChallengeMode");
+                packet.ResetBitReader();
             }
 
             if (hasLfgInfo)
-                packet.ReadInt32("Slot", "LfgInfo");
+            {
+                packet.ReadUInt32("Slot", "LfgInfo");
+                packet.ReadByte("MyFlags", "LfgInfo");
+                packet.ReadUInt32("MyRandomSlot", "LfgInfo");
+                packet.ReadByte("MyPartialClear", "LfgInfo");
+                packet.ReadSingle("MyGearDiff", "LfgInfo");
+                packet.ReadByte("MyStrangerCount", "LfgInfo");
+                packet.ReadByte("MyKickVoteCount", "LfgInfo");
+                packet.ReadByte("BootCount", "LfgInfo");
+                packet.ReadBit("Aborted", "LfgInfo");
+                packet.ReadBit("MyFirstReward", "LfgInfo");
+                packet.ResetBitReader();
+            }
 
             if (hasLootSettings)
+            {
                 packet.ReadByte("Method", "LootSettings");
+                packet.ReadPackedGuid128("LootMaster", "LootSettings");
+                packet.ReadByte("Threshold", "LootSettings");
+            }
 
             if (hasDifficultySettings)
-                packet.ReadInt32("DifficultyID", "DifficultySettings");
+            {
+                packet.ReadInt16("DungeonDifficultyID", "DifficultySettings");
+                packet.ReadInt16("RaidDifficultyID", "DifficultySettings");
+                packet.ReadInt16("LegacyRaidDifficultyID", "DifficultySettings");
+            }
         }
     }
 }
