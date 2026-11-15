@@ -66,12 +66,6 @@ namespace WowPacketParser.SQL.Builders
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.quest_template))
                 return string.Empty;
 
-            // The Forever client sends RewardDisplaySpell in SMSG_QUERY_QUEST_INFO_RESPONSE with a
-            // layout the parsing module does not match, so the stored rows carry garbage values.
-            // Write nothing for that target instead of importing junk.
-            if (Settings.TargetedDatabase == TargetedDatabase.Forever)
-                return string.Empty;
-
             if (Storage.QuestRewardDisplaySpells.IsEmpty())
                 return string.Empty;
 
@@ -459,6 +453,25 @@ namespace WowPacketParser.SQL.Builders
         {
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.npc_text))
                 return string.Empty;
+
+            // Forever stores no text here, only which broadcast_text each of the 8 options points at.
+            // The NPCs that hand these out are written separately, so there is nothing to compare
+            // the rows with in the database the sniff was taken on.
+            if (Settings.TargetedDatabase == TargetedDatabase.Forever)
+            {
+                if (Storage.NpcTextsForever.IsEmpty())
+                    return string.Empty;
+
+                var rows = new RowList<NpcTextForever>();
+                foreach (var npcText in Storage.NpcTextsForever)
+                {
+                    var row = new Row<NpcTextForever>();
+                    row.Data = npcText.Item1;
+                    rows.Add(row);
+                }
+
+                return new SQLInsert<NpcTextForever>(rows, false).Build();
+            }
 
             if (!Storage.NpcTexts.IsEmpty() &&
                 (Settings.TargetedDatabase == TargetedDatabase.WrathOfTheLichKing ||

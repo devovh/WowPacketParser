@@ -5,6 +5,25 @@ using WowPacketParser.SQL;
 
 namespace WowPacketParser.Store.Objects
 {
+    // Forever 1.60.x: npc_text keeps only the probabilities and the broadcast_text ids;
+    // the text itself lives in broadcast_text. Shares the table name with NpcText, and
+    // either record must only be used for the targets it was written for.
+    [DBTableName("npc_text")]
+    public sealed record NpcTextForever : IDataModel
+    {
+        [DBFieldName("ID", true)]
+        public uint? ID;
+
+        [DBFieldName("Probability", 8)]
+        public float?[] Probability;
+
+        [DBFieldName("BroadcastTextID", 8)]
+        public uint?[] BroadcastTextID;
+
+        [DBFieldName("VerifiedBuild")]
+        public int? VerifiedBuild = ClientVersion.BuildInt;
+    }
+
     [DBTableName("npc_text")]
     public sealed record NpcText : IDataModel
     {
@@ -371,7 +390,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("Emote7_2")]
         public EmoteType? Emote72;
 
-        [DBFieldName("VerifiedBuild")]
+        [DBFieldName("VerifiedBuild", TargetedDatabaseFlag.TillWarlordsOfDraenor)]
         public int? VerifiedBuild = ClientVersion.BuildInt;
     }
 

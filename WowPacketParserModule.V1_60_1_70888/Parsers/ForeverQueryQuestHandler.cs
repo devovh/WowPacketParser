@@ -177,9 +177,15 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
 
             for (var i = 0; i < rewardDisplaySpellCount; ++i)
             {
-                packet.ReadInt32<SpellId>("RewardDisplaySpellSpellID", i);
-                packet.ReadInt32("RewardDisplaySpellPlayerConditionID", i);
-                packet.ReadInt32("RewardDisplaySpellType", i);
+                QuestRewardDisplaySpell rewardDisplaySpell = new QuestRewardDisplaySpell
+                {
+                    QuestID = quest.ID,
+                    Idx = (uint)i,
+                    SpellID = (uint)packet.ReadInt32<SpellId>("RewardDisplaySpellSpellID", i),
+                    PlayerConditionID = (uint)packet.ReadInt32("RewardDisplaySpellPlayerConditionID", i),
+                    Type = packet.ReadInt32("RewardDisplaySpellType", i),
+                };
+                Storage.QuestRewardDisplaySpells.Add(rewardDisplaySpell, packet.TimeSpan);
             }
 
             quest.ObjectiveText = new string[4];

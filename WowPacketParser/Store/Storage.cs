@@ -70,6 +70,7 @@ namespace WowPacketParser.Store
         // Page & npc text
         public static readonly DataBag<PageText> PageTexts = new DataBag<PageText>(new List<SQLOutput> { SQLOutput.page_text });
         public static readonly DataBag<NpcText> NpcTexts = new DataBag<NpcText>(new List<SQLOutput> { SQLOutput.npc_text });
+        public static readonly DataBag<NpcTextForever> NpcTextsForever = new DataBag<NpcTextForever>(new List<SQLOutput> { SQLOutput.npc_text });
         public static readonly DataBag<NpcTextMop> NpcTextsMop = new DataBag<NpcTextMop>(new List<SQLOutput> { SQLOutput.npc_text });
         public static readonly StoreDictionary<uint /*menuID*/, NpcText925> GossipToNpcTextMap = new(new List<SQLOutput> { SQLOutput.npc_text });
 
@@ -2780,6 +2781,7 @@ namespace WowPacketParser.Store
             PageTexts.Clear();
             NpcTexts.Clear();
             NpcTextsMop.Clear();
+            NpcTextsForever.Clear();
             GossipToNpcTextMap.Clear();
 
             CreatureTexts.Clear();

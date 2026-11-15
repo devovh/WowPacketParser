@@ -52,6 +52,22 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
             CoreParsers.NpcHandler.TempGossipOptionPOI.Reset();
         }
 
+        // The gossip text of an NPC is not sent with the menu, only the broadcast_text ids the
+        // client should pick from. Collect them the way the 9.x parser does so npc_text is
+        // written from what the server actually pointed at.
+        public static void AddBroadcastTextToGossip(uint menuID, uint broadcastTextID, WowGuid guid)
+        {
+            NpcText925 npcText = null;
+            if (!Storage.GossipToNpcTextMap.TryGetValue(menuID, out npcText))
+            {
+                npcText = new NpcText925();
+                npcText.ObjectType = guid.GetObjectType();
+                npcText.ObjectEntry = guid.GetEntry();
+                Storage.GossipToNpcTextMap.Add(menuID, npcText);
+            }
+            npcText.AddBroadcastTextIfNotExists(broadcastTextID, 1.0f);
+        }
+
         public static void ReadTreasureLootList(Packet packet, params object[] indexes)
         {
             var rewardsCount = packet.ReadUInt32();
@@ -154,6 +170,10 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
 
             if (broadcastTextId.HasValue)
                 npcTextId = SQLDatabase.GetNPCTextIDByMenuIDAndBroadcastText(menuId, broadcastTextId.Value);
+
+            // Nothing to look up without a database, but the menu still points at these texts
+            if (npcTextId == 0 && broadcastTextId.HasValue)
+                AddBroadcastTextToGossip(packetGossip.MenuId, broadcastTextId.Value, guid);
 
             if (npcTextId != 0)
             {
