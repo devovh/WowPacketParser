@@ -274,6 +274,11 @@ namespace WowPacketParser.Hotfix
             var tableName = Regex.Replace(normalizedTableHashString, @"(?<=[a-z])([A-Z])|(?<=[A-Z])([A-Z][a-z])",
                 @"_$1$2", RegexOptions.Compiled).ToLower();
 
+            // Delete by ID instead of wiping the whole table. The whole-table DELETE assumes the
+            // sniff carries a complete DBCache of the table; a WoW Forever sniff only carries the
+            // records the client asked for, so it would erase every other row of the table.
+            bool deleteByID = tableName == "broadcast_text" || Settings.TargetedDatabase == Enums.TargetedDatabase.Forever;
+
             if (localeBuilder != null && propertiesInfos.Any(
                 propInfo => propInfo.PropertyType == typeof (string) || propInfo.PropertyType == typeof (string[])))
             {
@@ -389,7 +394,7 @@ namespace WowPacketParser.Hotfix
                         return;
                 }
 
-                if (tableName == "broadcast_text")
+                if (deleteByID)
                 {
                     var remainingCountDelete = store.Records.Count - 1;
 
@@ -409,7 +414,7 @@ namespace WowPacketParser.Hotfix
                 isLocale = true;
             }
 
-            if (tableName == "broadcast_text")
+            if (deleteByID)
             {
                 var remainingCountDelete = store.Records.Count - 1;
 

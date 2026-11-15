@@ -14,10 +14,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("ID", true)]
         public uint? ID;
 
-        [DBFieldName("Probability", 8)]
+        [DBFieldName("Probability", 8, true)]
         public float?[] Probability;
 
-        [DBFieldName("BroadcastTextID", 8)]
+        [DBFieldName("BroadcastTextID", 8, true)]
         public uint?[] BroadcastTextID;
 
         [DBFieldName("VerifiedBuild")]
@@ -390,7 +390,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("Emote7_2")]
         public EmoteType? Emote72;
 
-        [DBFieldName("VerifiedBuild", TargetedDatabaseFlag.TillWarlordsOfDraenor)]
+        [DBFieldName("VerifiedBuild")]
         public int? VerifiedBuild = ClientVersion.BuildInt;
     }
 

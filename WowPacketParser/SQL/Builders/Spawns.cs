@@ -423,7 +423,44 @@ namespace WowPacketParser.SQL.Builders
                 result.Append(spawnTrackingStateSql.Build());
             }
 
+            result.Append(ForeverDuplicateSpawnCleanup("creature", "@CGUID", count, 0, SQLOutput.creature_addon, "creature_addon"));
+
             return result.ToString();
+        }
+
+        /// <summary>
+        /// Forever only: removes the rows of the block just written that duplicate a spawn already
+        /// in the database, meaning the same entry on the same map within 5 yards of a spawn with a
+        /// lower guid. That covers spawns the target database had before, the same file imported a
+        /// second time (MAX(guid)+1 then lies past the first import, so every row would be added
+        /// again), and the same spawn seen twice in one sniff. The block's addon and spawn tracking
+        /// rows that are left without their spawn go with it.
+        /// </summary>
+        private static string ForeverDuplicateSpawnCleanup(string table, string guidVariable, uint lastOffset, int spawnType,
+            SQLOutput addonOutput, string addonTable)
+        {
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            var range = $"{guidVariable}+0 AND {guidVariable}+{lastOffset}";
+            var sql = new StringBuilder();
+            sql.AppendLine();
+            sql.AppendLine($"-- Drop the rows above that are already spawned (same entry and map within 5 yards of a lower guid)");
+            sql.AppendLine($"DELETE `n` FROM `{table}` `n` JOIN `{table}` `o` ON `o`.`id` = `n`.`id` AND `o`.`map` = `n`.`map` AND `o`.`guid` < `n`.`guid` " +
+                "AND POW(`o`.`position_x` - `n`.`position_x`, 2) + POW(`o`.`position_y` - `n`.`position_y`, 2) + POW(`o`.`position_z` - `n`.`position_z`, 2) < 25 " +
+                $"WHERE `n`.`guid` BETWEEN {range};");
+
+            if (Settings.SQLOutputFlag.HasAnyFlagBit(addonOutput))
+                sql.AppendLine($"DELETE `a` FROM `{addonTable}` `a` LEFT JOIN `{table}` `s` ON `s`.`guid` = `a`.`guid` WHERE `a`.`guid` BETWEEN {range} AND `s`.`guid` IS NULL;");
+
+            if (ClientVersion.AddedInVersion(ClientType.WarlordsOfDraenor) && Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.quest_template))
+            {
+                foreach (var trackingTable in new[] { "spawn_tracking", "spawn_tracking_state" })
+                    sql.AppendLine($"DELETE `t` FROM `{trackingTable}` `t` LEFT JOIN `{table}` `s` ON `s`.`guid` = `t`.`SpawnId` " +
+                        $"WHERE `t`.`SpawnType` = {spawnType} AND `t`.`SpawnId` BETWEEN {range} AND `s`.`guid` IS NULL;");
+            }
+
+            return sql.ToString();
         }
 
         private static float NormalizeOrientation(float originalOri)
@@ -689,6 +726,8 @@ namespace WowPacketParser.SQL.Builders
                 var spawnTrackingStateSql = new SQLInsert<SpawnTrackingState>(spawnTrackingStateRows, false);
                 result.Append(spawnTrackingStateSql.Build());
             }
+
+            result.Append(ForeverDuplicateSpawnCleanup("gameobject", "@OGUID", count, 1, SQLOutput.gameobject_addon, "gameobject_addon"));
 
             return result.ToString();
         }

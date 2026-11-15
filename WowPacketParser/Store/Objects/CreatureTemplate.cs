@@ -22,16 +22,16 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("name", LocaleConstant.enUS, nullable: true)]
         public string Name;
 
-        [DBFieldName("femaleName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("femaleName", TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever, LocaleConstant.enUS, nullable: true)]
         public string FemaleName;
 
-        [DBFieldName("subname", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("subname", LocaleConstant.enUS, nullable: true)]
         public string SubName;
 
-        [DBFieldName("TitleAlt", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("TitleAlt", TargetedDatabaseFlag.SinceWarlordsOfDraenor /*Mists of Pandaria*/ | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever, LocaleConstant.enUS, nullable: true)]
         public string TitleAlt;
 
-        [DBFieldName("IconName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("IconName", nullable: true)]
         public string IconName;
 
         [DBFieldName("HealthScalingExpansion", TargetedDatabaseFlag.SinceWarlordsOfDraenorTillShadowLands | TargetedDatabaseFlag.Classic)]
@@ -185,7 +185,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("VerifiedBuild")]
         public int? VerifiedBuild = ClientVersion.BuildInt;
     }
-
+
     /// <summary>
     /// creature_template columns the world database requires but SMSG_QUERY_CREATURE_RESPONSE
     /// does not carry; they are sniffed at spawn time as update fields. CreatureTemplateNonWDB
@@ -275,16 +275,16 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("name")]
         public string Name;
 
-        [DBFieldName("femaleName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("femaleName")]
         public string FemaleName;
 
-        [DBFieldName("subname", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("subname", nullable: true)]
         public string SubName;
 
-        [DBFieldName("TitleAlt", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("TitleAlt", nullable: true)]
         public string TitleAlt;
 
-        [DBFieldName("IconName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("IconName", nullable: true)]
         public string IconName;
 
         [DBFieldName("HealthScalingExpansion")]
