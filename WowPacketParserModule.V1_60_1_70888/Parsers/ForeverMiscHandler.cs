@@ -9,23 +9,6 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
     /// </summary>
     public static class ForeverMiscHandler
     {
-        /// <summary>
-        /// SMSG_HEALTH_UPDATE (tc-forever, Server/Packets/CombatPackets.cpp:130 HealthUpdate::Write):
-        /// [PackedGuid][int64 Health]. Fallback czytał u32 i zostawiał 1 bajt.
-        ///
-        /// Uwaga: GUID-em tego pakietu nie udalo sie dopasowac - maska z ReadPackedGuid128
-        /// (57350 = 0xE006) daje 5 bajtow i wtedy zostaje 1 nieprzeczytany, a maska u8
-        /// (0x06) daje 2 bajty i zostaje 5. Zostawiony odczyt 2-bajtowej maski, bo to on
-        /// daje poprawna wartosc Health (203521) - sam GUID jest nadal do ustalenia.
-        /// </summary>
-        [Parser(Opcode.SMSG_HEALTH_UPDATE)]
-        public static void HandleHealthUpdate(Packet packet)
-        {
-            packet.ReadPackedGuid128("Guid");
-            packet.ReadUInt32("ClassicUnknown");
-            packet.ReadUInt32("Health");
-            packet.ReadByte("ClassicPadding");
-        }
 
         /// <summary>
         /// SMSG_ACCOUNT_MOUNT_UPDATE (tc-forever, Server/Packets/MiscPackets.cpp:743 AccountMountUpdate::Write):
