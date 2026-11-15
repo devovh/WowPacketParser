@@ -24,16 +24,14 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadBit("IsFullUpdate");
             var mountSpellIDsCount = packet.ReadUInt32("MountSpellIDsCount");
 
-            var flags = new uint[mountSpellIDsCount];
-            for (var i = 0; i < mountSpellIDsCount; ++i)
-                flags[i] = packet.ReadBits(4);
-
-            packet.ResetBitReader();
-
             for (var i = 0; i < mountSpellIDsCount; ++i)
             {
-                packet.ReadInt32("MountSpellIDs", i);
-                packet.AddValue("Flags", flags[i], i);
+                // zmierzone na pakiecie 31 B (2 mounty po 13 B): i32 spell, u64 (zawsze 0), bajt z 4 bitami flag
+                packet.ReadInt32("MountSpellID", i);
+                packet.ReadUInt64("Unknown", i);
+                packet.ResetBitReader();
+                packet.ReadBits("Flags", 4, i);
+                packet.ResetBitReader();
             }
         }
         /// <summary>
