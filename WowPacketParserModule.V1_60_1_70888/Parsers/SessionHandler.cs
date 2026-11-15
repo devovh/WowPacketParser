@@ -173,8 +173,10 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadUInt32("RealmID");
             packet.ReadBytes("LocalChallenge", 32);
             packet.ReadBytes("Digest", 24);
+            packet.ReadBit("UseIPv6");
+            packet.ResetBitReader();
             var realmJoinTicketSize = packet.ReadInt32();
-            packet.ReadBytes("RealmJoinTicket", realmJoinTicketSize);
+            packet.ReadBytes("RealmJoinTicket", (int)System.Math.Min(realmJoinTicketSize, packet.Length - packet.Position));
             packet.ReadBytes("AddonInfo", (int)(packet.Length - packet.Position));
         }
 
