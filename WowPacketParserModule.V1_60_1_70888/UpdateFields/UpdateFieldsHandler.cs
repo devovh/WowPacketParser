@@ -13,6 +13,12 @@ using WowPacketParser.Store.Objects.UpdateFields;
 
 namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 {
+    /// <summary>Wspolny uklad pol obiektow dla klientow Forever 70862 i 70938 (70938 jest nowszy; roznice per-build sa przy konkretnych polach).</summary>
+    internal static class ForeverBuild
+    {
+        public static bool IsNewLayout => ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 || ClientVersion.Build == ClientVersionBuild.V1_60_1_70862;
+    }
+
     [GeneratedCode("UpdateFieldCodeGenerator.Formats.WowPacketParserHandler", "1.0.0.0")]
     public class UpdateFieldHandler : UpdateFieldsHandlerBase
     {
@@ -721,7 +727,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.ItemID = packet.ReadInt32("ItemID", indexes);
             data.SecondaryItemModifiedAppearanceID = packet.ReadInt32("SecondaryItemModifiedAppearanceID", indexes);
             data.ConditionalItemAppearanceID = packet.ReadInt32("ConditionalItemAppearanceID", indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 || ClientVersion.Build == ClientVersionBuild.V1_60_1_70862)
             {
                 packet.ReadInt32("UnknownAppearance", indexes);
             }
@@ -832,8 +838,20 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.BattlePetAttachedToDecorGUID = packet.ReadPackedGuid128("BattlePetAttachedToDecorGUID", indexes);
             data.BattlePetDecorHouseGUID = packet.ReadPackedGuid128("BattlePetDecorHouseGUID", indexes);
             data.ChannelData = ReadCreateUnitChannel(packet, indexes, "ChannelData");
-            data.SpellEmpowerStage = packet.ReadSByte("SpellEmpowerStage", indexes);
-            data.SummonedByHomeRealm = packet.ReadUInt32("SummonedByHomeRealm", indexes);
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70862 && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
+            {
+                // 70862: odwrocona kolejnosc wzgledem 70938: u32 (0), potem sbyte (FF)
+                data.SummonedByHomeRealm = packet.ReadUInt32("SummonedByHomeRealm", indexes);
+                data.SpellEmpowerStage = packet.ReadSByte("SpellEmpowerStage", indexes);
+            }
+            else
+            {
+                data.SpellEmpowerStage = packet.ReadSByte("SpellEmpowerStage", indexes);
+                data.SummonedByHomeRealm = packet.ReadUInt32("SummonedByHomeRealm", indexes);
+            }
+            // 70862: jeszcze jedno u32 przed Race; w sniffie zawsze 0
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70862)
+                packet.ReadUInt32("Unknown70862", indexes);
             data.Race = packet.ReadByte("Race", indexes);
             data.ClassId = packet.ReadByte("ClassId", indexes);
             data.PlayerClassId = packet.ReadByte("PlayerClassId", indexes);
@@ -899,7 +917,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             }
             data.StandState = packet.ReadByte("StandState", indexes);
             data.PetTalentPoints = packet.ReadByte("PetTalentPoints", indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 || ClientVersion.Build == ClientVersionBuild.V1_60_1_70862)
             {
                 data.AnimTier = packet.ReadByte("AnimTier", indexes);
                 data.VisFlags = packet.ReadByte("VisFlags", indexes);
@@ -924,7 +942,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.ModTimeRate = packet.ReadSingle("ModTimeRate", indexes);
             data.CreatedBySpell = packet.ReadInt32("CreatedBySpell", indexes);
             data.EmoteState = packet.ReadInt32("EmoteState", indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+            if (ForeverBuild.IsNewLayout)
             {
                 packet.ReadInt16("ClassicTrainingPointsUsed", indexes);
                 packet.ReadInt16("ClassicTrainingPointsTotal", indexes);
@@ -976,7 +994,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                 data.RangedAttackPowerModNeg = packet.ReadInt32("RangedAttackPowerModNeg", indexes);
                 data.RangedAttackPowerMultiplier = packet.ReadSingle("RangedAttackPowerMultiplier", indexes);
                 data.RangedAttackPowerModSupport = packet.ReadInt32("RangedAttackPowerModSupport", indexes);
-                if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+                if (ForeverBuild.IsNewLayout)
             {
                 packet.ReadInt32("UnknownBeforeMainHandWeaponAttackPower", indexes);
             }
@@ -984,7 +1002,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                 data.OffHandWeaponAttackPower = packet.ReadInt32("OffHandWeaponAttackPower", indexes);
                 data.RangedWeaponAttackPower = packet.ReadInt32("RangedWeaponAttackPower", indexes);
                 data.SetAttackSpeedAura = packet.ReadInt32("SetAttackSpeedAura", indexes);
-                if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+                if (ForeverBuild.IsNewLayout)
             {
                 packet.ReadInt32("UnknownBeforeLifesteal", indexes);
             }
@@ -1009,7 +1027,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.LookAtControllerID = packet.ReadInt32("LookAtControllerID", indexes);
             data.PerksVendorItemID = packet.ReadInt32("PerksVendorItemID", indexes);
             data.TaxiNodesID = packet.ReadInt32("TaxiNodesID", indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
+            if (ForeverBuild.IsNewLayout && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
             {
                 packet.ReadInt32("UnknownOwner1", indexes);
                 packet.ReadInt32("UnknownOwner2", indexes);
@@ -1019,13 +1037,14 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.PassiveSpells.Resize(packet.ReadUInt32());
             data.WorldEffects.Resize(packet.ReadUInt32());
             data.ChannelObjects.Resize(packet.ReadUInt32());
-            data.FlightCapabilityID = packet.ReadInt32("FlightCapabilityID", indexes);
+            if (ClientVersion.Build != ClientVersionBuild.V1_60_1_70862)
+                data.FlightCapabilityID = packet.ReadInt32("FlightCapabilityID", indexes);
             data.GlideEventSpeedDivisor = packet.ReadSingle("GlideEventSpeedDivisor", indexes);
             data.DriveCapabilityID = packet.ReadInt32("DriveCapabilityID", indexes);
             data.MaxHealthModifierFlatNeg = packet.ReadInt32("MaxHealthModifierFlatNeg", indexes);
             data.MaxHealthModifierFlatPos = packet.ReadInt32("MaxHealthModifierFlatPos", indexes);
             data.SilencedSchoolMask = packet.ReadUInt32("SilencedSchoolMask", indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
+            if (ForeverBuild.IsNewLayout && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
             {
                 packet.ReadSingle("UnknownOwnerFloat", indexes);
                 var ownerCount = packet.ReadUInt32("OwnerCount", indexes);
@@ -1036,7 +1055,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                 }
             }
             data.CurrentAreaID = packet.ReadUInt32("CurrentAreaID", indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
+            if (ForeverBuild.IsNewLayout && (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
             {
                 packet.ReadPackedGuid128("ClassicComboTarget", indexes);
                 packet.ReadInt32("UnknownAfterCombo", indexes);
