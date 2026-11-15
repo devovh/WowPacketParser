@@ -165,3 +165,12 @@ Z 18 błędnych pakietów zostały **2**, oba znane i opisane niżej.
 ### Zasady, które się sprawdziły
 - Gdy tc-forever nie ma układu, liczyć z długości: `9 x 74 = 666`, `127 + 2x9 + 55x12 + 6x4 = 829`.
 - Zrzut surowych bajtów: tymczasowy handler z `packet.WriteLine("HEX: " + BitConverter.ToString(bytes))`, potem go usunąć.
+
+---
+
+## Uwagi developera po punktach 1-5 (loot, ścieżki)
+
+- **Loot kluczowany po `LootID`, nie po entry stworzenia**: `node tools/fix-loot-id.cjs` (uruchamiać po `patch-from-tdb.cjs`) podmienia `Entry` na `creature_template_difficulty.LootID` (DifficultyID 0) z TDB world. Gdy TDB nie zna LootID, zostaje entry z komentarzem. Dwa stworzenia z tym samym LootID są łączone (wyższa szansa).
+- **Bez `DELETE`**: builder pisze `INSERT IGNORE`, nie kasuje istniejących wierszy, więc dropy z questów zostają.
+- **Zwłoki liczone raz**: ten sam GUID zwłok otwarty drugi raz nie zwiększa `kills` (chance nie spada).
+- **Czyszczenie duplikatów spawnów gubi ścieżki (`creature_addon.PathId`)** dla NPC, które już są w bazie. Developer podlinkuje je ręcznie, po naszej stronie bez zmian.

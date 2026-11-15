@@ -581,6 +581,7 @@ namespace WowPacketParser.SQL.Builders
         /// <summary>
         /// creature_loot_template for the Forever core, from SMSG_LOOT_RESPONSE windows of creature corpses.
         /// Chance = drops / kills * 100, where kills = number of loot windows seen for that creature entry.
+        /// Bez DELETE (INSERT IGNORE): istniejace wiersze, w tym dropy z questow, zostaja. Entry to docelowo LootID (patrz tools/fix-loot-id.cjs).
         /// Skinning (AcquireReason 6) and pickpocketing (2) go to other tables, so those windows are skipped.
         /// </summary>
         [BuilderMethod]
@@ -595,7 +596,12 @@ namespace WowPacketParser.SQL.Builders
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
                 return string.Empty;
 
-            var windows = Storage.ForeverLootWindows.Where(w => w.AcquireReason != 6 && w.AcquireReason != 2).ToList();
+            // Te same zwloki otwarte drugi raz (np. po zabraniu czesci przedmiotow) liczymy tylko raz, inaczej kills rosnie i Chance spada.
+            var seenCorpses = new HashSet<WowGuid>();
+            var windows = Storage.ForeverLootWindows
+                .Where(w => w.AcquireReason != 6 && w.AcquireReason != 2)
+                .Where(w => seenCorpses.Add(w.Owner))
+                .ToList();
             var kills = windows.GroupBy(w => w.Entry).ToDictionary(g => g.Key, g => g.Count());
 
             var drops = new SortedDictionary<(uint entry, int item), (int count, uint min, uint max)>();
@@ -636,7 +642,7 @@ namespace WowPacketParser.SQL.Builders
                 rows.Add(row);
             }
 
-            return new SQLInsert<CreatureLootTemplateForever>(rows, true).Build();
+            return new SQLInsert<CreatureLootTemplateForever>(rows, false, true).Build();
         }
 
         public static CreatureEquipment GetDuplicateEquipFromList(CreatureEquipment newEquip, List<CreatureEquipment> equipList)
