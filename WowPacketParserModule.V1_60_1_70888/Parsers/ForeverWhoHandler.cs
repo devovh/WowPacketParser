@@ -45,5 +45,66 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                 packet.ReadWoWString("GuildName", guildNameLength, i);
             }
         }
+
+        /// <summary>
+        /// CMSG_WHO (0x4400AF): w sniffie 70938 ten opcode niesie zapytanie /who, nie RESURRECT_RESPONSE.
+        /// Uklad z tc-forever WhoPackets.cpp:61 ReadWhoRequest (+ Token, Origin, bit IsAddon).
+        /// </summary>
+        [Parser(Opcode.CMSG_WHO)]
+        public static void HandleWhoRequest(Packet packet)
+        {
+            packet.ReadInt32("MinLevel");
+            packet.ReadInt32("MaxLevel");
+            packet.ReadInt32("RaceFilter", 0);
+            packet.ReadInt32("RaceFilter", 1);
+            packet.ReadInt32("ClassFilter");
+
+            packet.ResetBitReader();
+            var nameLen = packet.ReadBits("NameLength", 6);
+            var realmLen = packet.ReadBits("VirtualRealmNameLength", 9);
+            var surnameLen = packet.ReadBits("SurnameLength", 9);
+            var guildLen = packet.ReadBits("GuildLength", 7);
+            var guildRealmLen = packet.ReadBits("GuildVirtualRealmNameLength", 9);
+            var wordCount = packet.ReadBits("WordCount", 3);
+            packet.ReadBit("ShowEnemies");
+            packet.ReadBit("ShowArenaPlayers");
+            packet.ReadBit("ExactName");
+            packet.ReadBit("Unknown");
+            var areaCount = packet.ReadBits("AreaCount", 6);
+            var hasServerInfo = packet.ReadBit("HasServerInfo");
+            packet.ResetBitReader();
+
+            packet.ReadWoWString("Name", nameLen);
+            packet.ReadWoWString("VirtualRealmName", realmLen);
+            packet.ReadWoWString("Surname", surnameLen);
+            packet.ReadWoWString("Guild", guildLen);
+            packet.ReadWoWString("GuildVirtualRealmName", guildRealmLen);
+
+            for (var i = 0; i < wordCount; ++i)
+            {
+                packet.ResetBitReader();
+                var len = packet.ReadBits("WordLength", 7, i);
+                packet.ResetBitReader();
+                packet.ReadWoWString("Word", len, i);
+            }
+
+            for (var i = 0; i < areaCount; ++i)
+                packet.ReadInt32("AreaID", i);
+
+            if (hasServerInfo)
+            {
+                packet.ReadByte("FactionGroup", "ServerInfo");
+                packet.ReadInt32("Locale", "ServerInfo");
+                packet.ReadUInt32("RequesterVirtualRealmAddress", "ServerInfo");
+                for (var i = 0; i < 5; ++i)
+                    packet.ReadUInt32("Skipped", "ServerInfo", i);
+                packet.ReadByte("Skipped", "ServerInfo");
+            }
+
+            packet.ReadUInt32("Token");
+            packet.ReadByte("Origin");
+            packet.ResetBitReader();
+            packet.ReadBit("IsAddon");
+        }
     }
 }
