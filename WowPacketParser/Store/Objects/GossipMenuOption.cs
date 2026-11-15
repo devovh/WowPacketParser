@@ -11,14 +11,14 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("MenuID", true)]
         public uint? MenuID;
 
-        [DBFieldName("GossipOptionID", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
+        [DBFieldName("GossipOptionID", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
         public int? GossipOptionID;
 
         [DBFieldName("OptionID", true)]
         public uint? OptionID;
 
         [DBFieldName("OptionIcon", TargetedDatabaseFlag.TillBattleForAzeroth)]
-        [DBFieldName("OptionNpc", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
+        [DBFieldName("OptionNpc", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
         public GossipOptionNpc? OptionNpc;
 
         [DBFieldName("OptionText")]
@@ -33,10 +33,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("OptionNpcFlag", TargetedDatabaseFlag.TillBattleForAzeroth)]
         public NPCFlags? OptionNpcFlag;
 
-        [DBFieldName("Language", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
+        [DBFieldName("Language", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
         public Language? Language;
 
-        [DBFieldName("Flags", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
+        [DBFieldName("Flags", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic)]
         public int? Flags;
 
         [DBFieldName("ActionMenuID")]
@@ -45,7 +45,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("ActionPoiID", false, true)]
         public object ActionPoiID = 0;
 
-        [DBFieldName("GossipNpcOptionID", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, false, false, true)]
+        [DBFieldName("GossipNpcOptionID", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, false, false, true)]
         public int? GossipNpcOptionID;
 
         [DBFieldName("BoxCoded")]
@@ -60,10 +60,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("BoxBroadcastTextID")]
         public int? BoxBroadcastTextID;
 
-        [DBFieldName("SpellID", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, false, false, true)]
+        [DBFieldName("SpellID", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, false, false, true)]
         public int? SpellID;
 
-        [DBFieldName("OverrideIconID", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, false, false, true)]
+        [DBFieldName("OverrideIconID", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, false, false, true)]
         public int? OverrideIconID;
 
         [DBFieldName("VerifiedBuild")]
