@@ -15,6 +15,8 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
     /// </summary>
     public static class ForeverAuctionHandler
     {
+        public static void ReadBucketKeyPublic(Packet packet, params object[] idx) => ReadBucketKey(packet, idx);
+
         private static void ReadBucketKey(Packet packet, params object[] idx)
         {
             packet.ResetBitReader();
