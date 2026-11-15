@@ -34,7 +34,7 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         public static void HandleGameObjectQueryResponse(Packet packet)
         {
             var entry = packet.ReadInt32("Entry");
-            packet.ReadGuid("GUID");
+            ForeverGuid.Read(packet, "GUID");
             var allow = packet.ReadBit("Allow");
 
             if (!allow)
