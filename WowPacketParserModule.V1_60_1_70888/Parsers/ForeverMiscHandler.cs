@@ -65,5 +65,49 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadUInt32("ClassicUnknown1");
             packet.ReadUInt32("ClassicUnknown2");
         }
+
+        /// <summary>
+        /// CMSG_BATTLEMASTER_JOIN_ARENA (tc-forever, BattlegroundPackets.cpp:170): w Classic 1.60
+        /// to jeden bajt - TeamSizeIndex - bez Roles. Retailowy odczyt czytal jeszcze Roles
+        /// i rzucal EndOfStream na kazdym pakiecie.
+        /// </summary>
+        [Parser(Opcode.CMSG_BATTLEMASTER_JOIN_ARENA)]
+        public static void HandleBattlemasterJoinArena(Packet packet)
+        {
+            packet.ReadByte("TeamSizeIndex");
+        }
+
+        /// <summary>
+        /// CMSG_CONSUMABLE_TOKEN_REDEEM_CONFIRMATION: klient Forever wysyla tylko jeden u32
+        /// (pakiet ma 4 bajty); retailowy uklad (Count, TokenGuid, bit) nie istnieje.
+        /// </summary>
+        [Parser(Opcode.CMSG_CONSUMABLE_TOKEN_REDEEM_CONFIRMATION)]
+        public static void HandleConsumableTokenRedeemConfirmation(Packet packet)
+        {
+            packet.ReadUInt32("UnkInt32");
+        }
+
+        /// <summary>
+        /// SMSG_GUILD_EVENT_LOG_QUERY_RESULTS (tc-forever, GuildPackets.cpp:281): [u32 count] i
+        /// per wpis [GUID Player][GUID Other][u8 TransactionType][u8 RankID][u32 TransactionDate].
+        /// Gdy dziennik jest pusty serwer wysyla pakiet o dlugosci 0 (bez nawet licznika),
+        /// co jest poprawnym, pustym wynikiem.
+        /// </summary>
+        [Parser(Opcode.SMSG_GUILD_EVENT_LOG_QUERY_RESULTS)]
+        public static void HandleGuildEventLogQueryResults(Packet packet)
+        {
+            if (packet.Length == 0)
+                return;
+
+            var count = packet.ReadInt32("EventEntryCount");
+            for (var i = 0; i < count; ++i)
+            {
+                ForeverGuid.Read(packet, "PlayerGUID", i);
+                ForeverGuid.Read(packet, "OtherGUID", i);
+                packet.ReadByte("TransactionType", i);
+                packet.ReadByte("RankID", i);
+                packet.ReadUInt32("TransactionDate", i);
+            }
+        }
     }
 }
