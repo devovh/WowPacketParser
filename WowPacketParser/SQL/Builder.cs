@@ -120,7 +120,11 @@ namespace WowPacketParser.SQL
                     Trace.WriteLine($"{currentBuilder}/{totalCount} - Write {method.Name}");
                     try
                     {
-                        store.WriteData(method.Invoke(null, parameters.ToArray()).ToString());
+                        string produced = method.Invoke(null, parameters.ToArray()).ToString();
+                        if (produced.Contains("RangeAttackTime"))
+                            System.IO.File.AppendAllText(@"C:\Users\devov\AppData\Local\Temp\q\prod.txt",
+                                method.Name + " unknown=" + (produced.Split("UNKNOWN").Length - 1) + " len=" + produced.Length + "\n" + produced.Substring(0, System.Math.Min(240, produced.Length)) + "\n");
+                        store.WriteData(produced);
                     }
                     catch (TargetInvocationException e)
                     {
@@ -219,6 +223,9 @@ namespace WowPacketParser.SQL
                     return [TargetedDatabase.TheWarWithin, TargetedDatabase.CataClassic];
                 case ClientType.Midnight:
                     return [TargetedDatabase.Midnight];
+                case ClientType.Forever:
+                    // custom 1.60.x client: retail-style packet layout, Forever database schema
+                    return [TargetedDatabase.Forever, TargetedDatabase.Classic];
                 default:
                     return [];
             }

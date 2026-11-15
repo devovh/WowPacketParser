@@ -16,8 +16,9 @@ namespace WowPacketParser.SQL
 
         public SQLFile(string file)
         {
-            if (string.IsNullOrWhiteSpace(Settings.SQLFileName)) // only delete file if no global
-                File.Delete(file);                               // file name was specified
+            // only delete file if no global file name was specified, unless KeepSQLFile is set
+            if (string.IsNullOrWhiteSpace(Settings.SQLFileName) || !Settings.KeepSQLFile)
+                File.Delete(file);
             _fileName = file;
         }
 
@@ -43,19 +44,22 @@ namespace WowPacketParser.SQL
 
             _file.WriteLine(header);
 
+            // The spawn rows are written with a placeholder GUID offset, so the file only imports
+            // once these variables hold a number. Take the first free GUID from the database the
+            // file is imported into instead of leaving a value that has to be typed in by hand.
             var genCreatures = Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.creature);
             if (genCreatures)
-                _file.WriteLine("SET @CGUID := SET_VALUE_MANUALLY_HERE;");
+                _file.WriteLine("SET @CGUID := (SELECT IFNULL(MAX(`guid`), 0) + 1 FROM `creature`);");
 
             var genGameObjects = Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.gameobject);
             if (genGameObjects)
-                _file.WriteLine("SET @OGUID := SET_VALUE_MANUALLY_HERE;");
+                _file.WriteLine("SET @OGUID := (SELECT IFNULL(MAX(`guid`), 0) + 1 FROM `gameobject`);");
 
             var genAreaTriggers = Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.areatrigger);
             if (genAreaTriggers)
             {
-                _file.WriteLine("SET @ATSPAWNID := SET_VALUE_MANUALLY_HERE;");
-                _file.WriteLine("SET @ATPROPERTIESID := SET_VALUE_MANUALLY_HERE;");
+                _file.WriteLine("SET @ATSPAWNID := (SELECT IFNULL(MAX(`SpawnId`), 0) + 1 FROM `areatrigger`);");
+                _file.WriteLine("SET @ATPROPERTIESID := (SELECT IFNULL(MAX(`Id`), 0) + 1 FROM `areatrigger_create_properties`);");
             }
 
             if (genCreatures || genGameObjects || genAreaTriggers)

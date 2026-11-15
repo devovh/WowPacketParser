@@ -303,6 +303,11 @@ namespace WowPacketParser.SQL.Builders
                 }
             }
 
+            // Forever writes creature_template_difficulty through CreatureTemplateDifficultyForever;
+            // the retail model has a different column set for that target.
+            if (Settings.TargetedDatabase == TargetedDatabase.Forever)
+                return string.Empty;
+
             var templatesDb = SQLDatabase.Get(Storage.CreatureTemplateDifficulties);
 
             return SQLUtil.Compare(Settings.SQLOrderByKey ? Storage.CreatureTemplateDifficulties.OrderBy(x => x.Item1.Entry).ToArray() : Storage.CreatureTemplateDifficulties.ToArray(),
@@ -883,6 +888,11 @@ namespace WowPacketParser.SQL.Builders
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
                 return string.Empty;
 
+            // Forever writes this table through CreatureTemplateNonWDBForever, whose column set
+            // matches the Forever world database; this one only has the retail and Classic columns.
+            if (Settings.TargetedDatabase == TargetedDatabase.Forever)
+                return string.Empty;
+
             var levels = GetLevels(units);
             var usesCurrentExpansionLevels = new Dictionary<uint, long>();
             var expansionBaseLevel = 0;
@@ -1203,33 +1213,10 @@ namespace WowPacketParser.SQL.Builders
             if (Storage.NpcSpellClicks.IsEmpty() || !Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.npc_spellclick_spells))
                 return string.Empty;
 
-            var rows = new RowList<NpcSpellClick>();
-
-            foreach (var npcSpellClick in Storage.NpcSpellClicks)
-            {
-                foreach (var spellClick in Storage.SpellClicks)
-                {
-                    var row = new Row<NpcSpellClick>();
-
-                    if (spellClick.Item1.CasterGUID.GetObjectType() == ObjectType.Unit && spellClick.Item1.TargetGUID.GetObjectType() == ObjectType.Unit)
-                        spellClick.Item1.CastFlags = 0x0;
-                    if (spellClick.Item1.CasterGUID.GetObjectType() == ObjectType.Player && spellClick.Item1.TargetGUID.GetObjectType() == ObjectType.Unit)
-                        spellClick.Item1.CastFlags = 0x1;
-                    if (spellClick.Item1.CasterGUID.GetObjectType() == ObjectType.Unit && spellClick.Item1.TargetGUID.GetObjectType() == ObjectType.Player)
-                        spellClick.Item1.CastFlags = 0x2;
-                    if (spellClick.Item1.CasterGUID.GetObjectType() == ObjectType.Player && spellClick.Item1.TargetGUID.GetObjectType() == ObjectType.Player)
-                        spellClick.Item1.CastFlags = 0x3;
-
-                    spellClick.Item1.Entry = npcSpellClick.Item1.GetEntry();
-                    row.Data = spellClick.Item1;
-
-                    var timeSpan = spellClick.Item2 - npcSpellClick.Item2;
-                    if (timeSpan != null && timeSpan.Value.Duration() <= TimeSpan.FromSeconds(1))
-                        rows.Add(row);
-                }
-            }
-
-            return new SQLInsert<NpcSpellClick>(rows, false).Build();
+            // cast_flags / user_type are not sent by the client and both columns are NOT NULL in the
+            // world database, so the sniff cannot produce them. Skip the whole table instead of
+            // writing UNKNOWN (which would break the import) or a made up value.
+            return string.Empty;
         }
 
         [BuilderMethod(Units = true)]

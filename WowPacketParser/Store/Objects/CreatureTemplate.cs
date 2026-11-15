@@ -22,16 +22,16 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("name", LocaleConstant.enUS, nullable: true)]
         public string Name;
 
-        [DBFieldName("femaleName", TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("femaleName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string FemaleName;
 
-        [DBFieldName("subname", LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("subname", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string SubName;
 
-        [DBFieldName("TitleAlt", TargetedDatabaseFlag.SinceWarlordsOfDraenor /*Mists of Pandaria*/ | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
+        [DBFieldName("TitleAlt", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string TitleAlt;
 
-        [DBFieldName("IconName", nullable: true)]
+        [DBFieldName("IconName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string IconName;
 
         [DBFieldName("HealthScalingExpansion", TargetedDatabaseFlag.SinceWarlordsOfDraenorTillShadowLands | TargetedDatabaseFlag.Classic)]
@@ -185,6 +185,80 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("VerifiedBuild")]
         public int? VerifiedBuild = ClientVersion.BuildInt;
     }
+
+    /// <summary>
+    /// creature_template columns the world database requires but SMSG_QUERY_CREATURE_RESPONSE
+    /// does not carry; they are sniffed at spawn time as update fields. CreatureTemplateNonWDB
+    /// cannot be reused for Forever because its fields are declared for retail and Classic only.
+    /// </summary>
+    [DBTableName("creature_template", TargetedDatabaseFlag.Forever)]
+    public sealed record CreatureTemplateNonWDBForever : IDataModel
+    {
+        [DBFieldName("entry", true)]
+        public uint? Entry;
+
+        [DBFieldName("faction")]
+        public uint? Faction;
+
+        [DBFieldName("npcflag")]
+        public NPCFlags? NpcFlag;
+
+        [DBFieldName("speed_walk")]
+        public float? SpeedWalk;
+
+        [DBFieldName("speed_run")]
+        public float? SpeedRun;
+
+        [DBFieldName("BaseAttackTime")]
+        public uint? BaseAttackTime;
+
+        [DBFieldName("RangeAttackTime", nullable: true)]
+        public uint? RangeAttackTime;
+
+        [DBFieldName("unit_class")]
+        public uint? UnitClass;
+
+        [DBFieldName("unit_flags", nullable: true)]
+        public UnitFlags? UnitFlags;
+
+        [DBFieldName("unit_flags2", nullable: true)]
+        public UnitFlags2? UnitFlags2;
+
+        [DBFieldName("unit_flags3", nullable: true)]
+        public UnitFlags3? UnitFlags3;
+
+        [DBFieldName("VehicleId", nullable: true)]
+        public uint? VehicleID;
+    }
+
+    [DBTableName("creature_questitem")]
+    public sealed record CreatureTemplateQuestItemForever : IDataModel
+    {
+        [DBFieldName("CreatureEntry", true)]
+        public uint? CreatureEntry;
+
+        [DBFieldName("Idx", true)]
+        public uint? Idx;
+
+        [DBFieldName("ItemId")]
+        public uint? ItemId;
+
+        [DBFieldName("VerifiedBuild")]
+        public int? VerifiedBuild = ClientVersion.BuildInt;
+    }
+
+    [DBTableName("creature_quest_currency")]
+    public sealed record CreatureTemplateQuestCurrencyForever : IDataModel
+    {
+        [DBFieldName("CreatureId", true)]
+        public uint? CreatureId;
+
+        [DBFieldName("CurrencyId", true)]
+        public int? CurrencyId;
+
+        [DBFieldName("VerifiedBuild")]
+        public int? VerifiedBuild = ClientVersion.BuildInt;
+    }
 
     [DBTableName("creature_template")]
     public sealed record CreatureTemplateClassic : IDataModel
@@ -201,16 +275,16 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("name")]
         public string Name;
 
-        [DBFieldName("femaleName")]
+        [DBFieldName("femaleName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string FemaleName;
 
-        [DBFieldName("subname", nullable: true)]
+        [DBFieldName("subname", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string SubName;
 
-        [DBFieldName("TitleAlt", nullable: true)]
+        [DBFieldName("TitleAlt", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string TitleAlt;
 
-        [DBFieldName("IconName", nullable: true)]
+        [DBFieldName("IconName", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS, nullable: true)]
         public string IconName;
 
         [DBFieldName("HealthScalingExpansion")]

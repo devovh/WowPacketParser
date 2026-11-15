@@ -125,10 +125,14 @@ namespace WowPacketParser.SQL.Builders
             return default;
         }
 
+        private const string NODE_HEADER = "INSERT INTO waypoint_path_node (`PathId`, `NodeId`, `PositionX`, `PositionY`, `PositionZ`, `Orientation`) VALUES";
+
         protected override string GenerateQuery()
         {
             StringBuilder output = new();
-            output.AppendLine("SET @MOVID := SET_VALUE_MANUALLY_HERE;");
+            // Same reason as the spawn GUIDs: take the first free path id from the database
+            // instead of leaving a placeholder that has to be filled in by hand.
+            output.AppendLine("SET @MOVID := (SELECT IFNULL(MAX(`PathId`), 0) + 1 FROM `waypoint_path`);");
             int pathIdCounter = 0;
             foreach (var (mover, paths) in pathsPerGuid)
             {
@@ -146,9 +150,10 @@ namespace WowPacketParser.SQL.Builders
 
                     output.AppendLine("INSERT INTO waypoint_path (`PathId`, `MoveType`, `Flags`, `Velocity`, `Comment`) VALUES");
                     output.AppendLine($"(@MOVID + {pathIdCounter}, 0, {flags}, NULL, '{SQLUtil.EscapeString(StoreGetters.GetName(Utilities.ObjectTypeToStore(mover.Type.ToObjectType()), (int)mover.Entry))}');");
-                    output.AppendLine("INSERT INTO waypoint_path_node (`PathId`, `NodeId`, `PositionX`, `PositionY`, `PositionZ`, `Orientation`) VALUES");
+                    output.AppendLine(NODE_HEADER);
                 }
                 int pointIdCounter = 1;
+                int emittedRows = 0;
                 foreach (var path in paths.Paths)
                 {
                     foreach (var node in path.Waypoints)
@@ -160,13 +165,15 @@ namespace WowPacketParser.SQL.Builders
                             output.Append("-- ");
                         }
 
-                        var isLast = pointIdCounter == paths.PointCount;
+                        // A row ends the statement only when the last node of the whole track has
+                        // just been written; everything before it stays separated by commas.
                         if (Settings.TargetedProject == TargetedProject.Cmangos)
                             output.Append($"(@MOVID + {pathIdCounter}, '{pointIdCounter}', '{node.Position.X}', '{node.Position.Y}', '{node.Position.Z}', '{node.Orientation ?? 100.0f}', '0', '0', NULL)");
                         else if (Settings.TargetedProject == TargetedProject.TrinityCore)
                             output.Append($"(@MOVID + {pathIdCounter}, {pointIdCounter}, {node.Position.X}, {node.Position.Y}, {node.Position.Z}, {(node.Orientation.HasValue ? node.Orientation.Value.ToString(CultureInfo.InvariantCulture) : "NULL")})");
 
-                        output.Append(!isLast ? ',' : ';');
+                        output.Append(pointIdCounter == paths.PointCount ? ';' : ',');
+                        ++emittedRows;
 
                         if (pointIdCounter == 1)
                             output.Append($" -- PathType: {path.Type}");
@@ -177,6 +184,24 @@ namespace WowPacketParser.SQL.Builders
                     }
                 }
 
+                // Each emitted row already ends the statement (';' on the track's last node), so a
+                // track whose nodes are all commented out leaves the waypoint_path_node header with
+                // a VALUES and no row, and the next statement would be glued onto it. Drop that
+                // header in that case: count the rows that actually survived.
+                if (emittedRows == 0)
+                {
+                    string dump = output.ToString();
+                    int headerAt = dump.LastIndexOf(NODE_HEADER, System.StringComparison.Ordinal);
+                    if (headerAt >= 0)
+                    {
+                        int headerEnd = dump.IndexOf('\n', headerAt);
+                        dump = dump.Remove(headerAt, headerEnd - headerAt + 1);
+                        output.Clear();
+                        output.Append(dump);
+                    }
+                }
+
+                output.AppendLine();
                 output.AppendLine();
 
                 ++pathIdCounter;

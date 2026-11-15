@@ -22,6 +22,6 @@ namespace WowPacketParser.Enums
         CataClassic        = 9,
         TheWarWithin       = 10,
         Midnight           = 11,
-        Forever            = 11,
+        Forever            = 12,
     }
 }

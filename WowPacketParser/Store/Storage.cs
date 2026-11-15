@@ -29,6 +29,7 @@ namespace WowPacketParser.Store
         public static readonly DataBag<ConversationLineTemplate> ConversationLineTemplates = new DataBag<ConversationLineTemplate>(new List<SQLOutput> { SQLOutput.conversation_line_template });
         public static readonly DataBag<ConversationTemplate> ConversationTemplates = new DataBag<ConversationTemplate>(new List<SQLOutput> { SQLOutput.conversation_template });
         public static readonly DataBag<GameObjectTemplate> GameObjectTemplates = new DataBag<GameObjectTemplate>(new List<SQLOutput> { SQLOutput.gameobject_template });
+        public static readonly DataBag<GameObjectTemplateForever> GameObjectTemplatesForever = new DataBag<GameObjectTemplateForever>(new List<SQLOutput> { SQLOutput.gameobject_template });
         public static readonly DataBag<GameObjectTemplateQuestItem> GameObjectTemplateQuestItems = new DataBag<GameObjectTemplateQuestItem>(new List<SQLOutput> { SQLOutput.gameobject_template });
         public static readonly DataBag<GameObjectQuestStarter> GameObjectQuestStarters = new DataBag<GameObjectQuestStarter>(new List<SQLOutput> { SQLOutput.gameobject_queststarter });
         public static readonly DataBag<GameObjectQuestEnder> GameObjectQuestEnders = new DataBag<GameObjectQuestEnder>(new List<SQLOutput> { SQLOutput.gameobject_questender });
@@ -41,8 +42,13 @@ namespace WowPacketParser.Store
         public static readonly DataBag<QuestRewardHouseRoom> QuestRewardHouseRoomStorage = new DataBag<QuestRewardHouseRoom>(new List<SQLOutput> { SQLOutput.quest_template });
         public static readonly DataBag<QuestRewardHouseDecor> QuestRewardHouseDecorStorage = new DataBag<QuestRewardHouseDecor>(new List<SQLOutput> { SQLOutput.quest_template });
         public static readonly StoreDictionary<uint, CreatureTemplate> CreatureTemplates = new StoreDictionary<uint, CreatureTemplate>(new List<SQLOutput> { SQLOutput.creature_template });
+        public static readonly StoreDictionary<uint, CreatureTemplateForever> CreatureTemplatesForever = new StoreDictionary<uint, CreatureTemplateForever>(new List<SQLOutput> { SQLOutput.creature_template });
+        public static readonly StoreDictionary<uint, CreatureTemplateDifficultyForever> CreatureTemplateDifficultiesForever = new StoreDictionary<uint, CreatureTemplateDifficultyForever>(new List<SQLOutput> { SQLOutput.creature_template_difficulty });
+        public static readonly DataBag<CreatureTemplateQuestItemForever> CreatureTemplateQuestItemsForever = new DataBag<CreatureTemplateQuestItemForever>(new List<SQLOutput> { SQLOutput.creature_template });
+        public static readonly DataBag<CreatureTemplateQuestCurrencyForever> CreatureTemplateQuestCurrenciesForever = new DataBag<CreatureTemplateQuestCurrencyForever>(new List<SQLOutput> { SQLOutput.creature_template });
         public static readonly DataBag<CreatureTemplateClassic> CreatureTemplatesClassic = new DataBag<CreatureTemplateClassic>(new List<SQLOutput> { SQLOutput.creature_template });
         public static readonly DataBag<CreatureTemplateNonWDB> CreatureTemplatesNonWDB = new DataBag<CreatureTemplateNonWDB>(new List<SQLOutput> { SQLOutput.creature_template });
+        public static readonly DataBag<CreatureTemplateNonWDBForever> CreatureTemplatesNonWDBForever = new DataBag<CreatureTemplateNonWDBForever>(new List<SQLOutput> { SQLOutput.creature_template });
         public static readonly DataBag<CreatureTemplateQuestItem> CreatureTemplateQuestItems = new DataBag<CreatureTemplateQuestItem>(new List<SQLOutput> { SQLOutput.creature_template });
         public static readonly DataBag<CreatureTemplateQuestCurrency> CreatureTemplateQuestCurrencies = new DataBag<CreatureTemplateQuestCurrency>(new List<SQLOutput> { SQLOutput.creature_template });
         public static readonly DataBag<CreatureTemplateDifficulty> CreatureTemplateDifficulties = new DataBag<CreatureTemplateDifficulty>(new List<SQLOutput> { SQLOutput.creature_template_difficulty });
@@ -2740,6 +2746,7 @@ namespace WowPacketParser.Store
             ConversationLineTemplates.Clear();
             ConversationTemplates.Clear();
             GameObjectTemplates.Clear();
+            GameObjectTemplatesForever.Clear();
             GameObjectTemplateQuestItems.Clear();
             ItemTemplates.Clear();
             QuestTemplates.Clear();
@@ -2748,11 +2755,16 @@ namespace WowPacketParser.Store
             QuestRewardDisplaySpells.Clear();
             QuestTreasurePickersStorage.Clear();
             CreatureTemplates.Clear();
+            CreatureTemplatesForever.Clear();
             CreatureTemplatesClassic.Clear();
             CreatureTemplatesNonWDB.Clear();
+            CreatureTemplatesNonWDBForever.Clear();
             CreatureTemplateQuestItems.Clear();
             CreatureTemplateQuestCurrencies.Clear();
             CreatureTemplateDifficulties.Clear();
+            CreatureTemplateDifficultiesForever.Clear();
+            CreatureTemplateQuestItemsForever.Clear();
+            CreatureTemplateQuestCurrenciesForever.Clear();
             CreatureTemplateDifficultiesWDB.Clear();
             CreatureTemplateModels.Clear();
             CreatureTemplateSpells.Clear();

@@ -66,7 +66,10 @@ namespace WowPacketParser.SQL.Builders
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.quest_template))
                 return string.Empty;
 
-            if (Settings.TargetedDatabase < TargetedDatabase.Shadowlands)
+            // The Forever client sends RewardDisplaySpell in SMSG_QUERY_QUEST_INFO_RESPONSE with a
+            // layout the parsing module does not match, so the stored rows carry garbage values.
+            // Write nothing for that target instead of importing junk.
+            if (Settings.TargetedDatabase == TargetedDatabase.Forever)
                 return string.Empty;
 
             if (Storage.QuestRewardDisplaySpells.IsEmpty())
@@ -116,6 +119,44 @@ namespace WowPacketParser.SQL.Builders
         }
 
         [BuilderMethod(true)]
+        public static string CreatureTemplateForever()
+        {
+            if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
+                return string.Empty;
+
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            if (Storage.CreatureTemplatesForever.IsEmpty())
+                return string.Empty;
+
+            var templatesDb = SQLDatabase.Get(Storage.CreatureTemplatesForever.Values);
+
+            return SQLUtil.Compare(Storage.CreatureTemplatesForever.Values, templatesDb, StoreNameType.Unit);
+        }
+
+        [BuilderMethod(true)]
+        public static string CreatureTemplateDifficultyForever()
+        {
+            if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template_difficulty))
+                return string.Empty;
+
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            if (Storage.CreatureTemplateDifficultiesForever.IsEmpty())
+                return string.Empty;
+
+            // The rows are written directly: SQLUtil.Compare de-duplicates by primary key and the
+            // Forever model carries more values (TypeFlags*, modifiers) than that path keeps.
+            var storeRows = new RowList<CreatureTemplateDifficultyForever>();
+            foreach (var stored in Storage.CreatureTemplateDifficultiesForever.Values)
+                storeRows.Add(new Row<CreatureTemplateDifficultyForever>(stored.Item1));
+
+            return new SQLInsert<CreatureTemplateDifficultyForever>(storeRows, false).Build();
+        }
+        [BuilderMethod(true)]
+
         public static string CreatureTemplateModel()
         {
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
@@ -168,6 +209,95 @@ namespace WowPacketParser.SQL.Builders
             });
         }
 
+        /// <summary>
+        /// Fills the creature_template columns that the world database needs but
+        /// SMSG_QUERY_CREATURE_RESPONSE does not carry; the sniff supplies them as update fields
+        /// at spawn time. CreatureTemplateNonWDB cannot be reused for this under
+        /// TargetedDatabase.Forever because its columns are declared for the retail and
+        /// Classic targets only and would not be visible for Forever.
+        /// </summary>
+        [BuilderMethod(true, Units = true)]
+        public static string CreatureTemplateNonWDBForever(Dictionary<WowGuid, Unit> units)
+        {
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
+                return string.Empty;
+
+            if (units.Count == 0)
+                return string.Empty;
+
+            foreach (var unit in units)
+            {
+                uint entry = unit.Key.GetEntry();
+
+                if (Storage.CreatureTemplatesNonWDBForever.Any(t => t.Item1.Entry == entry))
+                    continue;
+
+                var npc = unit.Value;
+                var template = new CreatureTemplateNonWDBForever
+                {
+                    Entry = entry,
+                    Faction = (uint)npc.UnitData.FactionTemplate,
+                    NpcFlag = (NPCFlags)Utilities.MAKE_PAIR64(npc.UnitData.NpcFlags[0] ?? 0, npc.UnitData.NpcFlags[1] ?? 0),
+                    SpeedRun = npc.Movement.RunSpeed,
+                    SpeedWalk = npc.Movement.WalkSpeed,
+                    BaseAttackTime = npc.UnitData.AttackRoundBaseTime[0],
+                    RangeAttackTime = npc.UnitData.RangedAttackRoundBaseTime,
+                    UnitClass = npc.UnitData.ClassId,
+                    UnitFlags = (UnitFlags)npc.UnitData.Flags,
+                    UnitFlags2 = (UnitFlags2)npc.UnitData.Flags2,
+                    UnitFlags3 = (UnitFlags3)npc.UnitData.Flags3,
+                    VehicleID = npc.Movement.VehicleId
+                };
+
+                // The world database requires this column, but the client only sends it for
+                // ranged units, so fall back to the melee attack time: otherwise the row keeps a
+                // null and SQLInsertRow writes UNKNOWN, which no database accepts.
+                if (template.RangeAttackTime == null || template.RangeAttackTime == 0)
+                    template.RangeAttackTime = template.BaseAttackTime ?? 0;
+
+                Storage.CreatureTemplatesNonWDBForever.Add(template);
+            }
+
+            if (Storage.CreatureTemplatesNonWDBForever.IsEmpty())
+                return string.Empty;
+
+            // SQLUtil.Compare de-duplicates by primary key and would keep a single row for the
+            // table shared with CreatureTemplateForever, so build the insert straight from the rows.
+            var storeRows = new RowList<CreatureTemplateNonWDBForever>();
+            foreach (var stored in Storage.CreatureTemplatesNonWDBForever)
+                storeRows.Add(new Row<CreatureTemplateNonWDBForever>(stored.Item1));
+
+            var built = new SQLInsert<CreatureTemplateNonWDBForever>(storeRows, false).Build();
+            System.IO.File.AppendAllText(@"C:\Users\devov\AppData\Local\Temp\q\built.txt",
+                "rows=" + storeRows.Count + " unknown=" + (built.Split("UNKNOWN").Length - 1) + "\n" + built.Substring(0, System.Math.Min(300, built.Length)) + "\n");
+            return built;
+        }
+        [BuilderMethod(true, Gameobjects = true)]
+        public static string GameObjectTemplateForever(Dictionary<WowGuid, GameObject> gameobjects)
+        {
+            if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.gameobject_template))
+                return string.Empty;
+
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            if (Storage.GameObjectTemplatesForever.IsEmpty())
+                return string.Empty;
+
+            foreach (var goT in Storage.GameObjectTemplatesForever)
+            {
+                GameObject go = gameobjects.FirstOrDefault(p => p.Key.GetEntry() == goT.Item1.Entry.GetValueOrDefault()).Value;
+                if (go != null && goT.Item1.Size == null)
+                    goT.Item1.Size = go.ObjectData.Scale;
+            }
+
+            var templatesDb = SQLDatabase.Get(Storage.GameObjectTemplatesForever);
+
+            return SQLUtil.Compare(Storage.GameObjectTemplatesForever, templatesDb, StoreNameType.GameObject);
+        }
         [BuilderMethod(true, Gameobjects = true)]
         public static string GameObjectTemplate(Dictionary<WowGuid, GameObject> gameobjects)
         {

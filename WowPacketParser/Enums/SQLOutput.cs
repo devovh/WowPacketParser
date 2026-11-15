@@ -41,7 +41,6 @@
         item_template,
         locales_quest,
         locales_quest_objectives,
-        npc_spellclick_spells,
         npc_text,
         npc_trainer,
         npc_vendor,
@@ -68,7 +67,8 @@
         hotfix_data,
         hotfix_blob,
         hotfix_optional_data,
-        hotfixes
+        hotfixes,
+        npc_spellclick_spells,
         // ReSharper restore InconsistentNaming
     }
 }

@@ -17,11 +17,12 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
     ///     jesli result == 0:
     ///       [bits 11 Title][bits 11 TitleAlt][bits 6 CursorName][bit Leader]
     ///       [4 x (bits 11 Name[i], bits 11 NameAlt[i])]
-    ///       [teksty Name/NameAlt][u32 TypeFlags x N][u8 CreatureType][i32 Family]
+    ///       [teksty Name/NameAlt][u32 TypeFlags x 3][u8 CreatureType][i32 Family]
     ///       [i8 Classification][2 x i32 ProxyCreatureID]
     ///       [u32 DisplayCount][f32 TotalProbability][per display: u32 id, f32 scale, f32 prob]
     ///       [f32 HpMulti][f32 EnergyMulti][u32 QuestItems][u32 QuestCurrencies]
-    ///       [8 x i32: MovementInfoID .. WidgetSetUnitConditionID]
+    ///       [8 x i32: MovementInfoID, HealthScalingExpansion, RequiredExpansion, VignetteID,
+    ///                 Class, CreatureDifficultyID, WidgetSetID, WidgetSetUnitConditionID]
     ///       [Title][TitleAlt][CursorName][QuestItems][QuestCurrencies]
     ///
     /// Fallback (9.x) czyta od razu u32 jako "Entry" i bit HasData, przez co dla pakietu
@@ -29,6 +30,10 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
     /// zostaje 115-158 bajtow.
     ///
     /// 6 B: 04 | 1F 34 04 00 | 01  ->  count=1, CreatureID=275487, result=1 (brak danych)
+    ///
+    /// Wynik zapisywany jest do Storage.CreatureTemplatesForever (schemat TDB Forever),
+    /// Storage.CreatureTemplateDifficultiesForever (TypeFlags/HealthModifier/ManaModifier/
+    /// CreatureDifficultyID/HealthScalingExpansion) oraz Storage.CreatureTemplateModels.
     /// </summary>
     public static class ForeverQueryCreatureHandler
     {
@@ -57,7 +62,7 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             var titleLen = packet.ReadBits("TitleLength", 11, e);
             var titleAltLen = packet.ReadBits("TitleAltLength", 11, e);
             var cursorNameLen = packet.ReadBits("CursorNameLength", 6, e);
-            packet.ReadBit("Leader", e);
+            var leader = packet.ReadBit("Leader", e);
 
             var nameLens = new int[4];
             var nameAltLens = new int[4];
@@ -79,48 +84,128 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
 
             var isForever70938 = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938;
             var typeFlagsCount = isForever70938 ? 3 : 4;
+            var typeFlags = new uint[typeFlagsCount];
             for (var i = 0; i < typeFlagsCount; ++i)
-                packet.ReadUInt32("TypeFlags", e, i);
+                typeFlags[i] = packet.ReadUInt32("TypeFlags", e, i);
 
-            packet.ReadByteE<CreatureType>("CreatureType", e);
-            packet.ReadInt32E<CreatureFamily>("CreatureFamily", e);
-            packet.ReadSByteE<CreatureRank>("Classification", e);
+            var creatureType = packet.ReadByteE<CreatureType>("CreatureType", e);
+            var creatureFamily = packet.ReadInt32E<CreatureFamily>("CreatureFamily", e);
+            var classification = packet.ReadSByteE<CreatureRank>("Classification", e);
 
+            var killCredits = new uint?[2];
             for (var i = 0; i < 2; ++i)
-                packet.ReadInt32("ProxyCreatureID", e, i);
+                killCredits[i] = (uint)packet.ReadInt32("ProxyCreatureID", e, i);
 
             var displayCount = packet.ReadUInt32("DisplayIdCount", e);
             packet.ReadSingle("TotalProbability", e);
 
             for (var i = 0; i < displayCount; ++i)
             {
-                packet.ReadUInt32("CreatureDisplayID", e, i);
-                packet.ReadSingle("DisplayScale", e, i);
-                packet.ReadSingle("Probability", e, i);
+                var displayId = packet.ReadUInt32("CreatureDisplayID", e, i);
+                var scale = packet.ReadSingle("DisplayScale", e, i);
+                var probability = packet.ReadSingle("Probability", e, i);
+
+                Storage.CreatureTemplateModels.Add(new CreatureTemplateModel
+                {
+                    CreatureID = entry,
+                    Idx = (uint)i,
+                    CreatureDisplayID = displayId,
+                    DisplayScale = scale,
+                    Probability = probability
+                }, packet.TimeSpan);
             }
 
-            packet.ReadSingle("HpMulti", e);
-            packet.ReadSingle("EnergyMulti", e);
+            var hpMulti = packet.ReadSingle("HpMulti", e);
+            var energyMulti = packet.ReadSingle("EnergyMulti", e);
             var questItemsCount = packet.ReadUInt32("QuestItems", e);
             var questCurrenciesCount = packet.ReadUInt32("QuestCurrencies", e);
 
-            for (var i = 0; i < 8; ++i)
-                packet.ReadInt32("UnkInt32", e, i);
+            var movementInfoId = (uint)packet.ReadInt32("CreatureMovementInfoID", e);
+            var healthScalingExpansion = packet.ReadInt32E<ClientType>("HealthScalingExpansion", e);
+            var requiredExpansion = packet.ReadInt32E<ClientType>("RequiredExpansion", e);
+            var vignetteId = (uint)packet.ReadInt32("VignetteID", e);
+            var unitClass = (uint)packet.ReadInt32E<Class>("UnitClass", e);
+            var creatureDifficultyId = packet.ReadInt32("CreatureDifficultyID", e);
+            var widgetSetId = packet.ReadInt32("WidgetSetID", e);
+            var widgetSetUnitConditionId = packet.ReadInt32("WidgetSetUnitConditionID", e);
 
-            if (titleLen > 1)
-                packet.ReadCString("Title", e);
-            if (titleAltLen > 1)
-                packet.ReadCString("TitleAlt", e);
-            if (cursorNameLen > 1)
-                packet.ReadCString("CursorName", e);
+            var title = titleLen > 1 ? packet.ReadCString("Title", e) : null;
+            var titleAlt = titleAltLen > 1 ? packet.ReadCString("TitleAlt", e) : null;
+            var cursorName = cursorNameLen > 1 ? packet.ReadCString("CursorName", e) : null;
 
-            if (isForever70938)
+            for (var i = 0; i < questItemsCount; ++i)
             {
-                for (var i = 0; i < questItemsCount; ++i)
-                    packet.ReadUInt32("QuestItemID", e, i);
-                for (var i = 0; i < questCurrenciesCount; ++i)
-                    packet.ReadUInt32("QuestCurrencyID", e, i);
+                Storage.CreatureTemplateQuestItemsForever.Add(new CreatureTemplateQuestItemForever
+                {
+                    CreatureEntry = entry,
+                    Idx = (uint)i,
+                    ItemId = (uint)packet.ReadInt32<ItemId>("QuestItemID", e, i)
+                }, packet.TimeSpan);
             }
+
+            for (var i = 0; i < questCurrenciesCount; ++i)
+            {
+                Storage.CreatureTemplateQuestCurrenciesForever.Add(new CreatureTemplateQuestCurrencyForever
+                {
+                    CreatureId = entry,
+                    CurrencyId = packet.ReadInt32("QuestCurrencyID", e, i)
+                }, packet.TimeSpan);
+            }
+
+            // The world database requires these text columns, and the client may send an empty
+            // string for them (the lengths are read as "> 1", so an empty one becomes null).
+            // An empty string is the database default, so keep the row importable.
+            title ??= string.Empty;
+            titleAlt ??= string.Empty;
+            cursorName ??= string.Empty;
+
+            // The client sends no female name at all; the database column is NOT NULL there.
+            var femaleName = namesAlt[0] ?? string.Empty;
+
+            Storage.CreatureTemplatesForever.Add(entry, new CreatureTemplateForever
+            {
+                Entry = entry,
+                KillCredit1 = killCredits[0],
+                KillCredit2 = killCredits[1],
+                Name = names[0],
+                FemaleName = femaleName,
+                SubName = title,
+                TitleAlt = titleAlt,
+                IconName = cursorName,
+                RequiredExpansion = (int?)requiredExpansion,
+                VignetteID = vignetteId,
+                Classification = classification,
+                UnitClass = unitClass,
+                Family = creatureFamily,
+                Type = creatureType,
+                RacialLeader = leader,
+                MovementID = movementInfoId,
+                WidgetSetID = widgetSetId,
+                WidgetSetUnitConditionID = widgetSetUnitConditionId,
+                TypeFlags = typeFlagsCount > 0 ? typeFlags[0] : null,
+                TypeFlags2 = typeFlagsCount > 1 ? typeFlags[1] : null,
+                TypeFlags3 = typeFlagsCount > 2 ? typeFlags[2] : null
+            }, packet.TimeSpan);
+
+            Storage.CreatureTemplateDifficultiesForever.Add(entry, new CreatureTemplateDifficultyForever
+            {
+                Entry = entry,
+                DifficultyID = 0,
+                HealthScalingExpansion = healthScalingExpansion,
+                HealthModifier = hpMulti,
+                ManaModifier = energyMulti,
+                CreatureDifficultyID = creatureDifficultyId,
+                TypeFlags = typeFlagsCount > 0 ? typeFlags[0] : null,
+                TypeFlags2 = typeFlagsCount > 1 ? typeFlags[1] : null,
+                TypeFlags3 = typeFlagsCount > 2 ? typeFlags[2] : null
+            }, packet.TimeSpan);
+
+            Storage.ObjectNames.Add(new ObjectName
+            {
+                ObjectType = StoreNameType.Unit,
+                ID = (int)entry,
+                Name = names[0]
+            }, packet.TimeSpan);
 
             packet.AddSniffData(StoreNameType.Unit, (int)entry, "QUERY_RESPONSE");
         }

@@ -123,7 +123,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("RewardKillHonor")]
         public float? RewardKillHonor;
 
-        [DBFieldName("RewardFavor", TargetedDatabaseFlag.SinceMidnight)]
+        [DBFieldName("RewardFavor", TargetedDatabaseFlag.SinceMidnight | TargetedDatabaseFlag.Forever)]
         public int? RewardFavor;
 
         [DBFieldName("StartItem")]
@@ -181,10 +181,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("PortraitGiver", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic)]
         public uint? QuestGiverPortrait;
 
-        [DBFieldName("PortraitGiverMount", TargetedDatabaseFlag.SinceBattleForAzeroth | TargetedDatabaseFlag.AnyClassic)]
+        [DBFieldName("PortraitGiverMount", TargetedDatabaseFlag.SinceBattleForAzeroth | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever)]
         public uint? PortraitGiverMount;
 
-        [DBFieldName("PortraitGiverModelSceneID", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.AnyClassic)]
+        [DBFieldName("PortraitGiverModelSceneID", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever)]
         public int? PortraitGiverModelSceneID;
 
         [DBFieldName("QuestTurnInPortrait", TargetedDatabaseFlag.Cataclysm)]
@@ -252,7 +252,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("RewardFactionFlags", TargetedDatabaseFlag.TillWrathOfTheLichKing | TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic)]
         public uint? RewardFactionFlags;
 
-        [DBFieldName("AreaGroupID", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic)]
+        [DBFieldName("AreaGroupID", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever)]
         public uint? AreaGroupID;
 
         [DBFieldName("TimeAllowed")]
@@ -268,16 +268,16 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("TreasurePickerID", TargetedDatabaseFlag.SinceBattleForAzerothTillDragonflight | TargetedDatabaseFlag.Classic | TargetedDatabaseFlag.WotlkClassic)]
         public int? QuestRewardID;
 
-        [DBFieldName("Expansion", TargetedDatabaseFlag.SinceLegion | TargetedDatabaseFlag.AnyClassic)]
+        [DBFieldName("Expansion", TargetedDatabaseFlag.SinceLegion | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever)]
         public int? Expansion;
 
-        [DBFieldName("ManagedWorldStateID", TargetedDatabaseFlag.SinceBattleForAzeroth | TargetedDatabaseFlag.WotlkClassic)]
+        [DBFieldName("ManagedWorldStateID", TargetedDatabaseFlag.SinceBattleForAzeroth | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.Forever)]
         public int? ManagedWorldStateID;
 
-        [DBFieldName("QuestSessionBonus", TargetedDatabaseFlag.SinceBattleForAzeroth | TargetedDatabaseFlag.WotlkClassic)]
+        [DBFieldName("QuestSessionBonus", TargetedDatabaseFlag.SinceBattleForAzeroth | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.Forever)]
         public int? QuestSessionBonus;
 
-        [DBFieldName("LogTitle", LocaleConstant.enUS)]
+        [DBFieldName("LogTitle", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.SinceCataclysm | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS)]
         public string LogTitle;
 
         [DBFieldName("LogDescription", LocaleConstant.enUS)]
@@ -289,8 +289,12 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("AreaDescription", LocaleConstant.enUS)]
         public string AreaDescription;
 
-        [DBFieldName("QuestCompletionLog", LocaleConstant.enUS)]
+        [DBFieldName("QuestCompletionLog", TargetedDatabaseFlag.Forever | TargetedDatabaseFlag.AnyClassic, LocaleConstant.enUS)]
         public string QuestCompletionLog;
+
+        // The Forever client sends this bit, and the Forever world database has the column.
+        [DBFieldName("ResetByScheduler", TargetedDatabaseFlag.Forever)]
+        public bool? ResetByScheduler;
 
         [DBFieldName("RequiredNpcOrGo", TargetedDatabaseFlag.TillCataclysm, 4)]
         public int?[] RequiredNpcOrGo;
@@ -325,27 +329,27 @@ namespace WowPacketParser.Store.Objects
         public uint?[] RequiredCurrencyCount;
 
         [DBFieldName("QuestGiverTextWindow", TargetedDatabaseFlag.Cataclysm)]
-        [DBFieldName("PortraitGiverText", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, LocaleConstant.enUS)]
+        [DBFieldName("PortraitGiverText", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic | TargetedDatabaseFlag.Forever, LocaleConstant.enUS)]
         public string QuestGiverTextWindow;
 
         [DBFieldName("QuestGiverTargetName", TargetedDatabaseFlag.Cataclysm)]
-        [DBFieldName("PortraitGiverName", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, LocaleConstant.enUS)]
+        [DBFieldName("PortraitGiverName", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic | TargetedDatabaseFlag.Forever, LocaleConstant.enUS)]
         public string QuestGiverTargetName;
 
         [DBFieldName("QuestTurnTextWindow", TargetedDatabaseFlag.Cataclysm)]
-        [DBFieldName("PortraitTurnInText", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, LocaleConstant.enUS)]
+        [DBFieldName("PortraitTurnInText", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic | TargetedDatabaseFlag.Forever, LocaleConstant.enUS)]
         public string QuestTurnTextWindow;
 
         [DBFieldName("QuestTurnTargetName", TargetedDatabaseFlag.Cataclysm)]
-        [DBFieldName("PortraitTurnInName", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic, LocaleConstant.enUS)]
+        [DBFieldName("PortraitTurnInName", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.CataClassic | TargetedDatabaseFlag.Forever, LocaleConstant.enUS)]
         public string QuestTurnTargetName;
 
         [DBFieldName("SoundAccept", TargetedDatabaseFlag.Cataclysm)]
-        [DBFieldName("AcceptedSoundKitID", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic)]
+        [DBFieldName("AcceptedSoundKitID", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever)]
         public uint? SoundAccept;
 
         [DBFieldName("SoundTurnIn", TargetedDatabaseFlag.Cataclysm)]
-        [DBFieldName("CompleteSoundKitID", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic)]
+        [DBFieldName("CompleteSoundKitID", TargetedDatabaseFlag.SinceWarlordsOfDraenor | TargetedDatabaseFlag.AnyClassic | TargetedDatabaseFlag.Forever)]
         public uint? SoundTurnIn;
 
         [DBFieldName("VerifiedBuild")]

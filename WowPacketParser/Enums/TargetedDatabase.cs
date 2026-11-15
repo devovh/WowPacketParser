@@ -20,7 +20,10 @@ namespace WowPacketParser.Enums
         Classic             = 20,
         WotlkClassic        = 21,
         CataClassic         = 22,
-        MoPClassic          = 23
+        MoPClassic          = 23,
+
+        // WoW Forever (custom 1.60.x client, schema follows TDB_full_forever)
+        Forever             = 24
     }
 
     [Flags]
@@ -47,7 +50,10 @@ namespace WowPacketParser.Enums
         MoPClassic                        = 1 << TargetedDatabase.MoPClassic,
         AnyClassic                        = Classic | WotlkClassic | CataClassic | MoPClassic,
 
-        Any                               = AnyRetail | AnyClassic,
+        // WoW Forever - deliberately not part of AnyClassic, it has its own column set
+        Forever                           = 1u << TargetedDatabase.Forever,
+
+        Any                               = AnyRetail | AnyClassic | Forever,
 
         // predefines
         TillWrathOfTheLichKing            = WrathOfTheLichKing | TheBurningCrusade,

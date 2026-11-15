@@ -304,7 +304,14 @@ namespace WowPacketParser.SQL.Builders
                             continue;
 
                         auras += aura.SpellId + " ";
-                        commentAuras += aura.SpellId + " - " + StoreGetters.GetName(StoreNameType.Spell, (int)aura.SpellId, false) + ", ";
+
+                        // The spell name can itself contain a comma (or a closing parenthesis), which
+                        // used to break the trailing comment of the row and make the statement look
+                        // malformed. Keep the name but strip what would unbalance the comment.
+                        string auraName = StoreGetters.GetName(StoreNameType.Spell, (int)aura.SpellId, false)
+                            .Replace(",", " ").Replace("(", " ").Replace(")", " ");
+
+                        commentAuras += aura.SpellId + " - " + auraName + ", ";
                     }
 
                     auras = auras.TrimEnd(' ');

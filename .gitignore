@@ -26,3 +26,6 @@ cov-int
 
 # Rider
 .idea
+
+# Parser output (SQL dumps, generated files)
+out/

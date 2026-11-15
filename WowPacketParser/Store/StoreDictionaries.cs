@@ -310,6 +310,11 @@ namespace WowPacketParser.Store
 
         public DataBag(List<SQLOutput> types) : base(types) { }
 
+        public void Clear()
+        {
+            base.Clear();
+        }
+
         public Tuple<T, TimeSpan?> this[T key]
         {
             get

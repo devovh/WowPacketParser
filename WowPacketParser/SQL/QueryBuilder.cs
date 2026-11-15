@@ -152,6 +152,12 @@ namespace WowPacketParser.SQL
                     whereConditions.Add(whereCondition);
             }
 
+            // A row whose every primary key value is null produces no condition at all. Without
+            // this guard whereConditions.First() throws "Sequence contains no elements" and the
+            // whole builder is lost, taking the rest of its table with it.
+            if (whereConditions.Count == 0)
+                return string.Empty;
+
             // 2. Check if all conditions share the same fields
             bool allShareSameFields = true;
             var baselineConditionFields = whereConditions.First().FieldValuePairs.Keys;
@@ -670,10 +676,17 @@ namespace WowPacketParser.SQL
             {
                 for (var i = 0; i < _rows.Count; i += Settings.MaximumConditionsPerStatement)
                 {
+                    string where = new SQLWhere<T>(_rows, true, i).Build();
+
+                    // A row whose primary keys are all null yields no condition; emitting
+                    // "DELETE FROM table WHERE ;" would be a syntax error.
+                    if (string.IsNullOrWhiteSpace(where))
+                        continue;
+
                     query.Append("DELETE FROM ");
                     query.Append(SQLUtil.GetTableName<T>());
                     query.Append(" WHERE ");
-                    query.Append(new SQLWhere<T>(_rows, true, i).Build());
+                    query.Append(where);
                     query.Append(";");
                 }
             }

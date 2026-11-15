@@ -16,10 +16,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("SpellID")]
         public uint? SpellID;
 
-        [DBFieldName("PlayerConditionID", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic)]
+        [DBFieldName("PlayerConditionID", TargetedDatabaseFlag.SinceShadowlands | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.Forever)]
         public uint? PlayerConditionID;
 
-        [DBFieldName("Type", TargetedDatabaseFlag.Dragonflight | TargetedDatabaseFlag.WotlkClassic)]
+        [DBFieldName("Type", TargetedDatabaseFlag.Dragonflight | TargetedDatabaseFlag.WotlkClassic | TargetedDatabaseFlag.Forever)]
         public int? Type;
 
         [DBFieldName("VerifiedBuild")]

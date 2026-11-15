@@ -14,7 +14,7 @@ namespace WowPacketParserModule.V10_0_0_46181.Parsers
             {
                 QuestID = questId,
                 Idx = idx,
-                SpellID = (uint)packet.ReadInt32<SpellId>("SpellID", indexes),
+                SpellID = (uint)packet.ReadInt32("SpellID", indexes),
                 PlayerConditionID = (uint)packet.ReadInt32("PlayerConditionID", indexes),
             };
 
