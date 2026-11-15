@@ -85,9 +85,10 @@ Dev: w Ironforge widzieli Magister Falath, Turlethion Moonrage i Drake Ekans, al
 
 **Było do zrobienia:** dodać `scale` (z `UnitData.ScaleX` / display scale) i `ContentTuningID` (+ ewentualnie `LevelScalingDeltaMin/Max`) do rekordów Forever i do buildera.
 
-### 2. `npc_vendor` — maxcount, incrtime, ExtendedCost, PlayerConditionID
-- W 70938: **0 wierszy**. W 70862: jest `npc_vendor` — sprawdzić, czy pola są kompletne.
-- Do zrobienia: `maxcount` i `incrtime` dla ograniczonego stocku + `ExtendedCost` + `PlayerConditionID`.
+### 2. `npc_vendor` — [ZROBIONE]
+- W 70938: 0 wierszy, bo w tym sniffie nie ma ani jednego SMSG_VENDOR_INVENTORY (sprawdzone grepem po 0x47005C). To brak danych, nie błąd parsera.
+- W 70862 jest 1 okno kupca (entry 5816, 8 pozycji), parsowane bez błędów. Z tego pakietu dostajemy slot, item, maxcount (-1 -> 0), ExtendedCost, type.
+- Dodane do SQL (flaga Forever): `PlayerConditionID`, `IgnoreFiltering`. `incrtime` zostaje 0 w bazie, klient go nie wysyła. Więcej kupców wymaga nowego sniffa z otwartymi oknami u kupców.
 
 ### 3. `creature_loot_template` — z okien lootu
 - W 70938: **0 wierszy**.
