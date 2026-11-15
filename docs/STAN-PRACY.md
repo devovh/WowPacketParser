@@ -1,7 +1,7 @@
 # Stan pracy — WPP-full / Forever 1.60.1 (build 70938)
 
 Ostatnia aktualizacja: 2026-11-15. Repo: `C:/Users/devov/Desktop/WPP-full`, branch `master`, remote `devovh`.
-Ostatni commit: `bbb663831` — *Apply developer patches (fix3)*.
+Ostatni commit: `749431604` — *docs: update remaining work after fix3 and the second sniff*.
 
 ## Poprawki developera (fix3, nałożone 2026-11-15)
 
@@ -67,8 +67,43 @@ node tools\check-sql.cjs out\forever_70938.sql
 
 ---
 
+## NOWE ZAMÓWIENIE OD DEVELOPERA (2026-11-15) — to jest następna praca
+
+Cytat: *„nice, cheers for taking them. if you fancy more, these would help us most, roughly in order”*. Pięć punktów, priorytet taki jak w liście.
+
+### 1. faction, npcflag, level, unit_flags, scale → `creature_template` + `creature_template_difficulty`
+Dev: w Ironforge widzieli Magister Falath, Turlethion Moonrage i Drake Ekans, ale z query dostali tylko nazwę i model — „so we couldn't make them”.
+
+**Ustalone w kodzie (stan wyjściowy):**
+- `CreatureTemplateNonWDBForever` (`WowPacketParser/Store/Objects/CreatureTemplate.cs:195`) już pisze `faction`, `npcflag`, `speed_walk`, `speed_run`, `BaseAttackTime`, `RangeAttackTime`, `unit_class`, `unit_flags`, `unit_flags2`, `unit_flags3`, `VehicleId` — **148 wierszy** w `out/forever_70938.sql` (drugi INSERT, linia 56132).
+- Źródło: `WDBTemplates.cs:214` `CreatureTemplateNonWDBForever(Dictionary<WowGuid, Unit> units)`, czyta `npc.UnitData.FactionTemplate`, `NpcFlags[0..1]`, `Flags/Flags2/Flags3`, `Movement.RunSpeed/WalkSpeed`.
+- **`scale` NIE jest zapisywany** — jest tylko `DisplayScale` w `creature_template_model` z query. Do dodania.
+- **`level` NIE jest zapisywany** — `UnitData.Level` (`ForeverUnitDataReader.cs:153`) jest czytany, ale nie trafia do SQL.
+- **Poziomu nie ma też w `creature_template`** (42 kolumny, sprawdzone w TDB). Prawdopodobnie idzie przez `ContentTuningID` w `creature_template_difficulty` — sniff ma **30581 wystąpień `ContentTuningID`**, wartości m.in. `0, 10, 11, 12, 1164800`. `UnitData.ContentTuningID` jest czytany (`ForeverUnitDataReader.cs:155`), ale `CreatureTemplateDifficultyForever` **nie ma tej kolumny** (ma ją tylko retailowy `CreatureTemplateDifficulty.cs:83`). **To pierwszy trop do sprawdzenia w tc-forever.**
+
+**Do zrobienia:** dodać `scale` (z `UnitData.ScaleX` / display scale) i `ContentTuningID` (+ ewentualnie `LevelScalingDeltaMin/Max`) do rekordów Forever i do buildera.
+
+### 2. `npc_vendor` — maxcount, incrtime, ExtendedCost, PlayerConditionID
+- W 70938: **0 wierszy**. W 70862: jest `npc_vendor` — sprawdzić, czy pola są kompletne.
+- Do zrobienia: `maxcount` i `incrtime` dla ograniczonego stocku + `ExtendedCost` + `PlayerConditionID`.
+
+### 3. `creature_loot_template` — z okien lootu
+- W 70938: **0 wierszy**.
+- Wymagania deva: **pomijać okna skinningu (`AcquireReason 6`)**, dodać komentarz z `drops/kills`, żeby było widać, z ilu zabójstw wynika szansa.
+
+### 4. `gossip_menu`, `gossip_menu_option`, `creature_template_gossip`
+- Teraz: `gossip_menu` 1, `gossip_menu_option` 1, `creature_template_gossip` 1 — za mało.
+- Do zrobienia: z pakietów gossip, z **broadcast text ids**.
+
+### 5. `waypoint_path` — dla NPC-ów, które chodzą
+- Teraz: **0 wierszy**. `creature_addon` jest (2 INSERT-y).
+- Do zrobienia: `waypoint_path` połączony z `creature_addon.PathId`, żeby miejskie NPC (Myra, łapacze złodziei, kurier) wyszły z trasami.
+
+---
+
 ## Co zostało (kolejność)
 
+0. **Punkty 1–5 developera powyżej** — to jest teraz główna praca.
 1. **Import do bazy** — brak MySQL (świadomie pominięte). To jedyna rzecz, która sprawdzi plik naprawdę: składnię, klucze obce, `@CGUID`/`@NPCTEXTID`, drugi import bez duplikatów. Po postawieniu: `mysql -u root -p world < out\forever_70938.sql`.
 2. **`page_text`** — kod gotowy, ale żaden z dwóch sniffów nie ma pakietu z tekstem strony. Trzeba nagrać sniff z czytaniem książek / tablic / znaków.
 3. **`SkipOnlyVerifiedBuildUpdateRows`** — po patchu `0001` hotfixy kasują po `ID`, więc ten problem jest już rozwiązany dla Forever. Flaga zostaje `false`; zmienić tylko jeśli dev poprosi.
