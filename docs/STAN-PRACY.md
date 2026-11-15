@@ -90,17 +90,20 @@ Dev: w Ironforge widzieli Magister Falath, Turlethion Moonrage i Drake Ekans, al
 - W 70862 jest 1 okno kupca (entry 5816, 8 pozycji), parsowane bez błędów. Z tego pakietu dostajemy slot, item, maxcount (-1 -> 0), ExtendedCost, type.
 - Dodane do SQL (flaga Forever): `PlayerConditionID`, `IgnoreFiltering`. `incrtime` zostaje 0 w bazie, klient go nie wysyła. Więcej kupców wymaga nowego sniffa z otwartymi oknami u kupców.
 
-### 3. `creature_loot_template` — z okien lootu
-- W 70938: **0 wierszy**.
-- Wymagania deva: **pomijać okna skinningu (`AcquireReason 6`)**, dodać komentarz z `drops/kills`, żeby było widać, z ilu zabójstw wynika szansa.
+### 3. `creature_loot_template` — [ZROBIONE]
+- Parser `ForeverLootHandler` (SMSG_LOOT_RESPONSE) zbiera okna lootu stworów do `Storage.ForeverLootWindows`; builder `UnitMisc.CreatureLootTemplateForever` pisze tabelę.
+- Pomija skinning (`AcquireReason 6`) i pickpocketing (2). `Chance` = drops/kills*100, gdzie kills = liczba okien lootu danego entry; komentarz wiersza: `<item> - drops/kills 1/4`.
+- 70938: 5 wierszy (entry 3100 i 3244). To wszystko, co jest w sniffie (5 okien). AcquireReason 14 i 9 to wartości Forever spoza enuma LootType; żadnego okna skinningu w sniffach nie ma.
+- Ograniczenie: item, który nie wypadł w żadnym oknie, nie istnieje w danych. Szansa jest tylko oszacowaniem z małej próby.
 
-### 4. `gossip_menu`, `gossip_menu_option`, `creature_template_gossip`
-- Teraz: `gossip_menu` 1, `gossip_menu_option` 1, `creature_template_gossip` 1 — za mało.
-- Do zrobienia: z pakietów gossip, z **broadcast text ids**.
+### 4. `gossip_menu`, `gossip_menu_option`, `creature_template_gossip` — [ZROBIONE w granicach sniffa]
+- Sniff 70938 zawiera **jeden** SMSG_GOSSIP_MESSAGE (bankier 3318, menu 1623), więc po 1 wierszu to wszystkie dostępne dane, nie błąd parsera.
+- `gossip_menu_option` ma teraz wszystkie kolumny schematu tc-forever (`GossipOptionID`, `OptionNpc`, `Language`, `Flags`, `GossipNpcOptionID`, `SpellID`, `OverrideIconID`).
+- `OptionBroadcastTextID` = 0: dopasowanie idzie po tekście z bazy TDB (`SQLDatabase.BroadcastTexts`), a tekstu opcji nie ma w broadcast_text ze sniffa. Wymaga bazy TDB do uzupełnienia.
 
-### 5. `waypoint_path` — dla NPC-ów, które chodzą
-- Teraz: **0 wierszy**. `creature_addon` jest (2 INSERT-y).
-- Do zrobienia: `waypoint_path` połączony z `creature_addon.PathId`, żeby miejskie NPC (Myra, łapacze złodziei, kurier) wyszły z trasami.
+### 5. `waypoint_path` — [ZROBIONE]
+- `waypoint_path` + `waypoint_path_node` pisze builder `Movement` (220 ścieżek w 70938).
+- Nowe: builder zapamiętuje `@MOVID+n` każdego stwora (`Movement.PathIdByGuid`), a `Spawns` wpisuje to w `creature_addon.PathId` (kolumna `PathId` dla Forever) i ustawia `creature.MovementType = 2`. W 70938: 50 stworów z trasą. Wiersze tymczasowych spawnów zostają zakomentowane razem ze spawnem.
 
 ---
 

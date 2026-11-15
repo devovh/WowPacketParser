@@ -324,6 +324,16 @@ namespace WowPacketParser.SQL.Builders
                 if (Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_addon))
                 {
                     addonRow.Data.PathID = 0;
+                    if (Settings.TargetedDatabase == TargetedDatabase.Forever)
+                    {
+                        if (Movement.PathIdByGuid.TryGetValue(creature.Guid.ToString(), out var pathExpr))
+                        {
+                            addonRow.Data.PathIDForever = pathExpr;
+                            row.Data.MovementType = 2;
+                        }
+                        else
+                            addonRow.Data.PathIDForever = "0";
+                    }
                     addonRow.Data.Mount = (uint)creature.UnitData.MountDisplayID;
                     addonRow.Data.StandState = creature.UnitData.StandState ?? 0;
                     addonRow.Data.AnimTier = creature.UnitData.AnimTier ?? 0;

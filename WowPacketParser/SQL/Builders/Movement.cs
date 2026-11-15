@@ -44,6 +44,12 @@ namespace WowPacketParser.SQL.Builders
 
         private Dictionary<UniversalGuid, AggregatedPaths> pathsPerGuid = new();
 
+        /// <summary>
+        /// Creature GUID (as text) to the "@MOVID+n" expression of its path in waypoint_path.
+        /// Filled by GenerateQuery, read by the spawn builder (proto builders run before the spawn builder).
+        /// </summary>
+        public static readonly Dictionary<string, string> PathIdByGuid = new();
+
         public override bool IsEnabled() => Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_movement) &&
                                             Settings.TargetedProject is TargetedProject.Cmangos or TargetedProject.TrinityCore;
 
@@ -130,6 +136,7 @@ namespace WowPacketParser.SQL.Builders
         protected override string GenerateQuery()
         {
             StringBuilder output = new();
+            PathIdByGuid.Clear();
             // Same reason as the spawn GUIDs: take the first free path id from the database
             // instead of leaving a placeholder that has to be filled in by hand.
             output.AppendLine("SET @MOVID := (SELECT IFNULL(MAX(`PathId`), 0) + 1 FROM `waypoint_path`);");
@@ -200,6 +207,9 @@ namespace WowPacketParser.SQL.Builders
                         output.Append(dump);
                     }
                 }
+
+                if (emittedRows > 0)
+                    PathIdByGuid[mover.ToWowParserString()] = $"@MOVID+{pathIdCounter}";
 
                 output.AppendLine();
                 output.AppendLine();

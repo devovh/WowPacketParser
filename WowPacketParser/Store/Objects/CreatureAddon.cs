@@ -13,6 +13,10 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("PathId", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.CataClassic)]
         public uint? PathID;
 
+        // Forever (tc-forever): PathId links to waypoint_path, written as "@MOVID+n" by the movement builder.
+        [DBFieldName("PathId", TargetedDatabaseFlag.Forever, noQuotes: true)]
+        public string PathIDForever;
+
         [DBFieldName("mount")]
         public uint? Mount;
 
