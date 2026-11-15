@@ -5,23 +5,21 @@ Target build: **Forever 1.60.1.70938** (live). Reference: tc-forever packet sour
 (`docs/DEVELOPER-OPCODES-70938-REPLY.md`).
 
 ## 1. Current state (dump 70938)
-- 119 131 of 119 594 packets parsed OK (**99.61%**), **0 packets with errors**.
-- Skipped (unnamed opcode): 58 packets. No structure (named, hex only): 405 packets.
+- 119 368 of 119 594 packets parsed OK (**99.81%**), **0 packets with errors**.
+- Skipped (unnamed opcode): 58 packets. No structure (named, hex only): 168 packets.
 - SQL output: 9 137 rows, 63 tables, 0 bad rows (`tools/check-sql.cjs`). Tests: 98 passed, 0 failed, 12 skipped.
 - "OK" means the packet was read to the end, not that every field is understood.
 
 ## 2. Still to do for 70938
 
-### 2.1 Packets with a name but no structure (30 opcodes, ~400 packets)
+### 2.1 Packets with a name but no structure (28 opcodes, 168 packets)
 Full list with sample bytes: `UNKNOWN-OPCODES-70938.md` (regenerate with `node tools/list-unknown-opcodes.cjs <parsed.txt> <out.md>`).
-Biggest groups, and what is missing:
+Done from bytes since the last version: `SMSG_ACTIVE_SCHEDULED_WORLD_STATE_INFO` (always `u32 Count = 0`, 225 packets) and `SMSG_UPDATE_RECENT_PLAYER_GUIDS` (8 zero bytes, meaning unknown). Biggest groups, and what is missing:
 
 | Opcode | Packets | Status |
 |---|---|---|
-| `SMSG_ACTIVE_SCHEDULED_WORLD_STATE_INFO` 0x4701F3 | 225 | developer has no writer (B); layout must be derived from bytes (4-byte packets) |
-| `SMSG_LATENCY_REPORT_PING` 0x470316 | 66 | no layout (B) |
+| `SMSG_LATENCY_REPORT_PING` 0x470316 | 66 | no layout (B). Its sample bytes are identical to `CMSG_QUERY_PLAYER_NAMES_FOR_COMMUNITY`, so one of the two names is probably wrong |
 | `CMSG_QUERY_PLAYER_NAMES_FOR_COMMUNITY` 0x46000F | 66 | no layout (B) |
-| `SMSG_UPDATE_RECENT_PLAYER_GUIDS` 0x470099 | 12 | 8-byte packets, layout not known |
 | others (RAF, perks, delves, BattlePay, sync entitlements, recent ally list, weekly rewards, ...) | 1-3 each | developer confirmed names only (B), no layouts |
 
 Effect: none of these feed a SQL table, so the database output is not affected. They only matter for a complete log.
