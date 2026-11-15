@@ -1,7 +1,18 @@
 # Stan pracy — WPP-full / Forever 1.60.1 (build 70938)
 
 Ostatnia aktualizacja: 2026-11-15. Repo: `C:/Users/devov/Desktop/WPP-full`, branch `master`, remote `devovh`.
-Ostatni commit: `834fe0846` — *forever: npc_text through broadcast_text ids, page_text and quest_reward_display_spell for 1.60.1*.
+Ostatni commit: `bbb663831` — *Apply developer patches (fix3)*.
+
+## Poprawki developera (fix3, nałożone 2026-11-15)
+
+Cztery patche z `C:/Users/devov/Desktop/fix3` nałożone przez `git apply`, build 0 błędów, testy 98/0/8:
+
+1. `0001` — hotfixy Forever kasują wiersze **po ID** (`WHERE VerifiedBuild>0 AND ID IN (...)`), a nie całą tabelę. W pliku 0 całotabelowych `DELETE ... WHERE VerifiedBuild>0;`.
+2. `0002` — usunięte `ALTER TABLE ... AUTO_INCREMENT = (SELECT ...)` (błąd składni w MySQL) i dodany przebieg kasujący duplikaty spawnów (ten sam entry i map w promieniu 5 jardów od niższego guid) oraz osierocone `creature_addon` / `spawn_tracking`.
+3. `0003` — `creature_template`: flagi `femaleName`/`subname`/`TitleAlt`/`IconName` wracają do upstreamu, Forever tylko w `femaleName` i `TitleAlt`. Plik z powrotem LF.
+4. `0004` — nowy `ForeverQueryNpcTextHandler.cs` czyta `SMSG_QUERY_NPC_TEXT_RESPONSE` (0x4B0008) do `Storage.NpcTextsForever`; kolumny poprawione na `Probability0..7` / `BroadcastTextID0..7`.
+
+Uwaga: moja wcześniejsza wersja `npc_text` (przez `AddBroadcastTextToGossip` z `SMSG_GOSSIP_MESSAGE`) została zastąpiona wersją developera.
 
 ---
 
