@@ -309,7 +309,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_DUEL_RESPONSE, 0x3F007D },
             { Opcode.CMSG_EJECT_PASSENGER, 0x3E0105 },
             { Opcode.CMSG_EMOTE, 0x3F00E3 },
-            { Opcode.CMSG_ENABLE_NAGLE, 0x450009 },
             { Opcode.CMSG_ENABLE_TAXI_NODE, 0x3F003F },
             { Opcode.CMSG_ENCOUNTER_JOURNAL_START_ARATHI_RPE, 0x3E030E },
             { Opcode.CMSG_ENGINE_SURVEY, 0x440113 },
@@ -497,7 +496,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_KEEP_ALIVE, 0x4400AB },
             { Opcode.CMSG_KEYBOUND_OVERRIDE, 0x3E00E7 },
             { Opcode.CMSG_KIOSK_ENABLE_GOD_MODE, 0x3E009A },
-            { Opcode.CMSG_LATENCY_REPORT, 0x450010 },
             { Opcode.CMSG_LEARN_PVP_TALENTS, 0x3F00FE },
             { Opcode.CMSG_LEARN_TALENTS, 0x3F00FC },
             { Opcode.CMSG_LEAVE_GROUP, 0x440075 },
@@ -526,7 +524,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_LOBBY_MATCHMAKER_REJECT_PARTY_INVITE, 0x44016D },
             { Opcode.CMSG_LOBBY_MATCHMAKER_SET_PARTY_PLAYLIST_ENTRY, 0x440170 },
             { Opcode.CMSG_LOBBY_MATCHMAKER_SET_PLAYER_READY, 0x440171 },
-            { Opcode.CMSG_LOG_STREAMING_ERROR, 0x45000D },
             { Opcode.CMSG_LOGOUT_CANCEL, 0x3F0074 },
             { Opcode.CMSG_LOGOUT_LOBBY_MATCHMAKER, 0x3F0127 },
             { Opcode.CMSG_LOGOUT_REQUEST, 0x3F0072 },
@@ -729,7 +726,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_QUERY_PAGE_TEXT, 0x3E0147 },
             { Opcode.CMSG_QUERY_PET_NAME, 0x3E0148 },
             { Opcode.CMSG_QUERY_PETITION, 0x3E014B },
-            { Opcode.CMSG_QUERY_PLAYER_NAME_BY_COMMUNITY_ID, 0x45000E },
             { Opcode.CMSG_QUERY_QUEST_COMPLETION_NPCS, 0x3E0022 },
             { Opcode.CMSG_QUERY_QUEST_INFO, 0x3E0146 },
             { Opcode.CMSG_QUERY_QUEST_ITEM_USABILITY, 0x3E0023 },
@@ -855,7 +851,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_SET_CURRENCY_FLAGS, 0x3E0015 },
             { Opcode.CMSG_SET_DIFFICULTY_ID, 0x3E00E6 },
             { Opcode.CMSG_SET_DUNGEON_DIFFICULTY, 0x4400AE },
-            { Opcode.CMSG_SET_EMPOWER_MIN_HOLD_STAGE_PERCENT, 0x3E013C },
             { Opcode.CMSG_SET_EVERYONE_IS_ASSISTANT, 0x440040 },
             { Opcode.CMSG_SET_FACTION_AT_WAR, 0x3F0079 },
             { Opcode.CMSG_SET_FACTION_NOT_AT_WAR, 0x3F007C },
@@ -976,7 +971,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_WRAP_ITEM, 0x410000 },
             { Opcode.CMSG_MOVE_SET_FACING_HEARTBEAT, 0x42007F },
             { Opcode.CMSG_QUERY_PLAYER_NAMES, 0x460010 },
-            { Opcode.CMSG_QUERY_PLAYER_NAMES_FOR_COMMUNITY, 0x46000F },
             { Opcode.CMSG_QUERY_CREATURE, 0x3E0143 },
             { Opcode.CMSG_QUERY_GAME_OBJECT, 0x3E0144 },
             { Opcode.CMSG_SET_SELECTION, 0x3F00CD },
@@ -1010,6 +1004,12 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.CMSG_GET_ACCOUNT_CHARACTER_LIST, 0x4400E6 },
             { Opcode.CMSG_CLUB_FINDER_REQUEST_SUBSCRIBED_CLUB_POSTING_IDS, 0x440153 },
             { Opcode.CMSG_RECENT_ALLY_REQUEST_DATA, 0x44019F },
+            { Opcode.CMSG_ENABLE_NAGLE, 0x460009 },
+            { Opcode.CMSG_LOG_STREAMING_ERROR, 0x46000B },
+            { Opcode.CMSG_QUERY_PLAYER_NAME_BY_COMMUNITY_ID, 0x46000D },
+            { Opcode.CMSG_QUERY_PLAYER_NAMES_FOR_COMMUNITY, 0x46000E },
+            { Opcode.CMSG_LATENCY_REPORT, 0x46000F },
+            { Opcode.CMSG_SET_EMPOWER_MIN_HOLD_STAGE_PERCENT, 0x3E013D },
         };
         private static readonly BiDictionary<Opcode, int> ServerOpcodes = new()
         {
@@ -1912,7 +1912,6 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.SMSG_GUILD_EVENT_RANK_CHANGED, 0x55003A },
             { Opcode.SMSG_GUILD_EVENT_RANKS_UPDATED, 0x530039 },
             { Opcode.SMSG_GUILD_EVENT_RANKS_UPDATED, 0x550039 },
-            { Opcode.SMSG_GUILD_EVENT_STATUS_CHANGE, 0x550038 },
             { Opcode.SMSG_GUILD_EVENT_TAB_ADDED, 0x53003B },
             { Opcode.SMSG_GUILD_EVENT_TAB_ADDED, 0x55003B },
             { Opcode.SMSG_GUILD_EVENT_TAB_DELETED, 0x55003C },
@@ -3483,6 +3482,7 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.SMSG_LOG_XP_GAIN, 0x470191 },
             { Opcode.SMSG_GUILD_BANK_REMAINING_WITHDRAW_MONEY, 0x530027 },
             { Opcode.SMSG_GUILD_BANK_QUERY_RESULTS, 0x530025 },
+            { Opcode.SMSG_GUILD_EVENT_STATUS_CHANGE, 0x530037 },
         };
 
         private static readonly BiDictionary<Opcode, int> MiscOpcodes = new();
