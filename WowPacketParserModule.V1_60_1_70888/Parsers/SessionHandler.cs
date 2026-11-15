@@ -25,12 +25,12 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.SMSG_AUTH_RESPONSE)]
         public static void HandleAuthResponse(Packet packet)
         {
-            // część bitowa idzie pierwsza (sniff 1.60.1: 2 bity przed Result)
-            packet.ResetBitReader();
-            var ok = packet.ReadBit("Success");
-            var queued = packet.ReadBit("Queued");
-
+            // tc-forever AuthResponse::Write: [u32 Result][bit HasSuccessInfo][bit HasWaitInfo][flush] - Result PRZED bitami
+            // (sniff 70938: 00 00 00 00 80 ...)
             packet.ReadUInt32E<BattlenetRpcErrorCode>("Result");
+            packet.ResetBitReader();
+            var ok = packet.ReadBit("HasSuccessInfo");
+            var queued = packet.ReadBit("HasWaitInfo");
 
             if (ok)
             {
