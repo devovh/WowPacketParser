@@ -25,6 +25,9 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("DifficultyID", true)]
         public uint? DifficultyID;
 
+        [DBFieldName("ContentTuningID")]
+        public int? ContentTuningID = 0;
+
         [DBFieldName("HealthScalingExpansion")]
         public ClientType? HealthScalingExpansion;
 
@@ -48,5 +51,26 @@ namespace WowPacketParser.Store.Objects
 
         [DBFieldName("VerifiedBuild")]
         public int? VerifiedBuild = ClientVersion.BuildInt;
+    }
+}
+
+namespace WowPacketParser.Store.Objects
+{
+    /// <summary>
+    /// creature_classic_level of the Forever core (tc-forever): the level range of an NPC entry.
+    /// Forever does not scale vanilla creatures through ContentTuningID; Creature::ApplyLevelScaling
+    /// reads this table first. Filled from UnitData.Level of the spawned units (min/max per entry).
+    /// </summary>
+    [DBTableName("creature_classic_level", TargetedDatabaseFlag.Forever)]
+    public sealed record CreatureClassicLevelForever : IDataModel
+    {
+        [DBFieldName("entry", true)]
+        public uint? Entry;
+
+        [DBFieldName("level_min")]
+        public byte? LevelMin;
+
+        [DBFieldName("level_max")]
+        public byte? LevelMax;
     }
 }

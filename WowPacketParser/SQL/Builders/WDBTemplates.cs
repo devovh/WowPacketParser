@@ -129,8 +129,8 @@ namespace WowPacketParser.SQL.Builders
             return SQLUtil.Compare(Storage.CreatureTemplatesForever.Values, templatesDb, StoreNameType.Unit);
         }
 
-        [BuilderMethod(true)]
-        public static string CreatureTemplateDifficultyForever()
+        [BuilderMethod(true, Units = true)]
+        public static string CreatureTemplateDifficultyForever(Dictionary<WowGuid, Unit> units)
         {
             if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template_difficulty))
                 return string.Empty;
@@ -143,9 +143,24 @@ namespace WowPacketParser.SQL.Builders
 
             // The rows are written directly: SQLUtil.Compare de-duplicates by primary key and the
             // Forever model carries more values (TypeFlags*, modifiers) than that path keeps.
+            // ContentTuningID is not in the query response; the sniff supplies it as an update
+            // field at spawn time (first non-zero value seen for the entry wins).
+            var contentTuning = new Dictionary<uint, int>();
+            foreach (var unit in units)
+            {
+                var tuning = unit.Value.UnitData.ContentTuningID ?? 0;
+                if (tuning != 0)
+                    contentTuning.TryAdd(unit.Key.GetEntry(), tuning);
+            }
+
             var storeRows = new RowList<CreatureTemplateDifficultyForever>();
             foreach (var stored in Storage.CreatureTemplateDifficultiesForever.Values)
-                storeRows.Add(new Row<CreatureTemplateDifficultyForever>(stored.Item1));
+            {
+                var row = stored.Item1;
+                if (row.Entry.HasValue && contentTuning.TryGetValue(row.Entry.Value, out var tuningId))
+                    row.ContentTuningID = tuningId;
+                storeRows.Add(new Row<CreatureTemplateDifficultyForever>(row));
+            }
 
             return new SQLInsert<CreatureTemplateDifficultyForever>(storeRows, false).Build();
         }
@@ -204,6 +219,63 @@ namespace WowPacketParser.SQL.Builders
         }
 
         /// <summary>
+        /// Level range per NPC entry for the Forever core (creature_classic_level), taken from
+        /// UnitData.Level of every spawned unit: the core does not use ContentTuningID for these.
+        /// </summary>
+        [BuilderMethod(true, Units = true)]
+        public static string CreatureClassicLevelForever(Dictionary<WowGuid, Unit> units)
+        {
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
+                return string.Empty;
+
+            var levels = new SortedDictionary<uint, (int min, int max)>();
+            foreach (var unit in units)
+            {
+                // Only real world creatures: pets, guardians, summons and charmed units take their
+                // level from the owner, which would blow the range of the entry up.
+                if (unit.Key.GetHighType() != HighGuidType.Creature)
+                    continue;
+
+                var data = unit.Value.UnitData;
+                if ((data.SummonedBy != null && !data.SummonedBy.IsEmpty()) ||
+                    (data.CreatedBy != null && !data.CreatedBy.IsEmpty()) ||
+                    (data.CharmedBy != null && !data.CharmedBy.IsEmpty()))
+                    continue;
+
+                var level = data.Level ?? 0;
+                if (level <= 0 || level > 255)
+                    continue;
+
+                var entry = unit.Key.GetEntry();
+                if (levels.TryGetValue(entry, out var range))
+                    levels[entry] = (System.Math.Min(range.min, level), System.Math.Max(range.max, level));
+                else
+                    levels[entry] = (level, level);
+            }
+
+            if (levels.Count == 0)
+                return string.Empty;
+
+            var rows = new RowList<CreatureClassicLevelForever>();
+            foreach (var pair in levels)
+            {
+                var row = new Row<CreatureClassicLevelForever>();
+                row.Data = new CreatureClassicLevelForever
+                {
+                    Entry = pair.Key,
+                    LevelMin = (byte)pair.Value.min,
+                    LevelMax = (byte)pair.Value.max
+                };
+                rows.Add(row);
+            }
+
+            return new SQLInsert<CreatureClassicLevelForever>(rows, false).Build();
+        }
+
+        /// <summary>
         /// Fills the creature_template columns that the world database needs but
         /// SMSG_QUERY_CREATURE_RESPONSE does not carry; the sniff supplies them as update fields
         /// at spawn time. CreatureTemplateNonWDB cannot be reused for this under
@@ -237,6 +309,7 @@ namespace WowPacketParser.SQL.Builders
                     NpcFlag = (NPCFlags)Utilities.MAKE_PAIR64(npc.UnitData.NpcFlags[0] ?? 0, npc.UnitData.NpcFlags[1] ?? 0),
                     SpeedRun = npc.Movement.RunSpeed,
                     SpeedWalk = npc.Movement.WalkSpeed,
+                    Scale = npc.ObjectData.Scale,
                     BaseAttackTime = npc.UnitData.AttackRoundBaseTime[0],
                     RangeAttackTime = npc.UnitData.RangedAttackRoundBaseTime,
                     UnitClass = npc.UnitData.ClassId,
@@ -264,10 +337,7 @@ namespace WowPacketParser.SQL.Builders
             foreach (var stored in Storage.CreatureTemplatesNonWDBForever)
                 storeRows.Add(new Row<CreatureTemplateNonWDBForever>(stored.Item1));
 
-            var built = new SQLInsert<CreatureTemplateNonWDBForever>(storeRows, false).Build();
-            System.IO.File.AppendAllText(@"C:\Users\devov\AppData\Local\Temp\q\built.txt",
-                "rows=" + storeRows.Count + " unknown=" + (built.Split("UNKNOWN").Length - 1) + "\n" + built.Substring(0, System.Math.Min(300, built.Length)) + "\n");
-            return built;
+            return new SQLInsert<CreatureTemplateNonWDBForever>(storeRows, false).Build();
         }
         [BuilderMethod(true, Gameobjects = true)]
         public static string GameObjectTemplateForever(Dictionary<WowGuid, GameObject> gameobjects)

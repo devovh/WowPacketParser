@@ -209,6 +209,9 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("speed_run")]
         public float? SpeedRun;
 
+        [DBFieldName("scale", nullable: true)]
+        public float? Scale;
+
         [DBFieldName("BaseAttackTime")]
         public uint? BaseAttackTime;
 

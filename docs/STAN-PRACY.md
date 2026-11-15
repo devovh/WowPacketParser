@@ -71,7 +71,7 @@ node tools\check-sql.cjs out\forever_70938.sql
 
 Cytat: *„nice, cheers for taking them. if you fancy more, these would help us most, roughly in order”*. Pięć punktów, priorytet taki jak w liście.
 
-### 1. faction, npcflag, level, unit_flags, scale → `creature_template` + `creature_template_difficulty`
+### 1. [ZROBIONE] faction, npcflag, level, unit_flags, scale → `creature_template` + `creature_template_difficulty`
 Dev: w Ironforge widzieli Magister Falath, Turlethion Moonrage i Drake Ekans, ale z query dostali tylko nazwę i model — „so we couldn't make them”.
 
 **Ustalone w kodzie (stan wyjściowy):**
@@ -81,7 +81,9 @@ Dev: w Ironforge widzieli Magister Falath, Turlethion Moonrage i Drake Ekans, al
 - **`level` NIE jest zapisywany** — `UnitData.Level` (`ForeverUnitDataReader.cs:153`) jest czytany, ale nie trafia do SQL.
 - **Poziomu nie ma też w `creature_template`** (42 kolumny, sprawdzone w TDB). Prawdopodobnie idzie przez `ContentTuningID` w `creature_template_difficulty` — sniff ma **30581 wystąpień `ContentTuningID`**, wartości m.in. `0, 10, 11, 12, 1164800`. `UnitData.ContentTuningID` jest czytany (`ForeverUnitDataReader.cs:155`), ale `CreatureTemplateDifficultyForever` **nie ma tej kolumny** (ma ją tylko retailowy `CreatureTemplateDifficulty.cs:83`). **To pierwszy trop do sprawdzenia w tc-forever.**
 
-**Do zrobienia:** dodać `scale` (z `UnitData.ScaleX` / display scale) i `ContentTuningID` (+ ewentualnie `LevelScalingDeltaMin/Max`) do rekordów Forever i do buildera.
+**ZROBIONE (2026-11-15):** `scale` trafia do drugiego INSERT-a `creature_template`; `ContentTuningID` jest kolumną `creature_template_difficulty` (sniff 70938 ma je zawsze 0, więc wpisywane 0). **Poziom NIE idzie przez ContentTuningID** — tc-forever (`Creature::ApplyLevelScaling`) czyta `creature_classic_level (entry, level_min, level_max)`; parser pisze ją teraz z `UnitData.Level` (83 wpisy, bez petów/summonów/charmów). Usunięty też debugowy zapis do `Temp\q\built.txt`.
+
+**Było do zrobienia:** dodać `scale` (z `UnitData.ScaleX` / display scale) i `ContentTuningID` (+ ewentualnie `LevelScalingDeltaMin/Max`) do rekordów Forever i do buildera.
 
 ### 2. `npc_vendor` — maxcount, incrtime, ExtendedCost, PlayerConditionID
 - W 70938: **0 wierszy**. W 70862: jest `npc_vendor` — sprawdzić, czy pola są kompletne.
