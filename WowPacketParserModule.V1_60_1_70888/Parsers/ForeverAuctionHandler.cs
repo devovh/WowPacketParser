@@ -40,38 +40,26 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         /// </summary>
         private static void ReadExtraBlock(Packet packet, bool last, ulong minPrice, params object[] idx)
         {
-            packet.ReadUInt32("ExtraItemID", idx);
-
-            var start = packet.Position;
-            var remaining = (int)(packet.Length - start);
-            var length = last ? remaining - 1 : -1;
-
-            if (!last)
+            // ItemInstance (od dewelopera): i32 ItemID, lista modyfikatorow (7 bitow licznika + flush, po u8 typ + i32 wartosc),
+            // 1 bit HasBonus + flush, a gdy ustawiony: u8 Context + u32 liczba + liczba x u32 BonusListID.
+            packet.ReadInt32("ExtraItemID", idx);
+            packet.ResetBitReader();
+            var mods = packet.ReadBits("ModifierCount", 7, idx);
+            packet.ResetBitReader();
+            for (var m = 0; m < mods; ++m)
             {
-                var peek = packet.ReadBytes(System.Math.Min(remaining, 80));
-                packet.SetPosition(start);
-
-                foreach (var candidate in new[] { 2, 7, 12 })
-                {
-                    if (candidate + 25 > peek.Length)
-                        continue;
-                    var q = candidate;
-                    var quantity = System.BitConverter.ToInt32(peek, q + 5);
-                    var level = System.BitConverter.ToInt32(peek, q + 9);
-                    var price = System.BitConverter.ToUInt64(peek, q + 13);
-                    var appearances = System.BitConverter.ToUInt32(peek, q + 21);
-                    if (price >= minPrice && price <= minPrice + 500 && appearances == 0 && quantity > 0 && level >= 0 && level <= 120)
-                    {
-                        length = candidate;
-                        break;
-                    }
-                }
+                packet.ReadByte("ModifierType", idx, m);
+                packet.ReadInt32("ModifierValue", idx, m);
             }
-
-            if (length < 0)
-                length = 2;
-
-            packet.ReadBytes("ExtraBlock", length, idx);
+            var hasBonus = packet.ReadBit("HasBonus", idx);
+            packet.ResetBitReader();
+            if (hasBonus)
+            {
+                packet.ReadByte("Context", idx);
+                var bonuses = packet.ReadUInt32("BonusCount", idx);
+                for (var j = 0; j < bonuses; ++j)
+                    packet.ReadUInt32("BonusListID", idx, j);
+            }
         }
 
         [Parser(Opcode.SMSG_AUCTION_LIST_BUCKETS_RESULT)]
