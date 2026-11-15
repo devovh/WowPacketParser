@@ -174,3 +174,11 @@ Z 18 błędnych pakietów zostały **2**, oba znane i opisane niżej.
 - **Bez `DELETE`**: builder pisze `INSERT IGNORE`, nie kasuje istniejących wierszy, więc dropy z questów zostają.
 - **Zwłoki liczone raz**: ten sam GUID zwłok otwarty drugi raz nie zwiększa `kills` (chance nie spada).
 - **Czyszczenie duplikatów spawnów gubi ścieżki (`creature_addon.PathId`)** dla NPC, które już są w bazie. Developer podlinkuje je ręcznie, po naszej stronie bez zmian.
+
+---
+
+## Sniff 70938: 0 błędów parsera (119 594 pakietów)
+
+- `SMSG_FEATURE_SYSTEM_STATUS`: `ForeverFeatureStatusHandler.cs`, układ z tc-forever `SystemPackets.cpp:123` (bez `KioskSessionDurationMinutes`, SocialRestriction przed ContentSetID, 10 bitów ClassicFlagBits10).
+- `SMSG_AUCTION_LIST_BUCKETS_RESULT`: `ForeverAuctionHandler.cs`. Klient 70938 dopisuje do koszyka 7. bit (`HasExtraBlock`), a po nim u32 (= ItemID) i blok 2/7/12 bajtów o nieznanej treści (tc-forever go nie zapisuje). Długość bloku dobierana heurystyką (nagłówek następnego koszyka musi być sensowny); sprawdzone na 500 koszykach, pakiet czyta się do końca. Treść bloku nadal do ustalenia.
+- 70862 (starszy build) nie jest celem tego modułu i ma błędy parsera; patrz niżej.
