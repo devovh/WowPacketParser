@@ -63,6 +63,7 @@ namespace WowPacketParser.Store
         // Vendor & trainer
         public static readonly DataBag<NpcTrainer> NpcTrainers = new DataBag<NpcTrainer>(new List<SQLOutput> { SQLOutput.npc_trainer }); // legacy 3.3.5 support
         public static readonly DataBag<NpcVendor> NpcVendors = new DataBag<NpcVendor>(new List<SQLOutput> { SQLOutput.npc_vendor });
+        public static readonly System.Collections.Generic.List<ForeverLootWindow> ForeverLootWindows = new();
         public static readonly DataBag<Trainer> Trainers = new DataBag<Trainer>(new List<SQLOutput> { SQLOutput.trainer });
         public static readonly DataBag<TrainerSpell> TrainerSpells = new DataBag<TrainerSpell>(new List<SQLOutput> { SQLOutput.trainer });
         public static readonly DataBag<CreatureTrainer> CreatureTrainers = new DataBag<CreatureTrainer>(new List<SQLOutput> { SQLOutput.trainer });
@@ -2774,6 +2775,7 @@ namespace WowPacketParser.Store
 
             NpcTrainers.Clear();
             NpcVendors.Clear();
+            ForeverLootWindows.Clear();
             Trainers.Clear();
             TrainerSpells.Clear();
             CreatureTrainers.Clear();

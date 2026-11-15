@@ -578,6 +578,67 @@ namespace WowPacketParser.SQL.Builders
                 vendor => StoreGetters.GetName(vendor.Type <= 1 ? StoreNameType.Item : StoreNameType.Currency, vendor.Item.GetValueOrDefault(), false));
         }
 
+        /// <summary>
+        /// creature_loot_template for the Forever core, from SMSG_LOOT_RESPONSE windows of creature corpses.
+        /// Chance = drops / kills * 100, where kills = number of loot windows seen for that creature entry.
+        /// Skinning (AcquireReason 6) and pickpocketing (2) go to other tables, so those windows are skipped.
+        /// </summary>
+        [BuilderMethod]
+        public static string CreatureLootTemplateForever()
+        {
+            if (Settings.TargetedDatabase != TargetedDatabase.Forever)
+                return string.Empty;
+
+            if (Storage.ForeverLootWindows.Count == 0)
+                return string.Empty;
+
+            if (!Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_template))
+                return string.Empty;
+
+            var windows = Storage.ForeverLootWindows.Where(w => w.AcquireReason != 6 && w.AcquireReason != 2).ToList();
+            var kills = windows.GroupBy(w => w.Entry).ToDictionary(g => g.Key, g => g.Count());
+
+            var drops = new SortedDictionary<(uint entry, int item), (int count, uint min, uint max)>();
+            foreach (var window in windows)
+            {
+                foreach (var group in window.Items.GroupBy(i => i.ItemId))
+                {
+                    var quantity = (uint)group.Sum(i => i.Quantity);
+                    var key = (window.Entry, group.Key);
+                    if (drops.TryGetValue(key, out var d))
+                        drops[key] = (d.count + 1, System.Math.Min(d.min, quantity), System.Math.Max(d.max, quantity));
+                    else
+                        drops[key] = (1, quantity, quantity);
+                }
+            }
+
+            if (drops.Count == 0)
+                return string.Empty;
+
+            var rows = new RowList<CreatureLootTemplateForever>();
+            foreach (var pair in drops)
+            {
+                var killCount = kills[pair.Key.entry];
+                var row = new Row<CreatureLootTemplateForever>();
+                row.Data = new CreatureLootTemplateForever
+                {
+                    Entry = pair.Key.entry,
+                    ItemType = 0,
+                    Item = (uint)pair.Key.item,
+                    Chance = (float)System.Math.Round(100.0 * pair.Value.count / killCount, 4),
+                    QuestRequired = false,
+                    LootMode = 1,
+                    GroupId = 0,
+                    MinCount = (byte)System.Math.Min(pair.Value.min, 255u),
+                    MaxCount = (byte)System.Math.Min(pair.Value.max, 255u)
+                };
+                row.Comment = StoreGetters.GetName(StoreNameType.Item, pair.Key.item, false) + $" - drops/kills {pair.Value.count}/{killCount}";
+                rows.Add(row);
+            }
+
+            return new SQLInsert<CreatureLootTemplateForever>(rows, true).Build();
+        }
+
         public static CreatureEquipment GetDuplicateEquipFromList(CreatureEquipment newEquip, List<CreatureEquipment> equipList)
         {
             for (int i = 0; i < equipList.Count; i++)
