@@ -64,9 +64,11 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.SMSG_ACCOUNT_DATA_TIMES)]
         public static void HandleAccountDataTimes(Packet packet)
         {
+            // tc-forever AccountDataTimes::Write: [Guid PlayerGuid][i64 ServerTime][20 x i64]; w 70938 opcode 0x4701B7
+            packet.ReadPackedGuid128("PlayerGuid");
             packet.ReadTime64("ServerTime");
 
-            for (var i = 0; i < 32; i++)
+            for (var i = 0; i < 20; i++)
                 packet.ReadTime64("AccountDataType", i);
         }
 
