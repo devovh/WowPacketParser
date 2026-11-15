@@ -21,6 +21,44 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
     /// </summary>
     public static class QueryHandler
     {
+        /// <summary>
+        /// PlayerGuidLookupData wg tc-forever QueryPackets.cpp:200: IsDeleted, dlugosc imienia (6 bitow),
+        /// dlugosc nazwiska (9), jeszcze jedna dlugosc (9, zawsze 0), 5 x dlugosc odmiany (7); potem odmiany,
+        /// guidy, dane liczbowe i na koncu tekst imienia i nazwiska.
+        /// </summary>
+        public static (byte Race, byte Gender, byte Class, byte Level) ReadPlayerGuidLookupData(Packet packet, params object[] idx)
+        {
+            packet.ResetBitReader();
+            packet.ReadBit("IsDeleted", idx);
+            var nameLength = (int)packet.ReadBits(6);
+            var surnameLength = (int)packet.ReadBits(9);
+            var thirdLength = (int)packet.ReadBits(9);
+            var declined = new int[5];
+            for (var i = 0; i < 5; ++i)
+                declined[i] = (int)packet.ReadBits(7);
+            packet.ResetBitReader();
+
+            for (var i = 0; i < 5; ++i)
+                packet.ReadWoWString("Name Declined", declined[i], i, idx);
+
+            packet.ReadPackedGuid128("AccountID", idx);
+            packet.ReadPackedGuid128("BnetAccountID", idx);
+            packet.ReadPackedGuid128("Player Guid", idx);
+            packet.ReadUInt64("GuildClubMemberID", idx);
+            packet.ReadUInt32("VirtualRealmAddress", idx);
+            var race = packet.ReadByteE<Race>("Race", idx);
+            var gender = packet.ReadByteE<Gender>("Gender", idx);
+            var cls = packet.ReadByteE<Class>("Class", idx);
+            var level = packet.ReadByte("Level", idx);
+            packet.ReadByte("PvpFaction", idx);
+            packet.ReadInt32("TimerunningSeasonID", idx);
+            packet.ReadWoWString("Name", nameLength, idx);
+            packet.ReadWoWString("Surname", surnameLength, idx);
+            if (thirdLength > 0)
+                packet.ReadWoWString("Unknown", thirdLength, idx);
+            return ((byte)race, (byte)gender, (byte)cls, level);
+        }
+
         public static PacketQueryPlayerNameResponse ReadNameCacheLookupResult(Packet packet, params object[] idx)
         {
             var response = new PacketQueryPlayerNameResponse();
@@ -34,10 +72,10 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
 
             if (hasPlayerGuidLookupData)
             {
-                var data = V8_0_1_27101.Parsers.CharacterHandler.ReadPlayerGuidLookupData(packet, idx, "PlayerGuidLookupData");
-                response.Race = (uint)data.Race;
-                response.Gender = (uint)data.Gender;
-                response.Class = (uint)data.Class;
+                var data = ReadPlayerGuidLookupData(packet, idx, "PlayerGuidLookupData");
+                response.Race = data.Race;
+                response.Gender = data.Gender;
+                response.Class = data.Class;
                 response.Level = data.Level;
                 response.HasData = true;
             }
