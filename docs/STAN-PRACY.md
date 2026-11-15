@@ -182,3 +182,12 @@ Z 18 błędnych pakietów zostały **2**, oba znane i opisane niżej.
 - `SMSG_FEATURE_SYSTEM_STATUS`: `ForeverFeatureStatusHandler.cs`, układ z tc-forever `SystemPackets.cpp:123` (bez `KioskSessionDurationMinutes`, SocialRestriction przed ContentSetID, 10 bitów ClassicFlagBits10).
 - `SMSG_AUCTION_LIST_BUCKETS_RESULT`: `ForeverAuctionHandler.cs`. Klient 70938 dopisuje do koszyka 7. bit (`HasExtraBlock`), a po nim u32 (= ItemID) i blok 2/7/12 bajtów o nieznanej treści (tc-forever go nie zapisuje). Długość bloku dobierana heurystyką (nagłówek następnego koszyka musi być sensowny); sprawdzone na 500 koszykach, pakiet czyta się do końca. Treść bloku nadal do ustalenia.
 - 70862 (starszy build) nie jest celem tego modułu i ma błędy parsera; patrz niżej.
+
+---
+
+## Testy i dokumentacja
+
+- `PARSER-ERRORS-70938.md` przepisany na aktualny stan (0 błędów, opcody, poprawki, pozycje otwarte). Poprzednia wersja jest w historii gita (`48716c924`).
+- `ForeverSchemaTest.cs`: dodane testy `creature_classic_level`, `creature_template_difficulty` (ContentTuningID), `creature_loot_template` (kolumny) oraz buildera loot (zwłoki liczone raz, bez `DELETE`, skórowanie pominięte).
+- **Uwaga:** testy Forever są pomijane (`Assert.Ignore`), gdy konfiguracja testów nie ma `TargetedDatabase=24`. Zwykłe `dotnet test` pokazuje wtedy 98 zaliczonych i 12 pominiętych. Aby je uruchomić: skopiować `WowPacketParser/bin/Release/WowPacketParser.dll.config` jako `WowPacketParser.Tests/bin/Debug/testhost.dll.config` i `dotnet test --no-build` (102 zaliczone, 8 pominiętych).
+- Stary test `CreatureTemplateForeverColumnsMatchTdb` miał 19 kolumn, a rekord i schemat TDB mają 42; po cichu był pomijany. Poprawiony do pełnej listy z `world_database.sql`.

@@ -1,175 +1,84 @@
-# What is still broken — WPP-full, build 1.60.1.70938
+# Parser status — WPP-full, build 1.60.1.70938
 
 Source capture: `dump_1.60.1.70938_2026-11-14_12-41-07.pkt`
 (119,594 packets, Orgrimmar, 8.5 min, MapID 1).
-
-State: **Karrz1 patches 0001 / 0002 / 0003 / 0004 / 0005 applied** on `master`.
 
 ## Overall result
 
 | bucket | packets | % |
 |---|---|---|
-| **OK** | **117,307** | **98.088 %** |
-| errors (exception) | **0** | **0.000 %** |
-| skipped | 1,181 | 0.988 % |
+| **OK** | **117,421** | **98.183 %** |
+| errors (exception or unread bytes) | **0** | **0.000 %** |
+| skipped | 1,127 | 0.942 % |
 | without structure | 1,046 | 0.875 % |
 
 Skipped and without-structure packets have no handler at all; they are not
-parser failures. Excluding them from the denominator:
+parser failures. **No packet throws and no packet leaves unread bytes.**
 
-**117,307 / 117,307 = 100.000 %** of everything the parser actually attempts.
-
-**No packet throws an exception any more.** The only remaining defect is
-44 packets that parse but leave unread bytes at the end.
+History of this capture: 162 packets with errors -> 46 -> 18 -> 2 -> **0**.
 
 ---
 
-## Part 1 — Exceptions: FIXED (was 62, now 0)
+## What was wrong and how it was fixed
 
-All 62 exceptions are gone after patches 0004 and 0005. Recorded here so the
-reasoning is not repeated. The author of 0004 corrected one detail of the
-earlier analysis: `"{0:F20}"` for `1E30` does produce a 20+ character string,
-so that example was wrong. The real trigger is **NaN and infinity**, which
-format to short strings (`"NaN"`, `"Infinity"`) and make `Substring(0, 20)`
-throw.
+Reference for layouts: tc-forever (`forevercore/src/server/game/Server/Packets`).
+Where tc-forever has no layout (or differs), the layout was derived from the
+packet bytes and lengths.
 
-### 1.1 `SMSG_GUILD_ROSTER` — 61 packets — fixed by 0004
+### Opcode numbering (wrong opcode -> wrong parser, looks like "garbage bytes")
 
-```
-WowPacketParser.Misc.Packet.FormatFloat(Single value)          PacketReads.cs:741
-WowPacketParserModule.Substructures.MythicPlusHandler.ReadDungeonScoreSummary   MythicPlusHandler.cs:55
-WowPacketParserModule.V9_0_1_36216.Parsers.GuildHandler.HandleGuildRoster      GuildHandler.cs:64
-```
+The sniff differs from the tc-forever numbering for some opcodes. These were
+found by packet size and content, not by the tables:
 
-`FormatFloat` now guards the substring by string length. Trimming, current
-culture and `DebugReads` formatting are unchanged.
+| wire | was | is | evidence |
+|---|---|---|---|
+| 0x47017F–0x47018B | retail numbering | Classic index = retail − 1 | `ClassicOpcodes.cpp TranslateServerOpcode70245`; `SMSG_HEALTH_UPDATE` removed, `ForeverThreatHandler.cs` added |
+| 0x4400AF | `CMSG_RESURRECT_RESPONSE` | `CMSG_WHO` | MinLevel 13, MaxLevel 19, AreaID 1637, Token 3 |
+| 0x4400AD | `CMSG_WHO` | `CMSG_RESURRECT_RESPONSE` | swapped pair |
+| 0x4701B7 | `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` | `SMSG_ACCOUNT_DATA_TIMES` | 170 B = Guid + ServerTime + 20 x Timestamp |
+| 0x4701B6 | `SMSG_ACCOUNT_DATA_TIMES` | `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` | 15 B packet |
 
-**Still open:** the guild-roster field alignment itself. Forever 1.60.1 has no
-Mythic+, yet `HandleGuildRoster` calls the retail `ReadDungeonScoreSummary`.
-The exception no longer fires, but the bytes are still read as the wrong
-structure — that reader can silently produce nonsense or leave bytes unread.
-Not visible on this capture (the roster packets now close cleanly), but it is
-not a correct layout.
+An earlier version of this document called the 160 unread bytes of
+`SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` a "server memory leak". That was wrong:
+they were the 20 timestamps of `SMSG_ACCOUNT_DATA_TIMES` read through the
+wrong opcode.
 
-### 1.2 `SMSG_UPDATE_OBJECT` — 1 packet — fixed by 0005
+### Layout fixes (module `WowPacketParserModule.V1_60_1_70888/Parsers`)
 
-```
-WowPacketParser.Misc.DynamicUpdateField`1.Resize(UInt32 newSize)  DynamicUpdateField.cs:25
-...V1_60_1_70888.UpdateFieldHandler.ReadCreateActivePlayerData  UpdateFieldsHandler.cs:3885
-```
-
-The real cause was **not** `Resize` — it was earlier, in the shared Perks
-vendor-item reader. Forever is a separate client branch, so `OriginalPrice`
-and `WarbandSceneID` were both skipped. The reader consumed 40 bytes plus the
-bit byte instead of 48 plus the bit byte, and `CraftingOrders` came out as
-2,667,577,344 instead of 0.
-
-Record 801 (zero-based), payload exactly 127,078 bytes — the same packet this
-project hand-decoded over several sessions:
-
-```
-Old Perks width:     40 bytes + bit byte; CraftingOrders = 2,667,577,344
-Corrected width:     48 bytes + bit byte; CraftingOrders = 0
-FrozenPerksVendorItem 50585; CraftingOrders count 50839
-```
-
-`Resize` additionally gained a 65,536 ceiling that rejects absurd counts before
-allocation or casting — a defensive limit, not a claimed protocol maximum.
-Rejection leaves existing values intact; there is no clamping and no silent
-data loss.
+| packet | handler | what changed |
+|---|---|---|
+| `SMSG_GUILD_ROSTER`, `SMSG_UPDATE_OBJECT` | patches 0004 / 0005 | NaN / infinity in `FormatFloat`; Mythic+ struct on a non-Mythic+ payload |
+| `SMSG_PARTY_UPDATE` | `ForeverPartyHandler.cs` | LeaverStatus bit, optional blocks |
+| `SMSG_GROUP_DECLINE`, `CMSG_AUTOBANK_ITEM`, `SMSG_GET_ACCOUNT_CHARACTER_LIST_RESULT` | `ForeverAccountHandler.cs` | tc-forever layouts |
+| `SMSG_ACCOUNT_MOUNT_UPDATE` | `ForeverMiscHandler.cs` | trailing fields |
+| `SMSG_THREAT_UPDATE`, `SMSG_THREAT_CLEAR`, `SMSG_TITLE_LOST` | `ForeverThreatHandler.cs` | shifted opcodes, tc-forever `CombatPackets.cpp` |
+| `SMSG_WHO`, `CMSG_WHO` | `ForeverWhoHandler.cs` | `WhoPackets.cpp:61,110` |
+| `SMSG_ACCOUNT_DATA_TIMES` | `WorldSessionHandler.cs` | Guid, ServerTime, 20 timestamps (was 32) |
+| `SMSG_AUTH_RESPONSE` | `SessionHandler.cs` | `u32 Result` comes BEFORE the two bits |
+| `SMSG_FEATURE_SYSTEM_STATUS_GLUE_SCREEN` | `ForeverGlueScreenHandler.cs` | derived from bytes (829 B) |
+| `SMSG_FEATURE_SYSTEM_STATUS` | `ForeverFeatureStatusHandler.cs` | `SystemPackets.cpp:123`: no `KioskSessionDurationMinutes`, SocialRestriction before ContentSetID, 10 `ClassicFlagBits10` bits |
+| `SMSG_RATED_PVP_INFO` | `ForeverPvpHandler.cs` | 9 brackets x 74 B = 666 B (`BattlegroundPackets.cpp:350`) |
+| `SMSG_REQUEST_PVP_REWARDS_RESPONSE` | `ForeverPvpHandler.cs` | rewards with a u8 mask; no tc-forever layout |
+| `SMSG_AUCTION_LIST_BUCKETS_RESULT` | `ForeverAuctionHandler.cs` | see "Open items" |
 
 ---
 
-## Part 2 — "Packet not fully read" (44 packets)
+## Open items (parse completely, meaning not fully known)
 
-These parse without throwing but leave unread bytes. Each one is a field the
-handler does not know about.
+These packets no longer fail, but part of what they carry is a guess:
 
-| count | opcode | wire | length | pos | remaining |
-|---|---|---|---|---|---|
-| 10 | `SMSG_PARTY_UPDATE` | 0x470097 | 150 | 139 | **11** |
-| 6 | `SMSG_HEALTH_UPDATE` | 0x47017F | 161 | 16 | **145** |
-| 5 | `SMSG_TITLE_LOST` | 0x470189 | 13 | 4 | **9** |
-| 3 | `SMSG_FEATURE_SYSTEM_STATUS_GLUE_SCREEN` | 0x470064 | 829 | 715 | **114** |
-| 3 | `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` | 0x4701B7 | 170 | 10 | **160** |
-| 2 | `CMSG_RESURRECT_RESPONSE` | 0x4400AF | 37 | 9 | **28** |
-| 2 | `SMSG_GROUP_DECLINE` | 0x47023D | 12 | 2 | **10** |
-| 1 | `SMSG_AUTH_RESPONSE` | 0x470001 | 378 | 5 | **373** |
-| 1 | `SMSG_GET_ACCOUNT_CHARACTER_LIST_RESULT` | 0x47020D | 59 | 54 | **5** |
-| 1 | `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` | 0x4701B7 | 175 | 15 | **160** |
-| 1 | `SMSG_ACCOUNT_MOUNT_UPDATE` | 0x470047 | 31 | 14 | **17** |
-| 1 | `SMSG_RATED_PVP_INFO` | 0x4D000F | 666 | 65 | **601** |
-| 1 | `SMSG_REQUEST_PVP_REWARDS_RESPONSE` | 0x4D0014 | 310 | 177 | **133** |
-| 1 | `CMSG_AUTOBANK_ITEM` | 0x410003 | 4 | 3 | **1** |
-| 1 | `SMSG_WHO` | 0x4C0002 | 5,321 | 4,460 | **861** |
-| 1 | `CMSG_RESURRECT_RESPONSE` | 0x4400AF | 33 | 6 | **27** |
-| 1 | `SMSG_WHO` | 0x4C0002 | 5,600 | 3,872 | **1,728** |
-| 1 | `SMSG_WHO` | 0x4C0002 | 5,329 | 5,072 | **257** |
-| 1 | `SMSG_TITLE_LOST` | 0x470189 | 14 | 4 | **10** |
-| 1 | `SMSG_THREAT_CLEAR` | 0x470191 | 26 | 13 | **13** |
-
-Notes on the interesting ones:
-
-- **`SMSG_HEALTH_UPDATE` at 161 bytes** — the handler reads 16 bytes (guid,
-  `u32 ClassicUnknown`, `u32 Health`, `u8 pad`). A 161-byte packet under this
-  opcode is *not* a health update; Forever reuses the opcode for a batch form.
-  This is the single biggest unread tail after the auth/account packets.
-- **`SMSG_WHO` × 3** — same handler, three different unread tails (861, 1,728,
-  257). Player entries carry Forever-only trailing fields.
-- **`SMSG_UPDATE_ACCOUNT_DATA_COMPLETE`** — the payload contains server memory
-  addresses (`0x6AEC7898`, `0x6AF848D4` repeating). This is a **server-side bug**;
-  the bytes are not a valid structure and cannot be parsed.
-- **`SMSG_AUTH_RESPONSE` (373 bytes unread)** — text `"CAMWOW EU5 Realm 5 PvE"`
-  at offset 63, `Result = 0x80000000`, `SuccessInfo` with virtual realms. No
-  matching structure in tc-forever.
-- **`SMSG_RATED_PVP_INFO` / `SMSG_REQUEST_PVP_REWARDS_RESPONSE`** — no emulator
-  counterpart; the emulator does not implement rated PvP.
-
----
-
-## Part 3 — What has no second source (blocked, not broken)
-
-These cannot be finished by guessing. Each needs either an emulator
-implementation or a second capture:
-
-| opcode | why blocked |
+| packet | what is uncertain |
 |---|---|
-| `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` | server memory leak; bytes are not a structure |
-| `SMSG_AUTH_RESPONSE` | no matching structure in tc-forever |
-| `SMSG_GET_ACCOUNT_CHARACTER_LIST_RESULT` | bit split unknown; one 59-byte packet is not enough |
-| `SMSG_RATED_PVP_INFO` | rated PvP not implemented in tc-forever |
-| `SMSG_REQUEST_PVP_REWARDS_RESPONSE` | same |
-| `SMSG_ACCOUNT_MOUNT_UPDATE` | 17 unexplained trailing bytes |
-| `SMSG_FEATURE_SYSTEM_STATUS_GLUE_SCREEN` | 829 bytes on wire vs 98 in emulator |
-| `SMSG_TITLE_LOST` | 9–10 trailing bytes, no emulator field |
-| `SMSG_THREAT_CLEAR` | 13 trailing bytes |
-| `SMSG_GROUP_DECLINE` | 10 trailing bytes |
-| `CMSG_AUTOBANK_ITEM` | 1 trailing byte |
-| `SMSG_GUILD_ROSTER` layout | Mythic+ struct called on a non-Mythic+ payload |
+| `SMSG_AUCTION_LIST_BUCKETS_RESULT` | The 70938 client appends, per bucket, a 7th flag bit (`HasExtraBlock`), then a u32 (= the bucket's ItemID) and a block of 2, 7 or 12 bytes whose content is unknown. tc-forever does not write it. The block length is chosen so that the next bucket header is sane (MinPrice not below the previous one, 0 appearances); verified on all 500 buckets of the one packet in this capture. A second capture would confirm it. |
+| `SMSG_REQUEST_PVP_REWARDS_RESPONSE` | The last byte (0xF8 in the capture) has no name yet. The packet is all zeros otherwise. |
+| `SMSG_RATED_PVP_INFO` | tc-forever has the layout, but the emulator does not implement rated PvP, so the values were not cross-checked against server code. |
 
----
+## Data the capture does not contain (not parser bugs)
 
-## Part 4 — Recommended order of work
-
-Exceptions are done. What is left is the 44 unread tails:
-
-1. `SMSG_PARTY_UPDATE` (10) and `SMSG_HEALTH_UPDATE` (6) — 16 packets, the
-   largest single group. `HEALTH_UPDATE` at 161 bytes is a batch form, not the
-   16-byte single form the handler assumes.
-2. `SMSG_WHO` (3) — three different unread tails from one handler; player
-   entries carry Forever-only trailing fields.
-3. `SMSG_TITLE_LOST` (6), `SMSG_GROUP_DECLINE` (2), `SMSG_THREAT_CLEAR` (1),
-   `CMSG_RESURRECT_RESPONSE` (3), `CMSG_AUTOBANK_ITEM` (1) — 13 packets, all
-   small single-field gaps.
-4. Everything in Part 3 — leave alone unless a second source appears.
-
-**Current state: 117,307 / 119,594 = 98.088 %**, and **100.000 %** of packets
-the parser attempts. The 44 remaining are missing fields, not crashes.
-
-**Realistic ceiling on this capture:** the ~34 fixable tails would give
-117,341 / 119,594 = 98.12 %, again 100 % of attempted packets. The other ~10
-(`SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` and the PvP opcodes) are server-side
-garbage or emulator gaps and cannot be closed from this capture alone.
+- `npc_vendor.incrtime` stays 0; this capture has no `SMSG_VENDOR_INVENTORY`.
+- Loot: only 5 `creature_loot_template` rows (few loot windows). Chance = drops / kills x 100, an estimate from a small sample.
+- Gossip: a single `SMSG_GOSSIP_MESSAGE`; `OptionBroadcastTextID` stays 0.
+- `creature_classic_level_spawn` is not implemented.
 
 ---
 
@@ -187,6 +96,14 @@ dotnet WowPacketParser.dll --ConfigFile WowPacketParser.dll.config ^
 Expected output line:
 
 ```
-Parsed 117307 (98.088%) packets successfully, 0 (0.000%) with errors,
-skipped 1181 (0.988%) and without structure 1046 (0.875%)  (total: 119594)
+Parsed 117421 (98.183%) packets successfully, 0 (0.000%) with errors,
+skipped 1127 (0.942%) and without structure 1046 (0.875%)  (total: 119594)
+```
+
+Post-processing of the generated SQL:
+
+```
+node tools/patch-from-tdb.cjs        # DB2 columns the client does not send, from the TDB hotfixes
+node tools/fix-loot-id.cjs           # creature_loot_template.Entry -> LootID (TDB world)
+node tools/check-sql.cjs out/forever_70938.sql
 ```
