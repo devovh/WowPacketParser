@@ -138,3 +138,30 @@ Dev: w Ironforge widzieli Magister Falath, Turlethion Moonrage i Drake Ekans, al
 - Shell użytkownika to **cmd.exe** — `head`/`grep` nie działają, podawać polecenia cmd.
 - Plik wyjściowy parsera ląduje w `bin/Release/`, trzeba go przenieść do `out/`.
 - `out/` jest w `.gitignore`.
+
+---
+
+## Poprawki parsera (sesja po punktach 1-5) — stan: 70938 = 98,18% OK, 2 pakiety z błędem
+
+Z 18 błędnych pakietów zostały **2**, oba znane i opisane niżej.
+
+| Pakiet | Co było źle | Poprawka |
+|---|---|---|
+| `SMSG_WHO` | brak handlera | nowy `ForeverWhoHandler.cs`, układ z tc-forever `WhoPackets.cpp` |
+| `CMSG_WHO` / `CMSG_RESURRECT_RESPONSE` | opcody zamienione (0x4400AF niesie zapytanie /who) | zamiana w `V1_60_1_69876/Opcodes.cs` + handler zapytania |
+| `SMSG_ACCOUNT_DATA_TIMES` / `SMSG_UPDATE_ACCOUNT_DATA_COMPLETE` | opcody zamienione (0x4701B7 = 170 B = czasy kont) | zamiana w `Opcodes.cs`, układ GUID + czas + 20 x i64 |
+| `SMSG_FEATURE_SYSTEM_STATUS_GLUE_SCREEN` | czytany układ retailowy | nowy `ForeverGlueScreenHandler.cs`, układ wyprowadzony z bajtów (829 B) |
+| `SMSG_AUTH_RESPONSE` | bity czytane przed `Result` | `Result` (u32) idzie PRZED bitami (tc-forever `AuthResponse::Write`) |
+| `SMSG_RATED_PVP_INFO` | brak układu | 9 bracketów x 74 B = 666 B (`ForeverPvpHandler.cs`) |
+| `SMSG_REQUEST_PVP_REWARDS_RESPONSE` | brak układu | nagrody z maską u8; ostatni bajt (0xF8) jeszcze bez nazwy |
+
+### Zostało (2 pakiety)
+
+- `SMSG_FEATURE_SYSTEM_STATUS` (949 B): tc-forever pisze `QuickJoinConfig` zaraz po `CommercePricePollTimeSeconds`, ale w sniffie po
+  `RedeemForBalanceAmount` idą 4 bajty `00 00 00 00` przed `ClubsPresenceDelay` (60000 = `60 EA 00 00`), a Squelch ma inny rozmiar niż
+  zakłada kod. Szkic handlera nie jest w repo; trzeba go dokończyć na bajtach.
+- `SMSG_AUCTION_LIST_BUCKETS_RESULT` (14123 B): wyjątek końca strumienia, nie analizowany.
+
+### Zasady, które się sprawdziły
+- Gdy tc-forever nie ma układu, liczyć z długości: `9 x 74 = 666`, `127 + 2x9 + 55x12 + 6x4 = 829`.
+- Zrzut surowych bajtów: tymczasowy handler z `packet.WriteLine("HEX: " + BitConverter.ToString(bytes))`, potem go usunąć.
