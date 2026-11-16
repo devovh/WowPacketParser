@@ -39,3 +39,11 @@ Most of these cannot be derived from a sniff at all (scripts, conditions, links)
 - The sniff has 7 trainer ids (4944, 4946, 4948, 5008, 5289, 5529, 5530). **None of them is in TDB's `trainer` table** (TDB has 174 ids below 1000 and the rest above 1 000 000; nothing in 4900-6000).
 - So the sniff would add 7 trainers that TDB does not have. They all come from one capture, so this is a small gain: 7 trainers.
 - `creature_text`: TDB already has ~21 000 rows; the sniff has only 16 chat packets, so the gain is negligible.
+
+## Trainers: why they are NOT written (checked on raw bytes)
+The 28 packets of opcode 0x47018D (named `SMSG_TRAINER_LIST` in our table) are all exactly 48 bytes with one fixed layout:
+`u32 A (5289, 5529, 4944, ...), u32 B (14, 664, 214, ...), u32 0, packed guid (player 06 E0 9D AC 8C 6C 08), u32 0, u32 1, u64 counter-like, u64 X, u64 X, u8 0`.
+This does not match tc-forever's `TrainerList` (guid, type, TrainerID, spell count, 33-byte spells, greeting), and there is no greeting or spell list.
+`A` is not in TDB's `trainer` table, `B` does not look like a trainer spell list. **The opcode name is probably wrong**: the packet is likely something else,
+sent per spell. Writing it to `trainer`/`trainer_spell` would produce wrong rows, so the parser does not.
+Question for the developer: what is S 0x47018D in 70938, and what is the real SMSG_TRAINER_LIST opcode? Also open a trainer window at a few NPCs in the next capture.
