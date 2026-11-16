@@ -3,9 +3,11 @@ using WowPacketParser.Misc;
 namespace WowPacketParser.Enums.Version.V1_60_1_69876
 {
     // Tabela opcodow dla klienta WoW Forever 1.60.1.70888 (+ nowsze buildy Forever).
-    // WYGENEROWANA przez gen-opcodes-70888.js z tc-forever (Opcodes.h + ClassicOpcodes.cpp)
-    // i tabeli WPP V1_60_1_69876. Numeracja: grupy +1 (build >= 70291), inserty 0x98/0x13B,
-    // reguly buildow 70755 i 70790. Nie edytuj recznie.
+    // Zrodla: tc-forever (Opcodes.h + ClassicOpcodes.cpp), tabela WPP V1_60_1_69876
+    // i numery potwierdzone przez dewelopera Forever (docs/DEVELOPER-OPCODES-70938-*.md).
+    // Numeracja: grupy +1 (build >= 70291), inserty 0x98/0x13B, reguly buildow 70755 i 70790.
+    // Wszystkie numery to numery wire 70938 (nie core: SMSG_UPDATE_OBJECT = 0x5E0000, nie 0x5D0000).
+    // Poprawiaj recznie, po jednym opcodzie, z podanym zrodlem w opisie commita.
     public static class Opcodes_1_60_1
     {
         public static BiDictionary<Opcode, int> Opcodes(Direction direction)

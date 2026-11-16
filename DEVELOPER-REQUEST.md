@@ -22,11 +22,13 @@ This file lists what is **still missing** so the parser can read everything the 
 ### 2.1 Opcodes with no name
 Only 4 server opcodes are still unnamed: `0x470377`, `0x470228`, `0x4C0005`, `0x470059`. Samples are in `UNKNOWN-OPCODES-70938.md` (regenerate with `node tools/list-unknown-opcodes.cjs`).
 
-**Request:** names and layouts for these four.
+**Closed (2026-11-16):** the developer has nothing on those numbers on his side either, so they stay unnamed and go out as raw hex. `SMSG_BATTLEFIELD_LIST` deliberately stays on `0x4C0005`. Do not guess names for them; if a name ever arrives, add it together with a reader.
 
 ### 2.2 Named opcodes with no structure (7 opcodes)
-`CMSG_MOVE_ENABLE_FULL_SPEED_PITCHING_ACK` 0x420083, `SMSG_RECENT_ALLY_DATA_RESPONSE` 0x470364, `SMSG_SYNC_WOW_ENTITLEMENTS` 0x470300, `SMSG_RAF_ACCOUNT_INFO` 0x4702ED, `SMSG_PAST_TIME_EVENTS` 0x470066, `SMSG_WEEKLY_REWARDS_PROGRESS_RESULT` 0x47030B, `SMSG_RAF_DEBUG_FRIEND_MONTHS` 0x470347.
-Hex samples are in `UNKNOWN-OPCODES-70938.md`. Some names may be wrong because our table is shifted; please check the names too.
+Names confirmed by the developer on 2026-11-16 — they are not shift leftovers. Settled:
+- `CMSG_MOVE_ENABLE_FULL_SPEED_PITCHING_ACK` 0x420083: MovementInfo + `i32 AckIndex`, read like every other `MOVE_*_ACK` (`ReadMovementAck`). Done.
+- `SMSG_RECENT_ALLY_DATA_RESPONSE` 0x470364: `u32`, `u8` (7 = list valid), `u32 Count`, then the entries; live sends one extra trailing byte he cannot explain, read as `Unk2`. Done.
+- `SMSG_SYNC_WOW_ENTITLEMENTS` 0x470300, `SMSG_RAF_ACCOUNT_INFO` 0x4702ED, `SMSG_PAST_TIME_EVENTS` 0x470066, `SMSG_WEEKLY_REWARDS_PROGRESS_RESULT` 0x47030B, `SMSG_RAF_DEBUG_FRIEND_MONTHS` 0x470347: names right, but the server never sends them, so no layout can be proven. They stay hex-only on purpose.
 
 ### 2.3 Layouts that are guessed or unverified
 - `SMSG_AUCTION_LIST_BUCKETS_RESULT` (0x4702F7): from bucket flags with bit 7 set, the client writes `u32 ItemID` plus a block of **2, 7 or 12 bytes of unknown content**. The length is chosen by a heuristic (the next bucket header must be sane). It was verified on one capture only. tc-forever does not write this block.
@@ -41,7 +43,9 @@ Hex samples are in `UNKNOWN-OPCODES-70938.md`. Some names may be wrong because o
 - 1 gossip row has `OptionBroadcastTextID` = 0.
 - The LootID mapping (`tools/fix-loot-id.cjs`) was verified only where LootID == creature entry.
 
-## 3. Needed for 70862 (secondary)
+## 3. Needed for 70862 (secondary — closed 2026-11-16)
+
+The developer's server only targets 70938 and he has no 70862 layouts for us, so this section is history, not a work item. Nothing here is being pursued.
 The parser status line reports 571 packets with errors. Counting error markers in the `_parsed.txt` log gives about 890 (a packet can log an exception and nested warnings, and some exceptions are caught inside handlers), so treat the per-opcode numbers below as "where the problems are", not as an exact partition of the 571.
 
 | Opcode | Error markers | Cause / state |

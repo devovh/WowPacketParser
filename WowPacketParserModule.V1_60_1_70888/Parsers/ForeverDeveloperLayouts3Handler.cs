@@ -36,6 +36,53 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.CMSG_RECENT_ALLY_REQUEST_DATA)]
         public static void HandleRecentAllyRequestData(Packet packet) { packet.ReadUInt32("Unknown"); }
 
+        /// <summary>
+        /// Forever 70938, deweloper: u32, u8 Valid (7 = lista poprawna), u32 Count + encje, potem 1 nieznany bajt.
+        /// Encje nie wystapily jeszcze w zadnym snifie (Count zawsze 0), wiec czytamy je jak w SMSG_RECENT_ALLY_LIST.
+        /// Ostatni bajt czytamy jako Unknown (a nie zostawiamy), zeby nie zglaszac "not fully read".
+        /// </summary>
+        [Parser(Opcode.SMSG_RECENT_ALLY_DATA_RESPONSE)]
+        public static void HandleRecentAllyDataResponse(Packet packet)
+        {
+            packet.ReadUInt32("Unk1");
+            packet.ReadByte("Valid");
+            var count = packet.ReadUInt32("Count");
+            for (var i = 0u; i < count; i++)
+            {
+                ForeverGuid.Read(packet, "Ally", i);
+                packet.ReadUInt32("Unk1", i);
+                packet.ReadUInt32("Unk2", i);
+                packet.ReadUInt32("Unk3", i);
+                packet.ReadUInt32("ZoneID", i);
+                var inter = packet.ReadUInt32("InteractionCount", i);
+                for (var j = 0u; j < inter; j++)
+                {
+                    packet.ReadByte("Type", i, j);
+                    packet.ReadTime64("UnixTime", i, j);
+                    packet.ReadInt32("Value", i, j);
+                    packet.ReadInt32("Unk", i, j);
+                }
+                packet.ReadUInt32("OnlineFlags", i);
+            }
+            if (packet.CanRead())
+                packet.ReadByte("Unk2");
+        }
+
+        /// <summary>
+        /// Forever 70938, deweloper (potwierdzone na 76 pakietach): u64 Type, u64 ObjectId, u32 Token,
+        /// u32 DataSize, potem DataSize bajtow protobufa. Protobufa nie parsujemy - leci jako hex.
+        /// Uwaga: 0x440126 to numer sprzed 70755; nasza tabela miala tam CMSG_CLUB_PRESENCE_SUBSCRIBE.
+        /// </summary>
+        [Parser(Opcode.CMSG_BATTLENET_REQUEST)]
+        public static void HandleBattlenetRequest(Packet packet)
+        {
+            packet.ReadUInt64("Type");
+            packet.ReadUInt64("ObjectId");
+            packet.ReadUInt32("Token");
+            var size = packet.ReadUInt32("DataSize");
+            packet.ReadBytes("Data", (int)size);
+        }
+
         [Parser(Opcode.SMSG_MOVE_INITIAL_OBJECT_UPDATE_COMPLETE)]
         public static void HandleMoveInitialObjectUpdateComplete(Packet packet)
         {
