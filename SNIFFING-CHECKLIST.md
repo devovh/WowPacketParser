@@ -32,6 +32,25 @@ Goal: capture packets that the current sniff (2026-11-14) does not contain, so t
 - If you can: stable master and pet window (hunter), mailbox (send yourself a mail from an alt), guild bank.
 - Fills / verifies: pet, mail, guild bank and auction handlers (currently only empty cases are tested).
 
+## 6. Niepuste bank, aukcje i zestawy (potrzebne od 2026-11-16)
+Cztery czytniki są napisane z układu dewelopera (ocena A/A-), ale w sniffie 14.11 każdy z nich
+trafił tylko na **pusty** pakiet (`Count=0`, `TabCount=0`, `ItemCount=0`). Układu nie da się
+„ustalić” ze sniffu — brakuje danych, nie wiedzy. Każda z tych czterech rzeczy domyka jeden punkt:
+
+- **Bank gildii z itemami**: otwórz bank gildii, w której w tablicy leży kilka itemów (min. 2 tablice).
+  Potrzebny niepusty `SMSG_GUILD_BANK_QUERY_RESULTS` (0x530025): tablice z nazwami i ikonami,
+  itemy z `ItemInstance`. Sprawdza czytnik `ForeverDeveloperLayouts4Handler.cs:35`.
+- **Licytacje**: wystaw coś na aukcji i zalicytuj na cudzą aukcję, potem otwórz „Aukcje: licytowane”.
+  Potrzebny `SMSG_AUCTION_LIST_BIDDED_ITEMS_RESULT` (0x4702FB) z `ItemCount > 0` — sprawdza
+  `AuctionItem` (`ForeverDeveloperLayoutsHandler.cs:122`).
+- **Ulubione aukcje**: dodaj 2-3 aukcje do ulubionych i otwórz listę.
+  Potrzebny `SMSG_AUCTION_FAVORITE_LIST` (0x470304) z `Count > 0` (`ForeverDeveloperLayouts4Handler.cs:77`).
+- **Zestawy wyposażenia**: zapisz 2 zestawy w oknie postaci i przełącz się między nimi.
+  Potrzebny `SMSG_LOAD_EQUIPMENT_SET` (0x4701BB) z `Count > 0` (`ForeverDeveloperLayouts4Handler.cs:93`).
+
+Wystarczy jedno wejście do banku i AH w trakcie sesji — reszta checklisty (trenerzy, vendory,
+questy, loot) zostaje bez zmian.
+
 ## After the session
 - Log out normally so the file is closed.
 - The file is saved in `C:\Users\devov\Desktop\regedit_70790\dumps`. Send the file name (or the file) for processing.

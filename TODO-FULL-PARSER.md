@@ -13,6 +13,14 @@ Target build: **Forever 1.60.1.70938**. Reference: tc-forever sources and the de
 ## 2. Still to do for 70938
 
 ### 2.1 Layouts given by the developer but not yet written into the parser
+**2026-11-16: everything in this section is already in the parser - see `TODO-AUDIT-2026-11-16.md`.**
+Kept as the record of what the developer supplied. `CMSG_USE_ITEM` goes through the
+V3_4_0_45166 fallback (`ItemHandler.cs:499` -> `ReadSpellCastRequest`), `SMSG_RECENT_ALLY_LIST`
+and both auction/bank/equipment handlers live in `ForeverDeveloperLayouts3/4Handler.cs`.
+The small grade-G layouts were checked on the capture's bytes (`out/tmp/dump-opcodes2.txt`);
+`SMSG_BATCH_PRESENCE_SUBSCRIPTION` was wrong there (u64 Id) and is fixed. What is still missing
+for the guild bank, auction lists and equipment sets is *non-empty* sample data, not code.
+
 Full text in `docs/DEVELOPER-OPCODES-70938-REPLY-2.md`, sections 3 and 5.
 - `CMSG_USE_ITEM` (0x3E0171): `u8 PackSlot, u8 Slot, guid CastItem, SpellCastRequest` (full SpellCastRequest layout given, grade A). Needs a Forever `SpellCastRequest` reader.
 - `SMSG_RECENT_ALLY_LIST` (0x470366, 396 bytes, grade A) and `SMSG_RECENT_ALLY_DATA_RESPONSE`.
@@ -21,10 +29,14 @@ Full text in `docs/DEVELOPER-OPCODES-70938-REPLY-2.md`, sections 3 and 5.
 - Small guessed layouts (G) for about 20 packets with 1-2 samples each: `SMSG_MOVE_INITIAL_OBJECT_UPDATE_COMPLETE` (guid + u32), `SMSG_REGIONWIDE_CHARACTER_RESTRICTIONS_DATA` / `..._MAIL_DATA`, `SMSG_LAST_CATALOG_FETCH_RESPONSE` (i64 time), `SMSG_BATCH_PRESENCE_SUBSCRIPTION`, `CMSG_SERVER_VALIDATION_SIGNATURE_REQUEST`, `CMSG_GET_ACCOUNT_CHARACTER_LIST`, `CMSG_CLUB_FINDER_REQUEST_SUBSCRIBED_CLUB_POSTING_IDS` (u32), `CMSG_MOVE_SET_TURN_RATE_CHEAT` (float), `CMSG_MOVE_ENABLE_FULL_SPEED_PITCHING_ACK` (MovementInfo + i32), `CMSG_PERKS_PROGRAM_REQUEST_REFUND` (u8 role mask; the name is wrong for Classic), and others. These do not feed any SQL table.
 
 ### 2.2 Unknown opcodes (4 unnamed, 5 packets)
-S 0x470377, S 0x470228, S 0x4C0005 (Classic-only chat message, payload u8), S 0x470059 (bytes look like bit, u32 3, u32 3, 3 x u32, u8). Neither side knows their names. Needs more captures.
+**Closed 2026-11-16** - the developer has no names for them either, so they go out as raw hex.
+S 0x470377, S 0x470228, S 0x4C0005 (Classic-only chat message, payload u8; `SMSG_BATTLEFIELD_LIST`
+is deliberately kept on this number), S 0x470059. Not a parser problem - the name does not exist yet.
 
 ### 2.3 Named, but no layout from either side (grade B)
-`SMSG_SYNC_WOW_ENTITLEMENTS` (1 208 bytes), `SMSG_RAF_ACCOUNT_INFO`, `SMSG_PAST_TIME_EVENTS`, `SMSG_WEEKLY_REWARDS_PROGRESS_RESULT`, `SMSG_RAF_DEBUG_FRIEND_MONTHS`, `CMSG_UPGRADE_RUNEFORGE_LEGENDARY`. One packet each; low value.
+**Closed 2026-11-16** - the server never sends them, so they stay as hex:
+`SMSG_SYNC_WOW_ENTITLEMENTS` (1 208 bytes), `SMSG_RAF_ACCOUNT_INFO`, `SMSG_PAST_TIME_EVENTS`,
+`SMSG_WEEKLY_REWARDS_PROGRESS_RESULT`, `SMSG_RAF_DEBUG_FRIEND_MONTHS`, `CMSG_UPGRADE_RUNEFORGE_LEGENDARY`.
 
 ### 2.4 Other open items
 - `SMSG_REQUEST_PVP_REWARDS_RESPONSE`: last byte 0xF8 unexplained (the server does not send it).
@@ -37,6 +49,8 @@ S 0x470377, S 0x470228, S 0x4C0005 (Classic-only chat message, payload u8), S 0x
 - `creature_loot_template`: chance is only drops / kills; 5 rows without data. LootID mapping verified only where LootID equals the creature entry.
 - `creature_classic_level_spawn` not implemented; 1 gossip row with `OptionBroadcastTextID` = 0.
 - Wanted capture: restocking vendors, many kills with loot, several cities and instances, the auction house opened a few times.
+- **Non-empty guild bank, auction lists and equipment sets**: see section 6 of `SNIFFING-CHECKLIST.md`.
+  Without them those four handlers stay "written from the documented layout", never "confirmed on bytes".
 
 ## 3. Build 70862 (older, low priority)
 574 packets still have errors. The developer only has the 70938 layouts.

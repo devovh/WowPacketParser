@@ -5,8 +5,11 @@ using WowPacketParser.Parsing;
 namespace WowPacketParserModule.V1_60_1_70888.Parsers
 {
     /// <summary>
+    /// <summary>
     /// Uklady od dewelopera, odpowiedz nr 2, sekcja 3 (ALFA-OPCODES-70938-REPLY-2.md).
     /// Pewnosc A: SMSG_RECENT_ALLY_LIST, CMSG_RECENT_ALLY_REQUEST_DATA. Reszta to jego domysly (G) z dlugosci probek.
+    /// Domysly sprawdzone na bajtach ze sniffu 14.11 (out/tmp/dump-opcodes2.txt) - kazdy z nich
+    /// konczy sie dokladnie na koncu payloadu; SMSG_BATCH_PRESENCE_SUBSCRIPTION mial blad (u64 zamiast u32).
     /// </summary>
     public static class ForeverDeveloperLayouts3Handler
     {
@@ -117,6 +120,11 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.SMSG_LAST_CATALOG_FETCH_RESPONSE)]
         public static void HandleLastCatalogFetchResponse(Packet packet) { packet.ReadTime64("FetchTime"); }
 
+        /// <summary>
+        /// Forever 70938: bit Unknown, flush, u32 Count, Count x u32 Id, potem JESZCZE JEDEN nieprzeczytany u32.
+        /// Zmierzone na jedynym pakiecie ze sniffu 14.11 (13 B: 80 01000000 3A743147 00000000) - pole Id
+        /// ma 4 bajty (nie 8, jak wczesniej), a za nim zostaja 4 bajty nieznane (u32/zamknieta lista).
+        /// </summary>
         [Parser(Opcode.SMSG_BATCH_PRESENCE_SUBSCRIPTION)]
         public static void HandleBatchPresenceSubscription(Packet packet)
         {
@@ -124,7 +132,9 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ResetBitReader();
             var count = packet.ReadUInt32("Count");
             for (var i = 0u; i < count; i++)
-                packet.ReadUInt64("Id", i);
+                packet.ReadUInt32("Id", i);
+            if (packet.CanRead())
+                packet.ReadUInt32("Unk");
         }
 
         [Parser(Opcode.CMSG_SERVER_VALIDATION_SIGNATURE_REQUEST)]
