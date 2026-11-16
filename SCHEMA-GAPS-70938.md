@@ -28,3 +28,14 @@ Most of these cannot be derived from a sniff at all (scripts, conditions, links)
 1. Store trainers (`trainer`, `trainer_spell`): the data is already parsed. Smallest useful next step.
 2. Then `creature_text` from `SMSG_CHAT` of NPCs.
 3. In the next capture visit vendors, trainers, quest givers (offer reward / request items), signposts with POIs, and read books.
+
+## Check against TDB (TDB_full_forever_2026_10_14)
+| Table | Rows in TDB |
+|---|---|
+| `trainer` | 708 |
+| `trainer_spell` | ~34 700 |
+| `creature_text` | ~21 250 |
+
+- The sniff has 7 trainer ids (4944, 4946, 4948, 5008, 5289, 5529, 5530). **None of them is in TDB's `trainer` table** (TDB has 174 ids below 1000 and the rest above 1 000 000; nothing in 4900-6000).
+- So the sniff would add 7 trainers that TDB does not have. They all come from one capture, so this is a small gain: 7 trainers.
+- `creature_text`: TDB already has ~21 000 rows; the sniff has only 16 chat packets, so the gain is negligible.
