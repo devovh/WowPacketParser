@@ -3225,7 +3225,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.DisplayID = packet.ReadUInt32("DisplayID", indexes);
             data.ExperienceLevel = packet.ReadUInt32("ExperienceLevel", indexes);
             data.PetFlags = packet.ReadByte("PetFlags", indexes);
-            data.Specialization = packet.ReadUInt32("Specialization", indexes);
+            // Forever (Classic) pet: loyalty and happiness instead of retail's Specialization
+            packet.ReadByte("LoyaltyLevel", indexes);
+            packet.ReadUInt32("LoyaltyPoints", indexes);
+            packet.ReadUInt32("Happiness", indexes);
+            packet.ReadUInt32("Experience", indexes);
+            packet.ReadUInt32("NextLevelExperience", indexes);
             packet.ResetBitReader();
             data.Name = new string('*', (int)packet.ReadBits(8));
             data.Name = packet.ReadWoWString("Name", data.Name.Length, indexes);
@@ -3237,7 +3242,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             var data = new StablePetInfo();
             packet.ResetBitReader();
             var rawChangesMask = new int[1];
-            rawChangesMask[0] = (int)packet.ReadBits(9);
+            rawChangesMask[0] = (int)packet.ReadBits(13);
             var changesMask = new BitArray(rawChangesMask);
 
             packet.ResetBitReader();
@@ -3268,18 +3273,23 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                     data.PetFlags = packet.ReadByte("PetFlags", indexes);
                 }
                 if (changesMask[8])
-                {
-                    data.Specialization = packet.ReadUInt32("Specialization", indexes);
-                }
+                    packet.ReadByte("LoyaltyLevel", indexes);
+                if (changesMask[9])
+                    packet.ReadUInt32("LoyaltyPoints", indexes);
+                if (changesMask[10])
+                    packet.ReadUInt32("Happiness", indexes);
+                if (changesMask[11])
+                    packet.ReadUInt32("Experience", indexes);
+                if (changesMask[12])
+                    packet.ReadUInt32("NextLevelExperience", indexes);
+                if (changesMask[6])
+                    data.Name = new string('*', (int)packet.ReadBits(8));
             }
             packet.ResetBitReader();
             if (changesMask[0])
             {
                 if (changesMask[6])
-                {
-                    data.Name = new string('*', (int)packet.ReadBits(8));
                     data.Name = packet.ReadWoWString("Name", data.Name.Length, indexes);
-                }
             }
             return data;
         }
