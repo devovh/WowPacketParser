@@ -51,3 +51,9 @@ So the sniff has **no trainer window at all**: `trainer`/`trainer_spell` cannot 
 SMSG_TRAINER_LIST on 70938 is **0x47018B** (tc-forever's 0x45018A is the retail number; the server adds the Classic shift +0x20001).
 `ForeverTrainerHandler.cs` was rewritten to the developer's layout (A, 5 live lists decode exactly) and writes `trainer`, `trainer_spell` and, when a gossip selection precedes the window, `creature_trainer`.
 Tested only on a synthetic packet built from the developer's layout (2 spells, greeting) - the SQL rows come out right. **The 2026-11-14 sniff has no 0x47018B packet**, so it still produces no trainer rows; the real test is the developer's capture of 2026-11-15 or our next one.
+
+## Sniff 2026-11-16 (dump_1.60.1.70938_2026-11-16_10-39-12.pkt)
+271 433 packets, **0 parser errors** (99.867% parsed, 329 skipped, 32 without structure). SQL: `out/forever_70938_new.sql`, 13 006 rows in 72 tables, 0 bad rows.
+New compared with the 2026-11-14 sniff: `npc_vendor` 83 (was 0), `trainer` 3 / `trainer_spell` 24 / `creature_trainer` 3 (were 0), `creature` 792 (173), `creature_template` 473 (157), `gameobject_template` 409 (100), `quest_offer_reward` 6, `quest_request_items` 2, `creature_questender` 6, `points_of_interest` 1, `creature_text` 12, `conversation_*`.
+Still missing: `page_text` (no book read), `incrtime` for restocking vendors (needs a 10-minute wait), pet/stable/mail windows, guild bank with data, auction listings.
+Loot: 84 `creature_loot_template` rows (18 loot windows, 18 kills) - too few kills for good drop chances.
