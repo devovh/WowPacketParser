@@ -51,9 +51,53 @@ trafił tylko na **pusty** pakiet (`Count=0`, `TabCount=0`, `ItemCount=0`). Ukł
 Wystarczy jedno wejście do banku i AH w trakcie sesji — reszta checklisty (trenerzy, vendory,
 questy, loot) zostaje bez zmian.
 
+## Nowy build klienta (procedura, 2026-11-16)
+
+Numer opcodu i uklad pakietu to dwie osobne rzeczy. Nowy build **moze dzialac bez zadnych zmian**,
+jesli serwer nie ruszyl ani numerow, ani zawartosci pakietow. Nie zakladaj z gory, ze jest zepsuty —
+sprawdz po kolei:
+
+**1. Uruchom parser na nowym sniffie i zapisz trzy liczby** (sa w logu i w naglowku `_parsed.txt`):
+`parsed` (procent), `skipped`, `without structure`.
+
+**2. Porownaj z punktem odniesienia** (sniff 14.11, build 70938):
+`119 529 (99,946%)`, `skipped 55`, `without structure 10`.
+- **Wszystko podobne** → numery opcodow prawdopodobnie sie nie przesunely. Idz do punktu 4.
+- **`skipped` / `without structure` skoczylo o setki** → numery sie przesunely albo pojawily sie nowe
+  opcody. To jest sygnal, ze tabela `WowPacketParser/Enums/Version/V1_60_1_69876/Opcodes.cs`
+  jest nieaktualna. Idz do punktu 3.
+
+**3. Ustal, co sie przesunelo.** W `_parsed.txt` numery nieznane ida jako hex, np.
+`ClientToServer: 4456684 (0x4400EC) Length: 0`. Zbierz je:
+`grep -oE "\((0x[0-9A-F]+)\) Length" _parsed.txt | sort | uniq -c | sort -rn | head -20`
+i porownaj z tabela. Pakiety, ktore **wczesniej mialy nazwe, a teraz ida jako hex**, to przesuniete
+numery. Nowe nazwy w tabeli na stare numery to najczestszy powod „cichego” zepsucia.
+
+**4. UWAGA: brak bledow nic nie znaczy.** Przy przesunietych numerach parser czyta cudzy pakiet
+i konczy „czysto”, bo bajty przypadkiem sie ukladaja. Dlatego nie patrz na `0 errors`, tylko na
+**sens wartosci** w `_parsed.txt`: GUID-y (nie same zera, prefiks `Player/`/`Creature/`),
+`SpellID` w sensownym zakresie (setki/tysiace, nie 4 miliardy), `Health` <= `MaxHealth`,
+daty w `Time:` z tego samego dnia. Jesli pola wygladaja na smieci — uklad albo numer jest zly,
+mimo ze nie ma bledu.
+
+**5. Sprawdz pakiety, ktore na pewno powinny przyjsc** (te sa w kazdej sesji):
+`SMSG_UPDATE_OBJECT` (0x5E0000), `SMSG_MOVE_UPDATE` (0x60000E), `SMSG_AURA_UPDATE` (0x690011),
+`SMSG_CHAT` (0x4C0001), `SMSG_TIME_SYNC_REQUEST` (0x600000), `CMSG_PLAYER_LOGIN` (0x440016).
+W sniffie 14.11 sa wszystkie (kolejno 3831, 77 861, 17 784, 16, 95 i 1 pakiet), wiec latwo je znalezc.
+Jeśli któregoś brak w nazwach, numer się przesunął.
+
+**6. Jesli numery sie przesunely** — nie zgaduj. Numery biora sie z `tc-forever` (`Opcodes.h`,
+`ClassicOpcodes.cpp`) albo od dewelopera serwera (tak powstal commit `159275037`).
+Kolejność pracy: popraw tabela → build → przelicz sniff → commit (`TODO-FULL-PARSER.md`, sekcja 4).
+
+**7. Jesli numery sa dobre, ale jakis pakiet ma `Packet not fully read`** — to blad ukladu, nie numeru.
+Weź payload z hexa w `_parsed.txt` (albo z `out/tmp/dump-opcodes2.cjs`) i porównaj z układem w kodzie,
+tak jak przy `SMSG_BATCH_PRESENCE_SUBSCRIPTION` (bylo `u64 Id`, jest `u32 Id` + `u32 Unk`).
+
 ## After the session
 - Log out normally so the file is closed.
 - The file is saved in `C:\Users\devov\Desktop\regedit_70790\dumps`. Send the file name (or the file) for processing.
+
 
 ## Short version (if time is short)
 Do only sections 1 and 2 (trainers and vendors): they give the biggest gain.
