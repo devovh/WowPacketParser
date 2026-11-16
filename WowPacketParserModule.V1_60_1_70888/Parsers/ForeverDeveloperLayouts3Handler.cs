@@ -58,9 +58,9 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         public static void HandleRegionwideCharacterData(Packet packet)
         {
             var count = packet.ReadUInt32("Count");
-            packet.ReadByte("Unknown");
             for (var i = 0u; i < count; i++)
             {
+                packet.ReadByte("Unknown0", i);
                 ForeverGuid.Read(packet, "Character", i);
                 packet.ReadUInt32("Unk1", i);
                 packet.ReadUInt32("Unk2", i);
@@ -85,6 +85,8 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         {
             packet.ReadUInt32("Unknown");
             ForeverGuid.Read(packet, "Guid");
+            if (packet.CanRead())
+                ForeverGuid.Read(packet, "Guid2");
         }
 
         [Parser(Opcode.CMSG_GET_ACCOUNT_CHARACTER_LIST)]

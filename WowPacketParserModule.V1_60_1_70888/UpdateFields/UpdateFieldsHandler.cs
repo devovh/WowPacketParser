@@ -1180,9 +1180,31 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             return data;
         }
 
+        // PetCreatureName::WriteUpdate (tc-forever): 3 bity maski (0 = grupa, 1 = CreatureID, 2 = Name), flush,
+        // potem pola: u32 CreatureID; bity dlugosci nazwy (8), flush, tekst.
+        public static IPetCreatureName ReadUpdatePetCreatureName70938(Packet packet, params object[] indexes)
+        {
+            var data = new PetCreatureName();
+            packet.ResetBitReader();
+            var mask = packet.ReadBits("PetNameMask", 3);
+            packet.ResetBitReader();
+            if ((mask & 1) != 0)
+            {
+                if ((mask & 2) != 0)
+                    data.CreatureID = packet.ReadUInt32("CreatureID", indexes);
+                if ((mask & 4) != 0)
+                {
+                    var len = packet.ReadBits(8);
+                    packet.ResetBitReader();
+                    data.Name = packet.ReadWoWString("Name", len, indexes);
+                }
+            }
+            return data;
+        }
+
         public static IPetCreatureName ReadUpdatePetCreatureName(Packet packet, params object[] indexes)
         {
-            return ReadCreatePetCreatureName(packet, indexes);
+            return ReadUpdatePetCreatureName70938(packet, indexes);
         }
 
         public static ICTROptions ReadCreateCTROptions(Packet packet, params object[] indexes)
@@ -1676,7 +1698,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                 if (Changed(4)) data.RandomCustomizations.Resize(packet.ReadBits("RandomCustomizationsCount", 32));
                 if (Changed(5)) data.QuestSessionQuestLog.Resize(packet.ReadBits("QuestSessionQuestLogCount", 32));
                 if (Changed(6)) data.ArenaCooldowns.Resize(packet.ReadBits("ArenaCooldownsCount", 32));
-                if (Changed(7)) data.PetNames.Resize(packet.ReadBits("PetNamesCount", 32));
+                if (Changed(7)) data.PetNames.ReadUpdateMask(packet);
                 if (Changed(8)) data.VisualItemReplacements.Resize(packet.ReadBits("VisualItemReplacementsCount", 32));
                 if (Changed(36)) data.Name = new string('*', (int)packet.ReadBits("NameLength", 6));
             }
@@ -1694,8 +1716,10 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                     data.QuestSessionQuestLog[i] = ReadCreateQuestLog(packet, indexes, "QuestSessionQuestLog", i);
                 for (var i = 0; i < data.ArenaCooldowns.Count; ++i)
                     data.ArenaCooldowns[i] = ReadCreateArenaCooldown(packet, indexes, "ArenaCooldowns", i);
-                for (var i = 0; i < data.PetNames.Count; ++i)
-                    data.PetNames[i] = ReadCreatePetCreatureName(packet, indexes, "PetNames", i);
+                if (Changed(7))
+                    for (var i = 0; i < data.PetNames.Count; ++i)
+                        if (data.PetNames.UpdateMask[i])
+                            data.PetNames[i] = ReadUpdatePetCreatureName70938(packet, indexes, "PetNames", i);
                 for (var i = 0; i < data.VisualItemReplacements.Count; ++i)
                     data.VisualItemReplacements[i] = packet.ReadInt32("VisualItemReplacements", indexes, i);
                 if (Changed(9)) data.DuelArbiter = packet.ReadPackedGuid128("DuelArbiter", indexes);
