@@ -80,18 +80,11 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadCString("WinnerName");
         }
 
-        [Parser(Opcode.CMSG_RESURRECT_RESPONSE)]
-        public static void HandleResurrectResponse(Packet packet)
-        {
-            // W sniffie jest pakiet o dlugosci 0 (odmowa bez danych) - czytamy tylko to, co jest.
-            if (!packet.CanRead())
-                return;
-            ForeverGuid.Read(packet, "Resurrecter");
-            packet.ReadUInt32("Response");
-        }
+        // 0x4400AD is CMSG_KEEP_ALIVE (no data), not RESURRECT_RESPONSE: the 0-byte packet is the whole message.
 
-        [Parser(Opcode.CMSG_AUCTIONABLE_TOKEN_SELL_AT_MARKET_PRICE)]
-        public static void HandleTokenSellAtMarketPrice(Packet packet)
+        /// <summary>0x440117 is CMSG_COMMERCE_TOKEN_GET_MARKET_PRICE (tc-forever reader: u32 ClientToken).</summary>
+        [Parser(Opcode.CMSG_COMMERCE_TOKEN_GET_MARKET_PRICE)]
+        public static void HandleCommerceTokenGetMarketPrice(Packet packet)
         {
             packet.ReadUInt32("ClientToken");
         }
