@@ -18,7 +18,7 @@ I pushed an update to https://github.com/devovh/WowPacketParser (master, commit 
 ## Importing the generated SQL
 I tested the output on a real MySQL 8.4 with your TDB (2026_10_14) plus the world updates from `sql/updates/world/master`. Importing the same file twice, or three times, adds no rows in any table I checked (creature, gameobject, waypoints, gossip, npc_text, loot, areatrigger, quest_poi).
 - Take a backup first (`mysqldump`) or import into a copy. Templates and hotfix tables are written as DELETE + INSERT for the sniffed ids, so they overwrite what you already have for those ids.
-- Run the parser with `--SplitSQLFile true`. It writes `*_world.sql`, `*_hotfixes.sql` and `*_wpp.sql`. Import each file into its own database. The `_wpp.sql` file has `object_names` and `sniff_data`, which are not in the world schema.
+- Run the parser with `--SplitSQLFile true`. It writes `*_world.sql`, `*_hotfixes.sql` and `*_wpp.sql`. Import `_world.sql` into world and `_hotfixes.sql` into hotfixes. `_wpp.sql` (`object_names`, `sniff_data`) creates its own tables, so import it into any scratch database; it is also safe to re-import.
 - Run `node tools/fix-loot-id.cjs <file>_world.sql` after the parser (it maps loot to LootID and makes the loot rows safe to re-import).
 - Spawns get guids above MAX(guid). A spawn of the same id on the same map within 5 yards of an existing one is deleted again at the end of the block, so custom spawns stay and re-imports do not duplicate.
 - `weather_update` is missing from the world schema you gave me, so that one INSERT fails with error 1146. Is the table meant to exist?

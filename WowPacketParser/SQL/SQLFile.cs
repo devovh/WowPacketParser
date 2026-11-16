@@ -94,6 +94,14 @@ namespace WowPacketParser.SQL
             if (genCreatures || genGameObjects || genAreaTriggers || genNpcText)
                 _file.WriteLine();
 
+            // Plik _wpp.sql (SplitSQLFile): object_names i sniff_data nie istnieja w zadnym schemacie swiata, wiec plik tworzy je sam.
+            if (Settings.SplitSQLFile && _fileName.EndsWith("_wpp.sql"))
+            {
+                _file.WriteLine("CREATE TABLE IF NOT EXISTS `object_names` (`ObjectType` INT NOT NULL, `Id` INT NOT NULL, `Name` TEXT, PRIMARY KEY (`ObjectType`, `Id`)) CHARACTER SET utf8mb4;");
+                _file.WriteLine("CREATE TABLE IF NOT EXISTS `sniff_data` (`Build` INT NOT NULL, `SniffName` VARCHAR(255) NOT NULL, `ObjectType` INT NOT NULL, `Id` INT NOT NULL, `Data` LONGTEXT, PRIMARY KEY (`Build`, `SniffName`, `ObjectType`, `Id`)) CHARACTER SET utf8mb4;");
+                _file.WriteLine();
+            }
+
             foreach (var sql in _sqls)
                 _file.WriteLine(sql);
 
