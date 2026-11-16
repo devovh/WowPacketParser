@@ -79,14 +79,6 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadWoWString("Surname", surnameLen);
         }
 
-        [Parser(Opcode.SMSG_LOAD_EQUIPMENT_SET)]
-        public static void HandleLoadEquipmentSet(Packet packet)
-        {
-            var count = packet.ReadUInt32("Count");
-            if (count > 0)
-                packet.ReadToEnd();
-        }
-
         [Parser(Opcode.SMSG_AUCTION_HELLO_RESPONSE)]
         public static void HandleAuctionHelloResponse(Packet packet)
         {
@@ -125,16 +117,6 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         {
             packet.ReadBit("ShowSocialContract");
             packet.ResetBitReader();
-        }
-
-        [Parser(Opcode.SMSG_AUCTION_FAVORITE_LIST)]
-        public static void HandleAuctionFavoriteList(Packet packet)
-        {
-            packet.ReadUInt32("DesiredDelay");
-            var count = packet.ReadBits(7);
-            packet.ResetBitReader();
-            if (count > 0)
-                packet.ReadToEnd();
         }
 
         [Parser(Opcode.SMSG_AUCTION_LIST_BIDDED_ITEMS_RESULT)]

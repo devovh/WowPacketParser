@@ -111,6 +111,13 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.CMSG_PERKS_PROGRAM_REQUEST_REFUND)]
         public static void HandleRoleMaskAsRefund(Packet packet) { packet.ReadByte("RoleMask"); }
 
+        /// <summary>Jak kazdy MOVE_*_ACK: MovementInfo + i32 AckIndex (A- wg dewelopera).</summary>
+        [Parser(Opcode.CMSG_MOVE_ENABLE_FULL_SPEED_PITCHING_ACK)]
+        public static void HandleMoveEnableFullSpeedPitchingAck(Packet packet)
+        {
+            WowPacketParserModule.V6_0_2_19033.Parsers.MovementHandler.ReadMovementAck(packet, "MovementAck");
+        }
+
         [Parser(Opcode.CMSG_MOVE_SET_TURN_RATE_CHEAT)]
         public static void HandleMoveSetTurnRateCheat(Packet packet) { packet.ReadSingle("TurnRate"); }
 
