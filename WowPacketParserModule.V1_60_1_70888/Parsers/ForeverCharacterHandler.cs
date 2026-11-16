@@ -67,17 +67,16 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         [Parser(Opcode.SMSG_DUEL_WINNER)]
         public static void HandleDuelWinner(Packet packet)
         {
-            // Wg tc-forever: bity 6+6+1, 2x u32 adres realmu, nazwy. W 70938 nazwy sa zakonczone zerem
-            // i przed nimi stoi 5 bajtow o nieznanym znaczeniu (grade G).
-            packet.ReadBits("BeatenNameLength", 6);
-            packet.ReadBits("WinnerNameLength", 6);
+            // 70938: two 24-bit name lengths, each counting the zero terminator, then Fled and a flush,
+            // both realm addresses, then the two names, each zero-terminated.
+            var beatenLength = packet.ReadBits("BeatenNameLength", 24);
+            var winnerLength = packet.ReadBits("WinnerNameLength", 24);
             packet.ReadBit("Fled");
             packet.ResetBitReader();
             packet.ReadUInt32("BeatenVirtualRealmAddress");
             packet.ReadUInt32("WinnerVirtualRealmAddress");
-            packet.ReadBytes(5);
-            packet.ReadCString("BeatenName");
-            packet.ReadCString("WinnerName");
+            packet.ReadWoWString("BeatenName", beatenLength);
+            packet.ReadWoWString("WinnerName", winnerLength);
         }
 
         // 0x4400AD is CMSG_KEEP_ALIVE (no data), not RESURRECT_RESPONSE: the 0-byte packet is the whole message.
