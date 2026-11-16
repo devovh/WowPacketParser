@@ -765,11 +765,17 @@ namespace WowPacketParser.SQL.Builders
                 }
 
                 StringBuilder result = new StringBuilder();
-                // delete query for GUIDs
-                var delete = new SQLDelete<PointsOfInterest>(Tuple.Create("@PID+0", "@PID+" + --count));
-                result.Append(delete.Build());
+                // Forever: ID to prawdziwy klucz (int), a @PID nie jest nigdzie zadeklarowane, wiec DELETE
+                // niczego nie kasowal. INSERT IGNORE zostawia istniejace POI i jest bezpieczny przy ponownym imporcie.
+                var forever = Settings.TargetedDatabase == TargetedDatabase.Forever;
+                if (!forever)
+                {
+                    // delete query for GUIDs
+                    var delete = new SQLDelete<PointsOfInterest>(Tuple.Create("@PID+0", "@PID+" + --count));
+                    result.Append(delete.Build());
+                }
 
-                var sql = new SQLInsert<PointsOfInterest>(rows, false);
+                var sql = new SQLInsert<PointsOfInterest>(rows, false, forever);
                 result.Append(sql.Build());
 
                 return result.ToString();
@@ -789,7 +795,10 @@ namespace WowPacketParser.SQL.Builders
             {
                 var npcText = entry.Value.Item1;
                 npcText.ConvertToDBStruct();
-                npcText.ID = $"@NPCTEXTID+{count}";
+                // Forever: staly numer 10000000+MenuID (konwencja TDB), zeby ponowny import trafial w te same wiersze.
+                npcText.ID = Settings.TargetedDatabase == TargetedDatabase.Forever
+                    ? (10000000u + entry.Key).ToString()
+                    : $"@NPCTEXTID+{count}";
 
                 string comment = "";
                 if (npcText.ObjectType == ObjectType.GameObject)
@@ -813,7 +822,9 @@ namespace WowPacketParser.SQL.Builders
             }
 
             StringBuilder result = new StringBuilder();
-            var textDelete = new SQLDelete<NpcText925>(Tuple.Create("@NPCTEXTID+0", "@NPCTEXTID+" + (count - 1)));
+            var textDelete = Settings.TargetedDatabase == TargetedDatabase.Forever
+                ? new SQLDelete<NpcText925>(textRows)
+                : new SQLDelete<NpcText925>(Tuple.Create("@NPCTEXTID+0", "@NPCTEXTID+" + (count - 1)));
             result.Append(textDelete.Build());
             var textInsert = new SQLInsert<NpcText925>(textRows, false);
             result.Append(textInsert.Build());
@@ -1214,8 +1225,9 @@ namespace WowPacketParser.SQL.Builders
                         Data = new CreatureText
                         {
                             Entry = text.Key,
-                            GroupId = "@GROUP_ID+" + count,
-                            ID = "@ID+",
+                            // Forever: konkretne liczby zamiast @GROUP_ID/@ID (te zmienne nie sa nigdzie deklarowane)
+                            GroupId = Settings.TargetedDatabase == TargetedDatabase.Forever ? count.ToString() : "@GROUP_ID+" + count,
+                            ID = Settings.TargetedDatabase == TargetedDatabase.Forever ? "1" : "@ID+",
                             Text = textValue.Item1.Text,
                             Type = textValue.Item1.Type,
                             Language = textValue.Item1.Language,
@@ -1223,7 +1235,7 @@ namespace WowPacketParser.SQL.Builders
                             Emote = (textValue.Item1.Emote != null ? textValue.Item1.Emote : 0),
                             Duration = 0,
                             Sound = (textValue.Item1.Sound != null ? textValue.Item1.Sound : 0),
-                            BroadcastTextID = textValue.Item1.BroadcastTextID,
+                            BroadcastTextID = textValue.Item1.BroadcastTextID ?? (Settings.TargetedDatabase == TargetedDatabase.Forever ? 0 : null),
                             Comment = textValue.Item1.Comment
                         },
 
@@ -1237,6 +1249,16 @@ namespace WowPacketParser.SQL.Builders
 
                     rows.Add(row);
                 }
+            }
+
+            if (Settings.TargetedDatabase == TargetedDatabase.Forever)
+            {
+                // import drugi raz nie moze dublowac tekstow: kasujemy po CreatureID
+                var ids = rows.Select(r => r.Data.Entry).Distinct().OrderBy(x => x).ToList();
+                if (ids.Count == 0)
+                    return string.Empty;
+                var del = "DELETE FROM `creature_text` WHERE `CreatureID` IN (" + string.Join(", ", ids) + ");" + Environment.NewLine;
+                return del + new SQLInsert<CreatureText>(rows, false).Build();
             }
 
             return new SQLInsert<CreatureText>(rows, false).Build();

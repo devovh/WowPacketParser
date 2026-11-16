@@ -53,13 +53,15 @@ for (const r of rows) {
 }
 
 const out = [...merged.values()].sort((a, b) => a.entry - b.entry || a.item - b.item);
-const outLines = out.map((r, i) =>
-    `(${r.entry}, ${r.type}, ${r.item}, ${r.chance}, ${r.qr}, ${r.mode}, ${r.grp}, ${r.min}, ${r.max})${i === out.length - 1 ? ";" : ","}${r.comment}`);
+// creature_loot_template nie ma klucza glownego (tylko KEY), wiec INSERT IGNORE nie chroni przed duplikatami przy
+// ponownym imporcie. Kazdy wiersz idzie jako INSERT ... SELECT ... WHERE NOT EXISTS po (Entry, ItemType, Item):
+// istniejace dropy (w tym questowe) zostaja, a drugi import niczego nie dodaje.
+const cols = "`Entry`, `ItemType`, `Item`, `Chance`, `QuestRequired`, `LootMode`, `GroupId`, `MinCount`, `MaxCount`";
+const outLines = out.map(r =>
+    `INSERT INTO \`creature_loot_template\` (${cols}) SELECT ${r.entry}, ${r.type}, ${r.item}, ${r.chance}, ${r.qr}, ${r.mode}, ${r.grp}, ${r.min}, ${r.max} FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM \`creature_loot_template\` WHERE \`Entry\` = ${r.entry} AND \`ItemType\` = ${r.type} AND \`Item\` = ${r.item});${r.comment}`);
 
-// usuwamy DELETE tuz przed INSERT (nie kasujemy istniejacych dropow, np. questowych) i zamieniamy na INSERT IGNORE
 let from = start;
 if (lines[start - 1] && lines[start - 1].startsWith("DELETE FROM `creature_loot_template`")) from = start - 1;
-const header = lines[start].replace(/^INSERT (IGNORE )?INTO/, "INSERT IGNORE INTO");
-lines.splice(from, end - from, header, ...outLines);
+lines.splice(from, end - from, ...outLines);
 fs.writeFileSync(SQL, lines.join(crlf ? "\r\n" : "\n"));
 console.log(`creature_loot_template: ${rows.length} wierszy -> ${out.length}, LootID znane dla ${lootOf.size}/${need.size} stworzen` + (unknown.length ? `, bez LootID: ${[...new Set(unknown)].join(",")}` : ""));

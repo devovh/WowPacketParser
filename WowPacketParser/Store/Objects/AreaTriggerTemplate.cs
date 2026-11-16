@@ -10,7 +10,7 @@ namespace WowPacketParser.Store.Objects
         [DBFieldName("Id", true)]
         public uint? Id;
 
-        [DBFieldName("IsCustom", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.CataClassic, true)]
+        [DBFieldName("IsCustom", TargetedDatabaseFlag.SinceDragonflight | TargetedDatabaseFlag.CataClassic | TargetedDatabaseFlag.Forever, true)]
         [DBFieldName("IsServerSide", TargetedDatabaseFlag.Shadowlands, true)]
         public byte? IsCustom;
 

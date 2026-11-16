@@ -70,7 +70,9 @@ namespace WowPacketParser.SQL
             var startTime = DateTime.Now;
             using (var store = new SQLFile(fileName))
             {
-                store.WriteData(UnitMisc.CreatureEquip(units)); // ensure this is run before spawns
+                // creature_equip_template jest tabela swiata: przy podziale plikow tylko w pliku world (nie w hotfixes ani wpp)
+                if (!Settings.SplitSQLFile || !(fileName.EndsWith("_hotfixes.sql") || fileName.EndsWith("_wpp.sql")))
+                    store.WriteData(UnitMisc.CreatureEquip(units)); // ensure this is run before spawns
 
                 var currentBuilder = 0;
                 var totalCount = protoBuilders.Count + builderMethods.Count;
@@ -120,7 +122,8 @@ namespace WowPacketParser.SQL
                     // Spawn rows address their rows as @CGUID+n / @OGUID+n, which only means
                     // anything if the delta variables exist in the file they end up in. When the
                     // builders are split by target database, only the world file gets them.
-                    if (Settings.SplitSQLFile && (attr.Units || attr.Gameobjects))
+                    if (Settings.SplitSQLFile && (attr.Units || attr.Gameobjects) &&
+                        (fileName.EndsWith("_hotfixes.sql") || fileName.EndsWith("_wpp.sql")))
                         continue;
 
                     Trace.WriteLine($"{currentBuilder}/{totalCount} - Write {method.Name}");

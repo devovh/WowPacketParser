@@ -63,11 +63,15 @@ namespace WowPacketParser.SQL
             // past the first import's rows, so every spawn would be inserted again. For the
             // Forever target the spawn builders end each block with a pass that removes the rows
             // of the block that duplicate a spawn already in the database (see Spawns.cs).
-            var genCreatures = Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.creature);
-            var genGameObjects = Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.gameobject);
-            var genAreaTriggers = Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.areatrigger);
+            // Przy podziale plikow (SplitSQLFile) zmienne dotycza tylko pliku world: w hotfixes i wpp nie ma tych tabel.
+            var worldFile = !Settings.SplitSQLFile || !(_fileName.EndsWith("_hotfixes.sql") || _fileName.EndsWith("_wpp.sql"));
+            var genCreatures = worldFile && Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.creature);
+            var genGameObjects = worldFile && Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.gameobject);
+            var genAreaTriggers = worldFile && Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.areatrigger);
+            var genNpcText = worldFile && Settings.SQLOutputFlag.HasAnyFlagBit(Enums.SQLOutput.npc_text);
 
-            _file.WriteLine("-- Spawn id ranges for the block below, taken from the database the file is imported into.");
+            if (genCreatures || genGameObjects || genAreaTriggers || genNpcText)
+                _file.WriteLine("-- Spawn id ranges for the block below, taken from the database the file is imported into.");
 
             if (genCreatures)
                 _file.WriteLine("SET @CGUID := (SELECT IFNULL(MAX(`guid`), 0) + 1 FROM `creature`);");
@@ -81,7 +85,13 @@ namespace WowPacketParser.SQL
                 _file.WriteLine("SET @ATPROPERTIESID := (SELECT IFNULL(MAX(`Id`), 0) + 1 FROM `areatrigger_create_properties`);");
             }
 
-            if (genCreatures || genGameObjects || genAreaTriggers)
+            if (genNpcText)
+            {
+                // npc_text i gossip_menu odwoluja sie do @NPCTEXTID+n; bez tej zmiennej TextID jest NULL i import sie wywala
+                _file.WriteLine("SET @NPCTEXTID := (SELECT IFNULL(MAX(`ID`), 0) + 1 FROM `npc_text`);");
+            }
+
+            if (genCreatures || genGameObjects || genAreaTriggers || genNpcText)
                 _file.WriteLine();
 
             foreach (var sql in _sqls)

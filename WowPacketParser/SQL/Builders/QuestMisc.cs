@@ -116,6 +116,15 @@ namespace WowPacketParser.SQL.Builders
                 if (requestItemEmote.Value.EmoteOnCompleteDelay >= 0 && requestItemEmote.Value.EmoteOnComplete >= 0 && requestItemEmote.Value.EmoteOnIncompleteDelay >= 0 && requestItemEmote.Value.EmoteOnIncomplete >= 0)
                     requestItems.VerifiedBuild = ClientVersion.BuildInt;
 
+                // Forever: kolumny emotek sa NOT NULL (domyslnie 0); bez pakietu z emotka zostalby NULL i import sie wywala
+                if (Settings.TargetedDatabase == TargetedDatabase.Forever)
+                {
+                    requestItems.EmoteOnComplete ??= 0;
+                    requestItems.EmoteOnIncomplete ??= 0;
+                    requestItems.EmoteOnCompleteDelay ??= 0;
+                    requestItems.EmoteOnIncompleteDelay ??= 0;
+                }
+
                 Storage.QuestRequestItems.Add(requestItems);
             }
 

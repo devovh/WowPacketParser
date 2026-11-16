@@ -88,7 +88,16 @@ namespace WowPacketParser.SQL.Builders
 
             StringBuilder result = new StringBuilder();
             if (customRows.Count > 0) {
-                var sql = new SQLInsert<AreaTriggerCreatePropertiesCustom>(customRows, true);
+                // Forever: Id to @ATPROPERTIESID+n (MAX+1), wiec DELETE po Id nie trafia w wiersze z poprzedniego importu i
+                // kazdy import dodawal je od nowa. Kasujemy wiec po AreaTriggerId + IsCustom=1 + VerifiedBuild tego sniffa.
+                var foreverAt = Settings.TargetedDatabase == TargetedDatabase.Forever;
+                if (foreverAt)
+                {
+                    var ids = string.Join(",", customRows.GetRows().Select(r => r.Data.AreaTriggerId).Where(i => i.HasValue).Distinct().OrderBy(i => i));
+                    if (ids.Length > 0)
+                        result.AppendLine($"DELETE FROM `areatrigger_create_properties` WHERE `IsCustom` = 1 AND `VerifiedBuild` = {ClientVersion.BuildInt} AND `AreaTriggerId` IN ({ids});");
+                }
+                var sql = new SQLInsert<AreaTriggerCreatePropertiesCustom>(customRows, !foreverAt);
                 result.Append(sql.Build());
                 result.Append(Environment.NewLine);
             }

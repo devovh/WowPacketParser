@@ -470,6 +470,16 @@ namespace WowPacketParser.SQL.Builders
                         $"WHERE `t`.`SpawnType` = {spawnType} AND `t`.`SpawnId` BETWEEN {range} AND `s`.`guid` IS NULL;");
             }
 
+            // Sciezki bez spawnu: duplikat spawnu poszedl wyzej do kosza razem z creature_addon, a drugi import
+            // wygenerowal nowe sciezki (@MOVID juz po pierwszym imporcie). Usuwamy sciezki z tego pliku, do ktorych
+            // nic w creature_addon nie prowadzi, zeby nie zostawaly osierocone ani zdublowane.
+            if (table == "creature" && Movement.LastPathOffset >= 0)
+            {
+                var pathRange = $"@MOVID+0 AND @MOVID+{Movement.LastPathOffset}";
+                sql.AppendLine($"DELETE `n` FROM `waypoint_path_node` `n` LEFT JOIN `creature_addon` `a` ON `a`.`PathId` = `n`.`PathId` WHERE `n`.`PathId` BETWEEN {pathRange} AND `a`.`PathId` IS NULL;");
+                sql.AppendLine($"DELETE `p` FROM `waypoint_path` `p` LEFT JOIN `creature_addon` `a` ON `a`.`PathId` = `p`.`PathId` WHERE `p`.`PathId` BETWEEN {pathRange} AND `a`.`PathId` IS NULL;");
+            }
+
             return sql.ToString();
         }
 

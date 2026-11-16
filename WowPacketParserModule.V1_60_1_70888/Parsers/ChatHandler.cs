@@ -97,6 +97,57 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             return true;
         }
 
+        /// <summary>
+        /// Czyta tresc SMSG_CHAT wedlug ukladu z tc-forever (ChatPackets.cpp, Chat::Write):
+        /// 16 bajtow, potem bity: SenderName 11, TargetName 11, Prefix 5, Channel 7, ChatText 12, 2 flagi,
+        /// 3 bity optionali (BroadcastTextID, ChannelGUID, EncounterEventID), potem napisy i optionale.
+        /// Zwraca false, gdy dlugosci nie pasuja co do bajtu do reszty pakietu (wtedy dziala stara heurystyka).
+        /// </summary>
+        private static bool TryReadChatBody(byte[] data, out string channel, out string text)
+        {
+            channel = string.Empty;
+            text = string.Empty;
+            const int bitsStart = 16;
+            if (data.Length < bitsStart + 7)
+                return false;
+
+            int bitPos = bitsStart * 8;
+            int ReadBitsLocal(int count)
+            {
+                int v = 0;
+                for (int i = 0; i < count; i++)
+                {
+                    int byteIdx = bitPos >> 3;
+                    int bit = (data[byteIdx] >> (7 - (bitPos & 7))) & 1;
+                    v = (v << 1) | bit;
+                    bitPos++;
+                }
+                return v;
+            }
+
+            int senderLen = ReadBitsLocal(11);
+            int targetLen = ReadBitsLocal(11);
+            int prefixLen = ReadBitsLocal(5);
+            int channelLen = ReadBitsLocal(7);
+            int textLen = ReadBitsLocal(12);
+            ReadBitsLocal(2);
+            int hasBroadcast = ReadBitsLocal(1);
+            int hasChannelGuid = ReadBitsLocal(1);
+            int hasEncounter = ReadBitsLocal(1);
+
+            int pos = bitsStart + 7;
+            int expectedRest = senderLen + targetLen + prefixLen + channelLen + textLen
+                + (hasBroadcast * 4) + (hasChannelGuid * 16) + (hasEncounter * 4);
+            if (data.Length - pos != expectedRest)
+                return false;
+
+            pos += senderLen + targetLen + prefixLen;
+            channel = Encoding.UTF8.GetString(data, pos, channelLen);
+            pos += channelLen;
+            text = Encoding.UTF8.GetString(data, pos, textLen);
+            return true;
+        }
+
         [Parser(Opcode.SMSG_CHAT)]
         public static void HandleServerChatMessage(Packet packet)
         {
@@ -126,7 +177,15 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             string channelName = string.Empty;
             string message;
 
-            if (channelChars > 0 && channelChars < data.Length)
+            if (TryReadChatBody(data, out var exactChannel, out var exactMessage))
+            {
+                // uklad z tc-forever: 16 B (AchievementID, flagi, DisplayTime, SpellID), 51 bitow dlugosci, potem napisy
+                channelName = exactChannel;
+                message = exactMessage;
+                if (channelName.Length > 0)
+                    packet.AddValue("Channel Name", channelName);
+            }
+            else if (channelChars > 0 && channelChars < data.Length)
             {
                 int channelEnd = SkipChars(data, 0, channelChars);
                 channelName = Encoding.UTF8.GetString(data, 0, channelEnd);

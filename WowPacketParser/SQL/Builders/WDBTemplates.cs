@@ -162,7 +162,8 @@ namespace WowPacketParser.SQL.Builders
                 storeRows.Add(new Row<CreatureTemplateDifficultyForever>(row));
             }
 
-            return new SQLInsert<CreatureTemplateDifficultyForever>(storeRows, false).Build();
+            // INSERT IGNORE: istniejacy wiersz (Entry, DifficultyID) zostaje, drugi import nie daje bledu ani duplikatu.
+            return new SQLInsert<CreatureTemplateDifficultyForever>(storeRows, false, true).Build();
         }
         [BuilderMethod(true)]
 
@@ -272,7 +273,7 @@ namespace WowPacketParser.SQL.Builders
                 rows.Add(row);
             }
 
-            return new SQLInsert<CreatureClassicLevelForever>(rows, false).Build();
+            return new SQLInsert<CreatureClassicLevelForever>(rows, false, true).Build();
         }
 
         /// <summary>
@@ -337,7 +338,32 @@ namespace WowPacketParser.SQL.Builders
             foreach (var stored in Storage.CreatureTemplatesNonWDBForever)
                 storeRows.Add(new Row<CreatureTemplateNonWDBForever>(stored.Item1));
 
-            return new SQLInsert<CreatureTemplateNonWDBForever>(storeRows, false).Build();
+            var built = new SQLInsert<CreatureTemplateNonWDBForever>(storeRows, false).Build();
+
+            // Te same entry wstawia juz CreatureTemplateForever (z odpowiedzi na zapytanie). Zwykly INSERT dalby
+            // "Duplicate entry" na kluczu glownym, wiec uzupelniamy kolumny istniejacych wierszy zamiast je dodawac.
+            var result = new System.Text.StringBuilder();
+            var columns = new List<string>();
+            foreach (var line in built.Split('\n'))
+            {
+                var l = line.TrimEnd('\r');
+                if (l.StartsWith("INSERT INTO"))
+                {
+                    var open = l.IndexOf('(');
+                    var close = l.IndexOf(") VALUES", System.StringComparison.Ordinal);
+                    columns = l.Substring(open + 1, close - open - 1).Split(',').Select(c => c.Trim()).Where(c => c != "`entry`").ToList();
+                }
+
+                if (l.EndsWith(");") && columns.Count > 0)
+                {
+                    result.AppendLine(l.Substring(0, l.Length - 1));
+                    result.AppendLine("ON DUPLICATE KEY UPDATE " + string.Join(", ", columns.Select(c => c + "=VALUES(" + c + ")")) + ";");
+                }
+                else
+                    result.AppendLine(l);
+            }
+
+            return result.ToString().TrimEnd();
         }
         [BuilderMethod(true, Gameobjects = true)]
         public static string GameObjectTemplateForever(Dictionary<WowGuid, GameObject> gameobjects)

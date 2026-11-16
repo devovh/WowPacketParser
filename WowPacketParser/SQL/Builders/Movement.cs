@@ -50,6 +50,9 @@ namespace WowPacketParser.SQL.Builders
         /// </summary>
         public static readonly Dictionary<string, string> PathIdByGuid = new();
 
+        /// <summary>Ostatni przesuniecie @MOVID+n uzyte w pliku (-1 gdy brak sciezek).</summary>
+        public static int LastPathOffset = -1;
+
         public override bool IsEnabled() => Settings.SQLOutputFlag.HasAnyFlagBit(SQLOutput.creature_movement) &&
                                             Settings.TargetedProject is TargetedProject.Cmangos or TargetedProject.TrinityCore;
 
@@ -137,6 +140,7 @@ namespace WowPacketParser.SQL.Builders
         {
             StringBuilder output = new();
             PathIdByGuid.Clear();
+            LastPathOffset = -1;
             // Same reason as the spawn GUIDs: take the first free path id from the database
             // instead of leaving a placeholder that has to be filled in by hand.
             output.AppendLine("SET @MOVID := (SELECT IFNULL(MAX(`PathId`), 0) + 1 FROM `waypoint_path`);");
@@ -214,6 +218,7 @@ namespace WowPacketParser.SQL.Builders
                 output.AppendLine();
                 output.AppendLine();
 
+                LastPathOffset = pathIdCounter;
                 ++pathIdCounter;
             }
             return output.ToString();

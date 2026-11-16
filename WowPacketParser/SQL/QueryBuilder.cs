@@ -112,11 +112,14 @@ namespace WowPacketParser.SQL
                         whereClause.Append(" AND ");
                     }
 
-                    whereClause.Remove(whereClause.Length - 5, 5); // remove last " AND "
+                    // wiersz bez zadnej wartosci klucza nie daje warunku: wtedy nie ma czego obcinac
+                    if (whereClause.Length >= 5 && whereClause.ToString().EndsWith(" AND "))
+                        whereClause.Remove(whereClause.Length - 5, 5); // remove last " AND "
                     whereClause.Append(")");
                     whereClause.Append(" OR ");
                 }
-                whereClause.Remove(whereClause.Length - 4, 4); // remove last " OR ";
+                if (whereClause.Length >= 4 && whereClause.ToString().EndsWith(" OR "))
+                    whereClause.Remove(whereClause.Length - 4, 4); // remove last " OR ";
             }
 
             return whereClause.ToString();
@@ -566,12 +569,15 @@ namespace WowPacketParser.SQL
                 {
                     if (field.Item3.Any(a => a.Nullable))
                     {
-                        query.Append("NULL");
+                        // Forever: kolumny NOT NULL DEFAULT x dostawalyby NULL i import sie wywalal; DEFAULT daje wartosc domyslna kolumny
+                        // (a tam gdzie domyslnie jest NULL, nadal wyjdzie NULL)
+                        query.Append(Settings.TargetedDatabase == WowPacketParser.Enums.TargetedDatabase.Forever ? "DEFAULT" : "NULL");
                         query.Append(SQLUtil.CommaSeparator);
                     }
                     else
                     {
-                        query.Append("UNKNOWN");
+                        // Forever: brak wartosci to DEFAULT kolumny (np. Speed = 1), a nie nieistniejaca kolumna UNKNOWN
+                        query.Append(Settings.TargetedDatabase == WowPacketParser.Enums.TargetedDatabase.Forever ? "DEFAULT" : "UNKNOWN");
                         query.Append(SQLUtil.CommaSeparator);
                     }
                 }
@@ -591,7 +597,7 @@ namespace WowPacketParser.SQL
                                 if (field.Item3.Any(a => a.Nullable))
                                     query.Append("NULL");
                                 else
-                                    query.Append("UNKNOWN");
+                                    query.Append(Settings.TargetedDatabase == WowPacketParser.Enums.TargetedDatabase.Forever ? "DEFAULT" : "UNKNOWN");
                             }
                             else
                                 query.Append(SQLUtil.ToSQLValue(v, v.GetType().GetCustomAttribute<FlagsAttribute>() != null, field.Item3.Any(a => a.NoQuotes)));

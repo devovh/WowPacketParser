@@ -73,6 +73,33 @@ namespace WowPacketParser.SQL
         {
             bool isComment = false;
             int lastCommaPos = -1;
+
+            // Ostatnie wiersze bloku moga byc zakomentowane ("-- (...), -- ..."): wtedy srednik musi trafic
+            // w ostatni AKTYWNY wiersz, inaczej zapytanie zostaje niezamkniete i skleja sie z nastepnym.
+            var end = str.Length;
+            while (end > 0)
+            {
+                var lineStart = end - 1;
+                while (lineStart > 0 && str[lineStart - 1] != '\n')
+                    lineStart--;
+                var p = lineStart;
+                while (p < end && (str[p] == ' ' || str[p] == '\t' || str[p] == '\r' || str[p] == '\n'))
+                    p++;
+                var blank = p >= end;
+                var commented = !blank && p + 1 < end && str[p] == '-' && str[p + 1] == '-';
+                if (!blank && !commented)
+                    break;
+                end = lineStart;
+            }
+            if (end > 0 && end < str.Length)
+            {
+                var tail = str.ToString(end, str.Length - end);
+                str.Length = end;
+                str.ReplaceLastCommaWithSemicolon();
+                str.Append(tail);
+                return;
+            }
+
             for (var i = str.Length - 1; i > 0; i--)
             {
                 if (i >= 3 && str[i - 3] == ',' && str[i - 2] == ' ' && str[i - 1] == '-' && str[i] == '-')
