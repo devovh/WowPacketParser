@@ -40,10 +40,9 @@ Most of these cannot be derived from a sniff at all (scripts, conditions, links)
 - So the sniff would add 7 trainers that TDB does not have. They all come from one capture, so this is a small gain: 7 trainers.
 - `creature_text`: TDB already has ~21 000 rows; the sniff has only 16 chat packets, so the gain is negligible.
 
-## Trainers: why they are NOT written (checked on raw bytes)
-The 28 packets of opcode 0x47018D (named `SMSG_TRAINER_LIST` in our table) are all exactly 48 bytes with one fixed layout:
-`u32 A (5289, 5529, 4944, ...), u32 B (14, 664, 214, ...), u32 0, packed guid (player 06 E0 9D AC 8C 6C 08), u32 0, u32 1, u64 counter-like, u64 X, u64 X, u8 0`.
-This does not match tc-forever's `TrainerList` (guid, type, TrainerID, spell count, 33-byte spells, greeting), and there is no greeting or spell list.
-`A` is not in TDB's `trainer` table, `B` does not look like a trainer spell list. **The opcode name is probably wrong**: the packet is likely something else,
-sent per spell. Writing it to `trainer`/`trainer_spell` would produce wrong rows, so the parser does not.
-Question for the developer: what is S 0x47018D in 70938, and what is the real SMSG_TRAINER_LIST opcode? Also open a trainer window at a few NPCs in the next capture.
+## Trainers: resolved - they are not in this sniff
+The 28 packets of 0x47018D were wrongly named `SMSG_TRAINER_LIST`. Checked against tc-forever (`CriteriaUpdate::Write`, `Opcodes.h`):
+they are **SMSG_CRITERIA_UPDATE** (u32 CriteriaID, u64 Quantity, guid, u32 Flags, u32 StateFlags, time, 2 x u64, bit). Parsed output is sane
+(CriteriaID 5289, Quantity 14, real timestamp). Fixed in the opcode table and `ForeverCriteriaHandler.cs`; the old `ForeverTrainerHandler.cs` was removed.
+So the sniff has **no trainer window at all**: `trainer`/`trainer_spell` cannot be built from it. The real 70938 number of SMSG_TRAINER_LIST is unknown
+(tc-forever has it as 0x45018A, i.e. 0x47018A in the 0x47 range, but 70938 uses that number for SMSG_CANCEL_AUTO_REPEAT). Next capture: open the trainer window at a few NPCs.
