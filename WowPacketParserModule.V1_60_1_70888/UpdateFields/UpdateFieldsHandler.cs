@@ -1829,7 +1829,34 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 
         public static ISkillInfo ReadUpdateSkillInfo(Packet packet, params object[] indexes)
         {
-            return ReadCreateSkillInfo(packet, indexes);
+            // SkillInfo::WriteUpdate (tc-forever): 2x u32 maska blokow, 2 bity, potem bloki po 32 bity
+            // (tylko niezerowe), flush, potem pola pod maska zmian (bit 0 = grupa, 1+i, 301+i, ...).
+            var data = new SkillInfo();
+            packet.ResetBitReader();
+            var topMask = new uint[3];
+            topMask[0] = packet.ReadUInt32("SkillBlocksMask", indexes, 0);
+            topMask[1] = packet.ReadUInt32("SkillBlocksMask", indexes, 1);
+            topMask[2] = packet.ReadBits("SkillBlocksMask", 2, indexes, 2);
+            var blocks = new uint[66];
+            for (var i = 0; i < 66; ++i)
+                if ((topMask[i / 32] & (1u << (i % 32))) != 0)
+                    blocks[i] = packet.ReadBits("SkillBlock", 32, indexes, i);
+            packet.ResetBitReader();
+            bool Changed(int bit) => (blocks[bit / 32] & (1u << (bit % 32))) != 0;
+            if (Changed(0))
+            {
+                for (var i = 0; i < 300; ++i)
+                {
+                    if (Changed(1 + i)) data.SkillLineID[i] = packet.ReadUInt16("SkillLineID", indexes, i);
+                    if (Changed(301 + i)) data.SkillStep[i] = packet.ReadUInt16("SkillStep", indexes, i);
+                    if (Changed(601 + i)) data.SkillRank[i] = packet.ReadUInt16("SkillRank", indexes, i);
+                    if (Changed(901 + i)) data.SkillStartingRank[i] = packet.ReadUInt16("SkillStartingRank", indexes, i);
+                    if (Changed(1201 + i)) data.SkillMaxRank[i] = packet.ReadUInt16("SkillMaxRank", indexes, i);
+                    if (Changed(1501 + i)) data.SkillTempBonus[i] = packet.ReadInt16("SkillTempBonus", indexes, i);
+                    if (Changed(1801 + i)) data.SkillPermBonus[i] = packet.ReadUInt16("SkillPermBonus", indexes, i);
+                }
+            }
+            return data;
         }
 
         public static IBitVector ReadCreateBitVector(Packet packet, params object[] indexes)
@@ -4186,7 +4213,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.XP = packet.ReadInt32("XP", indexes);
             data.NextLevelXP = packet.ReadInt32("NextLevelXP", indexes);
             data.TrialXP = packet.ReadInt32("TrialXP", indexes);
-            data.Skill = ReadUpdateSkillInfo(packet, indexes, "Skill");
+            data.Skill = ReadCreateSkillInfo(packet, indexes, "Skill");
             data.CharacterPoints = packet.ReadInt32("CharacterPoints", indexes);
             data.MaxTalentTiers = packet.ReadInt32("MaxTalentTiers", indexes);
             data.TrackCreatureMask = packet.ReadUInt32("TrackCreatureMask", indexes);
