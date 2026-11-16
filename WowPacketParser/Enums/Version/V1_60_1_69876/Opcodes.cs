@@ -3294,6 +3294,7 @@ namespace WowPacketParser.Enums.Version.V1_60_1_69876
             { Opcode.SMSG_TRADE_STATUS, 0x490017 },
             { Opcode.SMSG_TRADE_UPDATED, 0x470016 },
             { Opcode.SMSG_TRADE_UPDATED, 0x490016 },
+            { Opcode.SMSG_TRAINER_LIST, 0x47018B },
             { Opcode.SMSG_TRAINER_LIST, 0x49018A },
             { Opcode.SMSG_TRAIT_CONFIG_COMMIT_FAILED, 0x470075 },
             { Opcode.SMSG_TRAIT_CONFIG_COMMIT_FAILED, 0x490075 },

@@ -46,3 +46,8 @@ they are **SMSG_CRITERIA_UPDATE** (u32 CriteriaID, u64 Quantity, guid, u32 Flags
 (CriteriaID 5289, Quantity 14, real timestamp). Fixed in the opcode table and `ForeverCriteriaHandler.cs`; the old `ForeverTrainerHandler.cs` was removed.
 So the sniff has **no trainer window at all**: `trainer`/`trainer_spell` cannot be built from it. The real 70938 number of SMSG_TRAINER_LIST is unknown
 (tc-forever has it as 0x45018A, i.e. 0x47018A in the 0x47 range, but 70938 uses that number for SMSG_CANCEL_AUTO_REPEAT). Next capture: open the trainer window at a few NPCs.
+
+### Update after developer reply 3 (`ALFA-REPLY-3-TRAINER-CRITERIA.md`)
+SMSG_TRAINER_LIST on 70938 is **0x47018B** (tc-forever's 0x45018A is the retail number; the server adds the Classic shift +0x20001).
+`ForeverTrainerHandler.cs` was rewritten to the developer's layout (A, 5 live lists decode exactly) and writes `trainer`, `trainer_spell` and, when a gossip selection precedes the window, `creature_trainer`.
+Tested only on a synthetic packet built from the developer's layout (2 spells, greeting) - the SQL rows come out right. **The 2026-11-14 sniff has no 0x47018B packet**, so it still produces no trainer rows; the real test is the developer's capture of 2026-11-15 or our next one.
