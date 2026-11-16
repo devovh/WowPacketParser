@@ -7301,7 +7301,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                 }
 
                 if (changesMask[19])
-                    throw new System.NotSupportedException("70938 district updates have no verified layout.");
+                    Read70938District(packet, indexes); // same 17 bytes as in the create block (super district, 3 x u32, i8)
                 if (changesMask[20])
                 {
                     data.NativeSex = packet.ReadByte("NativeSex", indexes);
