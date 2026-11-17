@@ -36,5 +36,22 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadInt32("FailedArg2");
             packet.ReadPackedGuid128("FailedBy");
         }
+
+        /// <summary>
+        /// SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA dla Forever 1.60.1.
+        ///
+        /// Handler w WowPacketParser/Parsing/Parsers/SpellHandler.cs (HandleSpellNull) jest PUSTY,
+        /// a serwer wysyla 4 bajty - w sniffie 17.11 11:53 cztery razy, zawsze ten sam rozmiar:
+        ///   BE C7 01 00 | A4 BD 01 00 | B7 D0 01 00 | 2C BE 01 00
+        /// czyli jedno uint32. Wartosci (116670, 114052, 118967, 114220) nie sa jednak SpellID-em:
+        /// zadna nie wystepuje w tym sniffie jako SpellID w SMSG_AURA_UPDATE/SPELL_GO, a 118967
+        /// jest w TDB jako creature_template (Hillstalker Worg), nie spell. Dlatego pole zostaje
+        /// bez nazwy - czytamy je, zeby pakiet byl zjedzony do konca, ale NIE twierdzimy, co znaczy.
+        /// </summary>
+        [Parser(Opcode.SMSG_ON_CANCEL_EXPECTED_RIDE_VEHICLE_AURA)]
+        public static void HandleOnCancelExpectedRideVehicleAura(Packet packet)
+        {
+            packet.ReadUInt32("Unk");
+        }
     }
 }

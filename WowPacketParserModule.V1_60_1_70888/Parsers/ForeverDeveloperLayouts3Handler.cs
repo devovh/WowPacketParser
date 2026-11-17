@@ -142,8 +142,13 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
         {
             packet.ReadUInt32("Unknown");
             ForeverGuid.Read(packet, "Guid");
+            // Forever wysyla do TRZECH guidow, nie dwoch: sniff 17.11 11:53 ma pakiet 29 B
+            // (03 00 00 00 + 8 + 11 + 11 bajtow), a czytnik konczyl na drugim i zostawial 9.
+            // 14.11 i 16.11 mialy krotsze pakiety (11 B i 20 B) - dlatego ta trzecia jest warunkowa.
             if (packet.CanRead())
                 ForeverGuid.Read(packet, "Guid2");
+            if (packet.CanRead())
+                ForeverGuid.Read(packet, "Guid3");
         }
 
         [Parser(Opcode.CMSG_GET_ACCOUNT_CHARACTER_LIST)]

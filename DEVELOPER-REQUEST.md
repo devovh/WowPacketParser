@@ -36,6 +36,16 @@ Names confirmed by the developer on 2026-11-16 — they are not shift leftovers.
 - `SMSG_RATED_PVP_INFO`: not cross-checked with server code.
 - `SMSG_FEATURE_SYSTEM_STATUS`: follows tc-forever `SystemPackets.cpp:123`; verified on one capture.
 
+### 2.3a Two client opcodes we cannot lay out (found on the 2026-11-17 captures)
+
+Both are client-to-server. On the whole 17.11 capture (594 346 packets, undead paladin) everything else reads cleanly: 0 exceptions.
+
+- **`CMSG_BUY_ITEM` (0x3F003B)** — 3 packets, **43, 41 and 37 bytes**. Two layouts were tried and neither fits:
+  - Forever guid (`u16 mask + bytes`) + `u32 Entry`, `u32 Slot`, `u32 Count`, guid, `u8 BagSlot`: the masks `0xEF67` / `0xE667` / `0xE767` mean 12 / 10 / 11 guid bytes, which leaves no room for the rest;
+  - full 128-bit guid + `u32 Entry`, `u32 Slot`, `u32 Count` + 128-bit guid + `u8`: that is 41 bytes, so it matches the 41-byte packet only.
+  Three different lengths from two layouts means the variable part is somewhere we are not looking. **What we need:** the writer (`ItemPackets.cpp`?) field list.
+- **`CMSG_CHAT_MESSAGE_PARTY` (0x2D0026)** — 1 packet, 11 bytes: `01 00 00 00 | 00 | A0 68 65 6C 6C 6F`, i.e. `u32 Language = 1 (Orcish)` and the text "hello". The 0xA0 byte before the text is **neither** the byte length (5) **nor** a bit-packed length — our V4_3_4 reader takes 9 bits there and ends 3 bytes short. **What we need:** how the length is encoded.
+
 ### 2.4 Data the sniff does not contain (not parser bugs, need new captures or server knowledge)
 - `npc_vendor.incrtime` is always 0: the capture has no `SMSG_VENDOR_INVENTORY` for vendors that restock.
 - `creature_loot_template`: 5 rows have no data; the drop chance is only an estimate (drops / kills).
@@ -68,7 +78,8 @@ Already fixed for 70862 (in git, commits `be171cfff` to `74a37e9c4`): creature U
 3. Confirmation of two guesses: `SMSG_DUEL_WINNER` (5 unknown bytes before the names) and `CMSG_AUCTIONABLE_TOKEN_SELL_AT_MARKET_PRICE` (single u32).
 4. The update-field layout of ActivePlayer/Player for 70862 (low priority), to close the `SMSG_UPDATE_OBJECT` errors there.
 5. A decision on the auction extra block (2.3): does the server know what these 2/7/12 bytes are?
-6. Another capture, see `SNIFFING-CHECKLIST.md`: restocking vendors (wait 10 minutes), 50+ kills of the same mob, a book for `page_text`, pets/stable/mail, auction house opened more than once.
+6. The field lists for `CMSG_BUY_ITEM` (0x3F003B) and `CMSG_CHAT_MESSAGE_PARTY` (0x2D0026), see 2.3a — these are the only two packets left in the 17.11 captures that do not read to the end.
+7. Another capture, see `SNIFFING-CHECKLIST.md`: restocking vendors (wait 10 minutes), 50+ kills of the same mob, a book for `page_text`, pets/stable/mail, auction house opened more than once.
 
 ## 5. How to reproduce
 ```
