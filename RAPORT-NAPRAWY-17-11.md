@@ -9,8 +9,8 @@ i `dump_1.60.1.70938_2026-11-17_11-53-35.pkt` (594 346 pakietów). Postać w sni
 
 | sniff | przed | po |
 |---|---|---|
-| 17.11 11:53 | 593 812 (99,910 %), **11 błędów**, 9 „not fully read" | **593 820 (99,911 %), 3 błędy, 3 „not fully read"** |
-| 17.11 10:05 | 118 622 (99,737 %), **1 błąd** | **118 623 (99,738 %), 0 błędów** |
+| 17.11 11:53 | 593 812 (99,910 %), **11 błędów**, 9 „not fully read" | **593 823 (99,912 %), 0 błędów, 0 „not fully read"** |
+| 17.11 10:05 | 118 622 (99,737 %), **1 błąd** | **118 623 (99,738 %), 0 błędów, 0 „not fully read"** |
 | 16.11 (kontrola) | 271 072 (99,867 %), 0 błędów | **271 074 (99,868 %), 0 błędów**, „bez struktury" 32 → 30 |
 | 14.11 (kontrola) | 119 529 (99,946 %), 0 błędów | **bez zmian — 119 529, 0 błędów** |
 
@@ -44,28 +44,37 @@ Plik: `WowPacketParserModule.V1_60_1_70888/Parsers/ForeverDeveloperLayouts3Handl
 
 ---
 
-## 3. Zostaje nierozwiązane (świadomie, bez zgadywania)
+## 3. ROZWIĄZANE 17.11.2026 po odpowiedzi dewelopera
 
-### `CMSG_BUY_ITEM` (0x3F003B) — 2 pakiety
-Trzy pakiety: **43, 41 i 37 bajtów**. Próbowałem dwóch układów:
+Deweloper przysłał układy obu nierozwiązanych opcodów i **oba pasują do bajtów co do jednego**:
 
-| hipoteza | wynik |
-|---|---|
-| guid Forever (u16 maska + bajty) + Entry/Slot/Count | maski `ef67`/`e667`/`e767` dają 12/10/11 bajtów GUID-a — nie zostawia miejsca na resztę |
-| guid128 + Entry/Slot/Count + guid128 + bajt | wychodzi 41 B, a pakiety mają 37 i 43 B |
+### `CMSG_BUY_ITEM` (0x3F003B)
+guid Forever VendorGUID, guid Forever ContainerGUID, `ItemInstance` Item, `i32 Quantity`, `u32 Muid`, `u32 Slot`, `i32 ItemType`.
 
-Żaden nie tłumaczy trzech różnych długości. **Handler zostaje stary**, a plik
-`ForeverItemHandler.cs` to notatka przy kodzie (bez `[Parser]`), żeby nikt nie powtarzał tych prób.
-Do dopisania w `DEVELOPER-REQUEST.md` jako prośba o układ od dewelopera.
+Trzy pakiety (43/41/37 B) wychodzą jako 12/10/11 bajtów GUID-a + lista modyfikatorów itemu — wszystkie trzy kończą się na ostatnim bajcie. Pole zmiennej długości to rozmiar GUID-a **plus modyfikatory itemu**, nie samo Entry/Slot/Count.
+Wynik na sniffie: 43 B → ItemID 2901, Quantity 1, Muid 1, Slot 255.
+Plik: `ForeverItemHandler.cs`
 
-### `CMSG_CHAT_MESSAGE_PARTY` (0x2D0026) — 1 pakiet
-11 bajtów: `01 00 00 00 | 00 | A0 68 65 6C 6C 6F`, czyli Language=1 (Orcish) i tekst „hello".
-Czytnik V4_3_4 czyta 9 bitów długości i wychodzi o 3 bajty za mało. Ale bajt przed tekstem (0xA0) nie jest
-długością ani w bitach, ani w bajtach — nie odgaduję jego znaczenia. Zostaje stary czytnik.
+### `CMSG_CHAT_MESSAGE_PARTY` (0x2D0026)
+`i32 Language`, `11 bitów TextLength`, `1 bit IsSecure`, flush, tekst.
+
+Tajemniczy bajt `0xA0` to **dolna połowa 11-bitowej długości plus IsSecure** — `00 A0` = długość 5 i IsSecure 0. Ten sam układ (bez IsSecure) obsługuje SAY, RAID, RAID_WARNING i INSTANCE_CHAT.
+Wynik: Language 1 (Orcish), TextLength 5, IsSecure False, Text „hello".
+Plik: `ForeverChatHandler.cs`
+
+### Blok w `SMSG_AUCTION_LIST_BUCKETS_RESULT` (0x4702F7)
+To `ItemInstance` — te 2/7/12 bajty to 0/1/2 modyfikatorów, a nie nieznana treść. Heurystyka długości nie jest potrzebna.
+**Uwaga: tego jeszcze NIE przepisałem w parserze** — stara heurystyka nadal siedzi w kodzie.
+
+## 4. Czego deweloper nie potwierdził
+
+- **`SMSG_DUEL_WINNER`** — jego serwer pisze układ retail (6 bitów BeatenNameLen, 6 bitów WinnerNameLen, 1 bit Fled, flush, u32 BeatenVirtualRealmAddress, u32 WinnerVirtualRealmAddress, nazwy). Pakiet 43 B z żywego serwera tego nie pasuje, więc nasze zgadywanie (5 nieznanych bajtów przed nazwami) **zostaje niepotwierdzone**.
+- **`CMSG_AUCTIONABLE_TOKEN_SELL_AT_MARKET_PRICE`** — serwer go ignoruje bez czytania, więc nie ma dowodu na żaden układ. Zostaje nasze `u32`.
+- 70862 (pola update, 4 opcody bez nazwy, 7 tylko-hex) — deweloper nie ma nic do dodania.
 
 ---
 
-## 4. Narzędzia dodane
+## 5. Narzędzia dodane
 
 - `tools/make-synthetic-nonempty.cjs` — generator sniffu PKT 3.1 z **niepustymi** wariantami
   `SMSG_GUILD_BANK_QUERY_RESULTS`, `SMSG_AUCTION_FAVORITE_LIST`, `SMSG_LOAD_EQUIPMENT_SET`,
@@ -76,9 +85,9 @@ długością ani w bitach, ani w bajtach — nie odgaduję jego znaczenia. Zosta
 
 ---
 
-## 5. Wniosek o „procentie działania"
+## 6. Wniosek o „procentie działania"
 
 - **Zero wyjątków** na wszystkich czterech sniffach po zmianach.
-- To, co zostaje, to 3 pakiety „not fully read" (2 × `CMSG_BUY_ITEM`, 1 × `CMSG_CHAT_MESSAGE_PARTY`) —
-  oba układy nierozwiązane, nie zepsute.
+- W sniffach 17.11 **nie zostaje ani jeden pakiet** z „not fully read" i ani jeden wyjątek.
+- Sniff 17.11 11:53: 71 pakietów „bez struktury" (0,012 %) — to opcody, które mają nazwę, ale czytnika nie ma; tam nic się nie psuje, po prostu nie ma co czytać.
 - Undead paladin **nie generuje żadnych własnych, specyficznych pakietów** — nie ma tam nic do naprawy.
