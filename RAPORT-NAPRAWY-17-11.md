@@ -64,7 +64,9 @@ Plik: `ForeverChatHandler.cs`
 
 ### Blok w `SMSG_AUCTION_LIST_BUCKETS_RESULT` (0x4702F7)
 To `ItemInstance` — te 2/7/12 bajty to 0/1/2 modyfikatorów, a nie nieznana treść. Heurystyka długości nie jest potrzebna.
-**Uwaga: tego jeszcze NIE przepisałem w parserze** — stara heurystyka nadal siedzi w kodzie.
+**Już wdrożone** w `ForeverAuctionHandler.cs` (commit `a605bde21`, 15.11). Sprawdzone na sniffie 16.11:
+2 316 koszyków z blokiem extra, `ModifierCount` 0 (1 719) lub 1 (642), `HasBonus` ustawiony w 1 424 z nich,
+a cały sniff kończy się z **0 nieprzeczytanych bajtów**.
 
 ## 4. Czego deweloper nie potwierdził
 

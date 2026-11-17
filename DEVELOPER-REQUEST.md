@@ -31,7 +31,7 @@ Names confirmed by the developer on 2026-11-16 — they are not shift leftovers.
 - `SMSG_SYNC_WOW_ENTITLEMENTS` 0x470300, `SMSG_RAF_ACCOUNT_INFO` 0x4702ED, `SMSG_PAST_TIME_EVENTS` 0x470066, `SMSG_WEEKLY_REWARDS_PROGRESS_RESULT` 0x47030B, `SMSG_RAF_DEBUG_FRIEND_MONTHS` 0x470347: names right, but the server never sends them, so no layout can be proven. They stay hex-only on purpose.
 
 ### 2.3 Layouts that are guessed or unverified
-- ~~`SMSG_AUCTION_LIST_BUCKETS_RESULT` (0x4702F7): the 2/7/12-byte block after the ItemID~~ — CLOSED 2026-11-17: it is an `ItemInstance` (the same one as in `CMSG_BUY_ITEM`), so the 2/7/12 bytes are 0/1/2 mods and no length heuristic is needed. **Not yet rewritten in the parser** — the old heuristic is still in the code.
+- ~~`SMSG_AUCTION_LIST_BUCKETS_RESULT` (0x4702F7): the 2/7/12-byte block after the ItemID~~ — CLOSED: it is an `ItemInstance` (the same one as in `CMSG_BUY_ITEM`), so the 2/7/12 bytes are 0/1/2 mods. **Already implemented** in `ForeverAuctionHandler.cs` (commit `a605bde21`). Verified on the 16.11 capture: 2 316 buckets with the block, `ModifierCount` 0 (1 719) or 1 (642), `HasBonus` set in 1 424 of them, and the whole capture ends with 0 bytes left over.
 - `SMSG_REQUEST_PVP_REWARDS_RESPONSE`: the last byte (0xF8) is not understood.
 - `SMSG_RATED_PVP_INFO`: not cross-checked with server code.
 - `SMSG_FEATURE_SYSTEM_STATUS`: follows tc-forever `SystemPackets.cpp:123`; verified on one capture.
