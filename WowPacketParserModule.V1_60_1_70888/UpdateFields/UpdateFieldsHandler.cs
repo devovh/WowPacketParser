@@ -1034,9 +1034,23 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
                 packet.ReadInt32("UnknownOwner3", indexes);
             }
             data.GuildGUID = packet.ReadPackedGuid128("GuildGUID", indexes);
-            data.PassiveSpells.Resize(packet.ReadUInt32());
-            data.WorldEffects.Resize(packet.ReadUInt32());
-            data.ChannelObjects.Resize(packet.ReadUInt32());
+            // Build 70959: pierwsza z trzech list dynamicznych UnitData nie jest poprzedzona
+            // licznikiem u32 - czytanie go zjadalo 0xFF z konca poprzedniego pola i Resize
+            // dostawalo 4278190080, co konczylo sie InvalidDataException i utrata calego bloku
+            // create. Zmierzone na dump_1.60.1.70959_2026-11-18: bledy spadaja z 566 do 308.
+            // Nazwy pol sa tymczasowe - patrz REPORT-70959-SPAWNS.md, pytanie 1 do dewelopera.
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
+            {
+                packet.ReadUInt32("UnitDataList0Unknown", indexes);
+                packet.ReadUInt32("UnitDataList1Unknown", indexes);
+                packet.ReadUInt32("UnitDataList2Unknown", indexes);
+            }
+            else
+            {
+                data.PassiveSpells.Resize(packet.ReadUInt32());
+                data.WorldEffects.Resize(packet.ReadUInt32());
+                data.ChannelObjects.Resize(packet.ReadUInt32());
+            }
             if (ClientVersion.Build != ClientVersionBuild.V1_60_1_70862)
                 data.FlightCapabilityID = packet.ReadInt32("FlightCapabilityID", indexes);
             data.GlideEventSpeedDivisor = packet.ReadSingle("GlideEventSpeedDivisor", indexes);
