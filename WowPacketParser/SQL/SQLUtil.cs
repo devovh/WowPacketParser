@@ -1,4 +1,4 @@
-using MySql.Data.MySqlClient;
+﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -174,8 +174,22 @@ namespace WowPacketParser.SQL
             if (value is uint && isFlag)
                 value = Hexify((uint)value);
 
-            if (value is float)
-                value = string.Format("{0:F20}", value).Substring(0, 20).TrimEnd('0').TrimEnd('.');
+            if (value is float f)
+            {
+                // 70959: BoundingRadius/DisplayScale wychodzily jako NaN/Infinity (dzielenie przez 0
+                // w ModelData), a "{0:F20}" na NaN daje krotszy tekst niz 20 znakow i Substring
+                // rzucal ArgumentOutOfRangeException - caly builder ModelData przepadal.
+                // NaN/Infinity nie sa poprawnym SQL-em, wiec piszemy NULL.
+                if (float.IsNaN(f) || float.IsInfinity(f))
+                    value = "NULL";
+                else
+                {
+                    var text = string.Format("{0:F20}", f);
+                    if (text.Length > 20)
+                        text = text.Substring(0, 20);
+                    value = text.TrimEnd('0').TrimEnd('.');
+                }
+            }
 
             if (value is Blob blob)
                 value = "0x" + Convert.ToHexString(blob.Data);

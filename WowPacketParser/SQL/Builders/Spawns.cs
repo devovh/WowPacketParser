@@ -278,7 +278,11 @@ namespace WowPacketParser.SQL.Builders
                 row.Data.UnitFlags3 = null;
                 row.Data.DynamicFlag = 0;
 
-                if (creature.UnitData.Health > 1 && (creature.UnitData.Flags & (uint)UnitFlags.IsInCombat) == 0)
+                // 70959: MaxHealth wychodzi 0 (pole przesuniete w bloku UnitData), a dzielenie
+                // przez 0 wywalalo cala metode Creature() - DivideByZeroException - wiec do SQL
+                // nie trafial ANI JEDEN wiersz `creature`. Przy MaxHealth <= 0 zostawiamy 100%.
+                if (creature.UnitData.Health > 1 && creature.UnitData.MaxHealth > 0
+                    && (creature.UnitData.Flags & (uint)UnitFlags.IsInCombat) == 0)
                     row.Data.CurHealthPct = (uint)(creature.UnitData.Health / creature.UnitData.MaxHealth * 100);
 
                 row.Comment = StoreGetters.GetName(StoreNameType.Unit, (int)entry, false);
@@ -391,7 +395,6 @@ namespace WowPacketParser.SQL.Builders
                     }
                 }
                 ++count;
-
                 if (creature.Movement.HasWpsOrRandMov)
                     row.Comment += " (possible waypoints or random movement)";
 

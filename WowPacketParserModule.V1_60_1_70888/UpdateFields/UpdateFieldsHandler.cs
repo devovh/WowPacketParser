@@ -940,9 +940,22 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.ModRangedHaste = packet.ReadSingle("ModRangedHaste", indexes);
             data.ModHasteRegen = packet.ReadSingle("ModHasteRegen", indexes);
             data.ModTimeRate = packet.ReadSingle("ModTimeRate", indexes);
+            // 70959: ModTimeRate to nie ostatni modyfikator - po nim jest jeszcze jeden float
+            // (w sniffie 1.0), i DOPIERO potem CreatedBySpell. Zmierzone: dla stworow
+            // CreatedBySpell wychodzil 0x3F800000 (to wlasnie ten float 1.0), a prawdziwy
+            // 0x8000003F wpadal do EmoteState - 522 z 587 jednostek mialo przez to
+            // IsTemporarySpawn() == true i wypadalo z `creature`.
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
+                packet.ReadSingle("UnknownAfterModTimeRate", indexes);
             data.CreatedBySpell = packet.ReadInt32("CreatedBySpell", indexes);
             data.EmoteState = packet.ReadInt32("EmoteState", indexes);
-            if (ForeverBuild.IsNewLayout)
+            // 70959: kolejne u32 w sniffie ma zawsze 0x3F800000 (1.0f). Bez niego
+            // CurHealthPct = Health / MaxHealth wywalal sie na MaxHealth = 0 (28 jednostek)
+            // i cala metoda Creature() konczyla sie DivideByZeroException.
+            // 70959: te dwa pola sa zapisywane na koncu bloku UnitData, nie tutaj - patrz nizej.
+            // Odczytywane tutaj przesuwaly cala reszte bloku o 4 bajty: ModTimeRate=1.0 trafialo
+            // w CreatedBySpell jako 0x3F800000, a prawdziwy CreatedBySpell (0x8000003F) w EmoteState.
+            if (ClientVersion.Build != ClientVersionBuild.V1_60_1_70959 && ForeverBuild.IsNewLayout)
             {
                 packet.ReadInt16("ClassicTrainingPointsUsed", indexes);
                 packet.ReadInt16("ClassicTrainingPointsTotal", indexes);
@@ -1089,6 +1102,17 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             for (var i = 0; i < data.ChannelObjects.Count; ++i)
             {
                 data.ChannelObjects[i] = packet.ReadPackedGuid128("ChannelObjects", indexes, i);
+            }
+            // 70959: ClassicTrainingPoints* leza na KONCU bloku UnitData, po listach
+            // dynamicznych, a nie po EmoteState jak w 70938/70862. Czytane po EmoteState
+            // przesuwaly cala reszte bloku o 4 bajty: CreatedBySpell wychodzil jako
+            // 0x800000FF (-2147483585), wiec Unit.IsTemporarySpawn() oznaczal 545 z 587
+            // stworow jako tymczasowe i Spawns.Creature() nie wypisywal ani jednego wiersza
+            // do `creature`. Zmierzone: patrz REPORT-70959-SPAWNS.md.
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
+            {
+                packet.ReadInt16("ClassicTrainingPointsUsed", indexes);
+                packet.ReadInt16("ClassicTrainingPointsTotal", indexes);
             }
             packet.ResetBitReader();
             data.Field_314 = packet.ReadBit("Field_314", indexes);
