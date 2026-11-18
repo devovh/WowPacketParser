@@ -223,3 +223,40 @@ nie byl przyczyna pozostalych 279 bledow.
 Dev sam napisal, ze polozenia list w UnitData (PassiveSpells, WorldEffects,
 ChannelObjects) to uklad ICH serwera, nie pomiar zywego realmu. To nie jest
 zmierzone i nie zostalo uzyte.
+
+### Rozklad 21 bitow w zywym snifie 70959 (pierwszy obiekt create)
+
+| objType | bity (MSB first) | ile |
+|---|---|---|
+| 5 (Unit) | HasEntityPosition + MovementUpdate | 253 |
+| 6 | HasEntityPosition + MovementUpdate | 168 |
+| 8 (GameObject) | HasEntityPosition + Stationary + Rotation | 60 |
+| 8 (GameObject) | + ServerTime + GameObject | 13 |
+| 9 | HasEntityPosition + Stationary | 6 |
+| 10 | HasEntityPosition + Stationary | 4 |
+| 11 | HasEntityPosition + Stationary | 3 |
+| 1 | (brak) | 19 |
+
+Zero odchylek od listy deva.
+
+### Pety i summony (hipoteza Karrza)
+
+Karrz: wlasne pety/guardiany/totemy przychodza jako `0x84` / objType 5 tak jak
+zwykly creature, ale niosa pola owner-only (dlatego ze odbiorca jest ich wlascicielem).
+
+Zmierzone na snifie: Unit create z `MovementUpdate` = 15 (pakiety 1-obiektowe),
+wszystkie maja `MoverGUID == wlasny GUID obiektu`. `MoveFlags`: `0x1` x12,
+`0x0` x3. Nie znalazlem jednostek, ktore jednoznacznie wygladaja na wlasne
+pety/summony - wiec ta hypoteza nie tlumaczy pozostalych 279 bledow w tym snifie.
+
+### Serwer nie aktualizuje klienta od czasu powstania
+
+Karrz: "No we didnt update, havent since making it, not to say it wont ever".
+Ich serwer wysyla 70938 i 70959 identyczne bajty pol. Zgadza sie z pomiarem:
+70938 schodzi do 0 bledow na tabelach 70425 z oboma remapami, a 70959 zachowuje
+sie identycznie po stronie pol.
+
+### Dlaczego dev nie da sniffu
+
+Surowy capture zawiera ID kont i postaci, nicki innych graczy, czat i adresy
+polaczen. Odmowa jest uzasadniona, a nasz wlasny sniff 70959 jest lepszym zrodlem.
