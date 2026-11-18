@@ -4215,7 +4215,8 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
 
         public override IActivePlayerData ReadUpdateActivePlayerData(Packet packet, params object[] indexes)
         {
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938
+                || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
                 return ReadUpdateActivePlayerData70938(packet, indexes);
 
             // Forever 1.60.1: naglowek maski jak w PlayerData, ale 14 blokow
