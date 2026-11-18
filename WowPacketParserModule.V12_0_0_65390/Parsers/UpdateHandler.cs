@@ -22,6 +22,11 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
     public static class UpdateHandler
     {
         // Forever 1.60.1 (70338-70938) ma wlasny uklad bloku wartosci i fragmentow encji.
+        // UWAGA: 70959 NIE moze tu wejsc - zmierzone na dump_1.60.1.70959_2026-11-18:
+        //   IsForever do 70938 -> 127885 (99.596%) / 321 bledow / 1455 spawnow creature
+        //   IsForever do 70959 -> 127767 (99.504%) / 439 bledow /    0 spawnow creature
+        // 70959 wysyla co innego (serwer: BaseEntity::BuildCreateUpdateBlockForPlayer w tc-forever
+        // pisze blok tworzenia w ukladzie retail), wiec zostaje na sciezce retail.
         private static readonly bool IsForever =
             ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 &&
             ClientVersion.Build <= ClientVersionBuild.V1_60_1_70938;
