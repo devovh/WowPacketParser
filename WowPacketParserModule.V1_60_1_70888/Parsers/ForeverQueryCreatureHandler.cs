@@ -82,7 +82,7 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
                     namesAlt[i] = packet.ReadCString("NameAlt", e, i);
             }
 
-            var isForever70938 = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938;
+            var isForever70938 = ClientVersion.Build >= ClientVersionBuild.V1_60_1_70938;
             var typeFlagsCount = isForever70938 ? 3 : 4;
             var typeFlags = new uint[typeFlagsCount];
             for (var i = 0; i < typeFlagsCount; ++i)

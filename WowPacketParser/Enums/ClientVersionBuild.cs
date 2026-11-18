@@ -1172,6 +1172,7 @@ namespace WowPacketParser.Enums
         V1_60_1_70862 = 70862, // forever
         V1_60_1_70888 = 70888, // forever
         V1_60_1_70938 = 70938, // forever
+        V1_60_1_70959 = 70959, // forever
 
         // Battle.net - should probably not mix this but oh well
         BattleNetV37165 = 37165,
