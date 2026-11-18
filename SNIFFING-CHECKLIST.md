@@ -51,6 +51,21 @@ trafił tylko na **pusty** pakiet (`Count=0`, `TabCount=0`, `ItemCount=0`). Ukł
 Wystarczy jedno wejście do banku i AH w trakcie sesji — reszta checklisty (trenerzy, vendory,
 questy, loot) zostaje bez zmian.
 
+## Build 70959 (stan 2026-11-18)
+
+- Rozpoznany: `V1_60_1_70959`, mapowany na modul 70888 (`Opcodes`, `UpdateFields`,
+  `ClientVersion`). Numery opcodow **identyczne** z 70938 - sprawdzone na pelnym
+  snifie 128404 rekordow, zero nieznanych opcodow.
+- `ForeverQueryCreatureHandler`: 70959 wysyla 3 `TypeFlags` jak 70938 (nie 4).
+- Wynik: `dump_1.60.1.70959_2026-11-18_04-12-11.pkt` -> **125932 (98.075%)**,
+  2274 bledy (1.771%), skipped 179, bez struktury 19.
+- 70938 bez regresji: 119529 (99.946%), 0 bledow.
+- **Zostaje**: `SMSG_UPDATE_OBJECT` na `ActivePlayer` - `ReadUpdateActivePlayerData`
+  czyta 4 z 105 `InvSlots` i konczy sie na koncu bufora. Potrzebny
+  `ActivePlayerData::WriteUpdate` z tc-forever. Szczegoly: `ASK-DEV-70959-UPDATE-OBJECT.md`.
+- **Do SQL nie blokuje**: tabele TEMP ida z opcodow zapytan i TDB. Spawny
+  bierz z 70938, dopoki to nie jest naprawione.
+
 ## Nowy build klienta (procedura, 2026-11-16)
 
 Numer opcodu i uklad pakietu to dwie osobne rzeczy. Nowy build **moze dzialac bez zadnych zmian**,
