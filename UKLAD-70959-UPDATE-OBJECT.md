@@ -162,3 +162,64 @@ ten sam obiekt wystepuje w dwoch momentach (zeby porownac, co sie zmienia).
 Blok ruchu i format type=0 sa zmierzone i pewne. Blok UpdateFields w Create
 jest zmierzony co do rozmiaru, ale nie wiadomo, co po nim idzie - i to jest
 jedyne, co blokuje pelne przejscie pakietu 837.
+
+---
+
+## AKTUALIZACJA po odpowiedzi deva (2026-11-18)
+
+Dev potwierdzil uklad i wyjasnil moj blad. Kluczowa poprawka: **"7-bajtowy
+naglowek" to naprawde 21 bitow flag (MSB first) + flush do bajtu (3 B)
++ u32 PauseTimesCount**. Nie 7 bajtow o nieznanym znaczeniu.
+
+### Kolejnosc 21 bitow (MSB first)
+
+HasEntityPosition, NoBirthAnim, EnablePortals, PlayHoverAnim, ThisIsYou,
+MovementUpdate, MovementTransport, Stationary, CombatVictim, ServerTime, Vehicle,
+AnimKit, Rotation, GameObject, SmoothPhasing, SceneObject, ActivePlayer,
+Conversation, Room, Decor, MeshObject. Potem flush.
+
+### Maski - potwierdzone na 267 pakietach create z jednym obiektem
+
+| maska | bity (MSB first) | znaczenie | ile |
+|---|---|---|---|
+| `0x84` | 0, 5 | HasEntityPosition + MovementUpdate | 134 x Unit (objType 5) |
+| `0x84` | 0, 5 | to samo | 87 x objType 6 |
+| `0x81` | 0, 7 | HasEntityPosition + Stationary | 24 x objType 8 |
+| `0x81` | 0, 7 | to samo | 5 x objType 9 |
+| `0x8C` | 0, 4, 5 | + ThisIsYou | gracz (active player) |
+
+Przy liczeniu LSB-first `0x84` wychodzi jako "bity 2 i 7" - taki blad popelnilem
+w pierwszej wersji. Bity sa MSB first.
+
+### "Powtorzony GUID" to MoverGUID
+
+Nie jest to duplikat GUID-u obiektu - to `MoverGUID`, pierwsze pole bloku ruchu.
+W probkach ma te sama wartosc co GUID obiektu, dlatego wygladal jak powtorka.
+
+### `flags64` to MoveFlags
+
+`u64` po MoverGUID to `MoveFlags`, nie osobne flagi bloku.
+
+### Co jest po bloku pol
+
+Dev: **nic**. `u32 Size` obejmuje wszystko do konca obiektu i nastepny obiekt
+zaczyna sie zaraz za nim. Moje 98721 bajtow "nieznanego bloku" to nie osobny
+blok - to reszta obiektu[0] (blok ruchu ze splajnem, sily ruchu, 9 predkosci,
+17 floatow advFlying), ktorego jeszcze nie odkodowalem.
+
+### Zastosowana zmiana w kodzie
+
+`ReadMovementUpdateBlock` w V12_0_0_65390: pierwszy bit nazwany
+`HasEntityPosition`, `ThisIsYou` z etykieta, `ResetBitReader()` przed
+`PauseTimesCount` (21 bitow konczy sie w polowie bajtu).
+
+Wynik: 70959 bez zmian (99,629%, 279 bledow, 563 wiersze creature),
+70938 bez regresji (99,901%, 19 bledow, 1281 wierszy). Czyli kod jest teraz
+zgodny z lista deva, ale liczby byly juz wczesniej dobre - naglowek bloku create
+nie byl przyczyna pozostalych 279 bledow.
+
+### Otwarte
+
+Dev sam napisal, ze polozenia list w UnitData (PassiveSpells, WorldEffects,
+ChannelObjects) to uklad ICH serwera, nie pomiar zywego realmu. To nie jest
+zmierzone i nie zostalo uzyte.

@@ -663,14 +663,18 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
 
             packet.ResetBitReader();
 
-            packet.ReadBit("HasPositionFragment", index);
+            // 70959: kolejnosc i nazwy bitow potwierdzone na 267 pakietach create.
+            // Maski z zywego sniffu: 0x84 = HasEntityPosition+MovementUpdate (Unit),
+            // 0x8C = to samo + ThisIsYou (gracz), 0x81 = HasEntityPosition+Stationary
+            // (GameObject/AreaTrigger). Bity MSB first, 21 bitow, potem flush do bajtu.
+            var hasEntityPosition = packet.ReadBit("HasEntityPosition", index);
             moveInfo.NoBirthAnim = packet.ReadBit("NoBirthAnim", index);
             packet.ReadBit("EnablePortals", index);
             moveInfo.PlayHoverAnim = packet.ReadBit("PlayHoverAnim", index);
-            packet.ReadBit("ThisIsYou", index);
+            packet.ReadBit("ThisIsYou", index); // MoveInfo nie ma tego pola - tylko w bitach bloku
 
-            var hasMovementUpdate = packet.ReadBit("HasMovementUpdate", index);
-            var hasMovementTransport = packet.ReadBit("HasMovementTransport", index);
+            var hasMovementUpdate = packet.ReadBit("MovementUpdate", index);
+            var hasMovementTransport = packet.ReadBit("MovementTransport", index);
             var hasStationaryPosition = packet.ReadBit("Stationary", index);
             var hasCombatVictim = packet.ReadBit("HasCombatVictim", index);
             var hasServerTime = packet.ReadBit("HasServerTime", index);
@@ -685,6 +689,10 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
             var hasRoom = packet.ReadBit("HasRoom", index);
             var hasDecor = packet.ReadBit("HasDecor", index);
             var hasMeshObject = packet.ReadBit("HasMeshObject", index);
+
+            // 21 bitow konczy sie w polowie bajtu - reszta bloku jest bajtowa,
+            // wiec trzeba doskoczyc do nastepnego pelnego bajtu.
+            packet.ResetBitReader();
 
             var pauseTimesCount = packet.ReadUInt32("PauseTimesCount", index);
 
