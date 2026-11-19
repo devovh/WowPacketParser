@@ -16,7 +16,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
     /// <summary>Wspolny uklad pol obiektow dla klientow Forever 70862 i 70938 (70938 jest nowszy; roznice per-build sa przy konkretnych polach).</summary>
     internal static class ForeverBuild
     {
-        public static bool IsNewLayout => ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 || ClientVersion.Build == ClientVersionBuild.V1_60_1_70862;
+        // 70959 dostaje od serwera te same bajty co 70938 (ClassicOpcodes: Build70790.FirstBuild = 70790
+        // obejmuje kazdy nowszy build), wiec uklad pol jest ten sam. Zmierzone: 278 bledow
+        // zamiast 279, creature bez zmian - zmiana neutralna, ale porzadkuje kod.
+        public static bool IsNewLayout => ClientVersion.Build == ClientVersionBuild.V1_60_1_70938
+            || ClientVersion.Build == ClientVersionBuild.V1_60_1_70862
+            || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959;
     }
 
     [GeneratedCode("UpdateFieldCodeGenerator.Formats.WowPacketParserHandler", "1.0.0.0")]
