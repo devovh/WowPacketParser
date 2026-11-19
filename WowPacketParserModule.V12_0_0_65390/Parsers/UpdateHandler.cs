@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +30,14 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
         private static readonly bool IsForever =
             ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 &&
             ClientVersion.Build <= ClientVersionBuild.V1_60_1_70938;
+
+        // Forever: jednostka bez zmienionych pol nie ma maski fragmentow (serwer jej nie pisze),
+        // a mimo to dotychczasowy czytnik probowal ja odczytac i zjadal bajty nastepnego obiektu.
+        // Zakres 70338-70938 (bez 70938) i osobno 70959 - 70938 MUSI byc poza, bo z ta galazia
+        // daje 13890 bledow zamiast 18 (zmierzone). Samo 70959: 197 -> 170 bledow.
+        private static readonly bool HasShortFragmentMask =
+            (ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 && ClientVersion.Build < ClientVersionBuild.V1_60_1_70938) ||
+            ClientVersion.Build == ClientVersionBuild.V1_60_1_70959;
 
         [HasSniffData] // in ReadCreateObjectBlock
         [Parser(Opcode.SMSG_UPDATE_OBJECT, ClientVersionBuild.V12_1_0_69214)]
@@ -411,7 +419,7 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
             // bez maski fragmentow. Lista fragmentow jest wtedy pusta (bitow 0-3), a maska
             // (1-2 bajty) i tak nie zawiera nic, wiec jej odczyt zjadalby bajty sasiedniego
             // obiektu. Dla wyzszych buildow zostaje dotychczasowe zachowanie.
-            if (ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 && ClientVersion.Build < ClientVersionBuild.V1_60_1_70938 && fragmentBitCount <= 3)
+            if (HasShortFragmentMask && fragmentBitCount <= 3)
                 return;
 
             var changedFragments = new BitArray(fieldsData.ReadBytes((fragmentBitCount + 7) / 8));
