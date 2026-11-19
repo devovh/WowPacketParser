@@ -106,10 +106,17 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
                 }
                 else
                 {
-                if (Changed(22)) data.AnimGroupInstance = packet.ReadUInt32("AnimGroupInstance", indexes);
-                if (Changed(23)) data.UiWidgetItemID = packet.ReadUInt32("UiWidgetItemID", indexes);
-                if (Changed(24)) data.UiWidgetItemQuality = packet.ReadUInt32("UiWidgetItemQuality", indexes);
-                if (Changed(25)) data.UiWidgetItemCount = packet.ReadUInt32("UiWidgetItemCount", indexes);
+                // 70959 i pozostale (nie-70938): numeracja bitow jak w GameObjectData::WriteUpdate
+                // tc-forever - bit 22 to Level (drugi zapis), 23 AnimGroupInstance, 24 UiWidgetItemID,
+                // 25 UiWidgetItemQuality, 26 UiWidgetItemCount, 27 AssistActionData.
+                // Wczesniej parser czytal 22 jako AnimGroupInstance (przesuniecie o jeden bit),
+                // wiec UiWidgetItemCount (bit 26) nie byl czytany wcale - stad "Bytes remaining: 4"
+                // w kazdym update GameObjectu. Zmierzone na dump_1.60.1.70959_2026-11-18 pkt 1021.
+                if (Changed(22)) data.Level = packet.ReadInt32("LevelLate", indexes);
+                if (Changed(23)) data.AnimGroupInstance = packet.ReadUInt32("AnimGroupInstance", indexes);
+                if (Changed(24)) data.UiWidgetItemID = packet.ReadUInt32("UiWidgetItemID", indexes);
+                if (Changed(25)) data.UiWidgetItemQuality = packet.ReadUInt32("UiWidgetItemQuality", indexes);
+                if (Changed(26)) data.UiWidgetItemCount = packet.ReadUInt32("UiWidgetItemCount", indexes);
                 }
             }
 
