@@ -260,3 +260,59 @@ sie identycznie po stronie pol.
 
 Surowy capture zawiera ID kont i postaci, nicki innych graczy, czat i adresy
 polaczen. Odmowa jest uzasadniona, a nasz wlasny sniff 70959 jest lepszym zrodlem.
+
+## Blok ruchu rozpracowany do konca (pomiar na pkt 5278/5785/6071)
+
+Metoda: w pakietach z JEDNYM obiektem create szukalem takiego `u32 size`, ze
+`offset + 4 + size == dlugosc pakietu`. Trzy pakiety, ta sama jednostka:
+
+| pakiet | u32 size @ | size | dlugosc |
+|---|---|---|---|
+| 5278 | 209 | 647 | 860 |
+| 5785 | 310 | 647 | 961 |
+| 6071 | 322 | 647 | 973 |
+
+Ta sama wartosc 647 w trzech roznych pakietach - to rozmiar bloku pol dla tego
+zestawu pol (Unit, objType 5).
+
+### Uklad po GravityModifier (pkt 5278)
+
+```
+@ 94  9 bitow: HasStandingOn, HasTransport, HasFall, HasSpline,
+      HeightChangeFailed, RemoteTimeValid, HasInertia, HasAdvFlying,
+      HasDriveStatus.  Potem flush.
+@ 96  9 predkosci (36 B): 2.5 walk, 8.0 run, 4.5 runBack, 4.7222 swim,
+      2.5 swimBack, 7.0 flight, 4.5 flightBack, 3.1416 turn, 3.1416 pitch
+@132  u32 MovementForcesCount = 0
+@136  float MovementForcesModMagnitude = 1.0
+@140  17 floatow advFlying (68 B): 2.0, 65.0, 1.0, 3.0, 10.0, 100.0, 1.5708,
+      2.4435, 3.1416, 6.2832, 1.5708, 4.7124, 30.0, 80.0, 2.75, 7.0, 0.4
+@208  1 bajt: bit HasSpline + flush
+@209  u32 Size bloku pol (647), potem Size bajtow pol
+```
+
+Wszystkie wartosci sa sensowne (pi/2, pi, 2pi, limity predkosci), zadnych smieci.
+
+### Co to zmienilo w kodzie
+
+`ReadMovementUpdateBlock`: `ResetBitReader()` po 9 bitach flag, przed predkosciami.
+Zmiana poprawna, ale **wynik sie nie zmienil** - `ReadSingle()` sam sie wyrownuje,
+wiec parser czytal ten blok dobrze juz wczesniej.
+
+| sniff | pakiety | bledy | creature |
+|---|---|---|---|
+| 70959 07:58 (nowy) | 38664 (99,416%) | 79 | 294 |
+| 70959 18.11 | 127927 (99,629%) | 279 | 563 |
+| 70938 | 492566 (99,901%) | 19 | 1281 |
+
+### Wniosek
+
+Blok ruchu nie jest przyczyna pozostalych bledow. Zostaje `UpdateFields`,
+a dokladniej `UnitData` - i to jest zgodne z zastrzezeniem Karrza, ze jego
+pozycje pol od 13 wzwyz to uklad ich serwera, nie pomiar zywego realmu.
+
+### Nowe narzedzie
+
+`tools/pair-map.py` - bierze pary `create` tego samego GUID z dwoch momentow
+i liczy, na ktorych bajtach sie roznia. Na snifie 07:58 znalazl 30 takich par;
+poza blokiem ruchu roznice zaczynaja sie dopiero @183 (blok pol).

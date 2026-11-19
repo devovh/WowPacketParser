@@ -722,12 +722,16 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                 var hasStandingOnGameObjectGUID = packet.ReadBit("HasStandingOnGameObjectGUID", index);
                 var hasTransport = packet.ReadBit("Has Transport Data", index);
                 var hasFall = packet.ReadBit("Has Fall Data", index);
-                packet.ReadBit("HasSpline", index);
+                var hasSplineInBits = packet.ReadBit("HasSpline", index);
                 packet.ReadBit("HeightChangeFailed", index);
                 packet.ReadBit("RemoteTimeValid", index);
                 var hasInertia = packet.ReadBit("HasInertia", index);
                 var hasAdvFlying = packet.ReadBit("HasAdvFlying", index);
                 var hasDriveStatus = packet.ReadBit("HasDriveStatus", index);
+
+                // 70959: 9 bitow konczy sie w polowie bajtu, a dalej ida floaty,
+                // wiec trzeba doskoczyc do pelnego bajtu. Zmierzone na pkt 5278/5785/6071.
+                packet.ResetBitReader();
 
                 if (hasStandingOnGameObjectGUID)
                     packet.ReadPackedGuid128("StandingOnGameObjectGUID", index);
