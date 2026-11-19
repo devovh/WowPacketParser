@@ -175,6 +175,14 @@ namespace WowPacketParserModule.V1_60_1_70888.Parsers
             packet.ReadBytes("Digest", 24);
             packet.ReadBit("UseIPv6");
             packet.ResetBitReader();
+            // Forever 1.60.1: miedzy bitem UseIPv6 a rozmiarem biletu sa 4 bajty, ktorych
+            // nie znamy. Zmierzone na trzech sniffach - rozmiar stoi zawsze @77, a
+            // 81 + rozmiar = dlugosc pakietu co do bajtu:
+            //   70959 18.11 len 935: @69..76 = 52 d0 db 48 7b f4 4e 00, @77 = 854 (81+854=935)
+            //   70959 19.11 len 938: @69..76 = 15 e9 ec 8d de 42 5f 00, @77 = 857 (81+857=938)
+            //   70938       len 932: @69..76 = 63 48 06 96 67 08 a3 00, @77 = 851 (81+851=932)
+            // Ostatni bajt zawsze 00. Czytamy jako nieznane bajty, zeby sie przesunac.
+            packet.ReadBytes("AuthSessionUnknown", 8);
             var realmJoinTicketSize = packet.ReadInt32();
             packet.ReadBytes("RealmJoinTicket", (int)System.Math.Min(realmJoinTicketSize, packet.Length - packet.Position));
             packet.ReadBytes("AddonInfo", (int)(packet.Length - packet.Position));
