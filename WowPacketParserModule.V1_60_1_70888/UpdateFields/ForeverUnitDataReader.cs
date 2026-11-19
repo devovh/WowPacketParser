@@ -46,7 +46,11 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             var classicBlocks = new ulong[4];
             for (var i = 0; i < BlockCount; ++i)
                 if ((blocksMask & (1UL << i)) != 0)
-                    classicBlocks[i / 2] |= (is70938 ? packet.ReadBits("UnitBlock", 32, indexes, i) : (ulong)packet.ReadUInt32("UnitBlock", indexes, i)) << (32 * (i % 2));
+                    // Dev (Karrz): serwer pisze kazdy 32-bitowy blok MSB-first, tak samo jak
+                    // 8-bitowa maske blokow. Czytanie LE dawalo z 81 00 00 00 wartosc 129
+                    // (bity 0 i 7), a poprawnie jest 0x81000000 (bity 24 i 31 -> klasyczne 152, 159).
+                    // Zmierzone na pkt 1759 obiekt [1]: blok 17 B rozklada sie wtedy co do bajtu.
+                    classicBlocks[i / 2] |= (ulong)packet.ReadBits("UnitBlock", 32, indexes, i) << (32 * (i % 2));
 
             // Maska w numeracji TC: ta sama informacja, ale pod numerami pol, ktore czyta kod 12.x.
             var tcBlocks = ForeverClassicBitRemap.ToRetailBits(classicBlocks, TcBitCount,
