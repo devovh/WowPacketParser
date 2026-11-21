@@ -21,7 +21,14 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
         // zamiast 279, creature bez zmian - zmiana neutralna, ale porzadkuje kod.
         public static bool IsNewLayout => ClientVersion.Build == ClientVersionBuild.V1_60_1_70938
             || ClientVersion.Build == ClientVersionBuild.V1_60_1_70862
-            || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959;
+            || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959
+            || ClientVersion.Build == ClientVersionBuild.V1_60_1_71037;
+
+        /// <summary>Buildy, w ktorych writer UnitData pisze te same pola co 70938 (dev tc-forever:
+        /// "the 70959 create bytes are exactly the 70938 ones, there is no 70959 branch anywhere").</summary>
+        public static bool Has70938Fields => ClientVersion.Build == ClientVersionBuild.V1_60_1_70938
+            || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959
+            || ClientVersion.Build == ClientVersionBuild.V1_60_1_71037;
     }
 
     [GeneratedCode("UpdateFieldCodeGenerator.Formats.WowPacketParserHandler", "1.0.0.0")]
@@ -819,7 +826,8 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.StateAnimID = packet.ReadUInt32("StateAnimID", indexes);
             data.StateAnimKitID = packet.ReadUInt32("StateAnimKitID", indexes);
             // Forever: licznik wlasnych pol jest na koncu bloku, nie przed polami.
-            data.StateWorldEffectIDs = new System.Nullable<uint>[ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 ? packet.ReadUInt32() : 0];
+            // 70959/71037: dev tc-forever potwierdzil, ze writer jest ten sam co 70938.
+            data.StateWorldEffectIDs = new System.Nullable<uint>[ForeverBuild.Has70938Fields ? packet.ReadUInt32() : 0];
             data.StateWorldEffectsQuestObjectiveID = packet.ReadUInt32("StateWorldEffectsQuestObjectiveID", indexes);
             data.SpellOverrideNameID = packet.ReadInt32("SpellOverrideNameID", indexes);
             for (var i = 0; i < data.StateWorldEffectIDs.Length; ++i)
@@ -939,28 +947,26 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.PetNextLevelExperience = packet.ReadUInt32("PetNextLevelExperience", indexes);
             data.ModCastingSpeed = packet.ReadSingle("ModCastingSpeed", indexes);
             data.ModCastingSpeedNeg = packet.ReadSingle("ModCastingSpeedNeg", indexes);
-            if (ClientVersion.Build != ClientVersionBuild.V1_60_1_70938 || (flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
+            // 70959/71037: dev tc-forever: ModSpellHaste jest TYLKO dla ownera (w kazdym buildzie).
+            // Poprzedni warunek "nie-70938" czytal je dla kazdego bloku na 70959 (+4 B).
+            if ((flags & UpdateFieldFlag.Owner) != UpdateFieldFlag.None)
                 data.ModSpellHaste = packet.ReadSingle("ModSpellHaste", indexes);
             data.ModHaste = packet.ReadSingle("ModHaste", indexes);
             data.ModRangedHaste = packet.ReadSingle("ModRangedHaste", indexes);
             data.ModHasteRegen = packet.ReadSingle("ModHasteRegen", indexes);
             data.ModTimeRate = packet.ReadSingle("ModTimeRate", indexes);
-            // 70959: ModTimeRate to nie ostatni modyfikator - po nim jest jeszcze jeden float
-            // (w sniffie 1.0), i DOPIERO potem CreatedBySpell. Zmierzone: dla stworow
-            // CreatedBySpell wychodzil 0x3F800000 (to wlasnie ten float 1.0), a prawdziwy
-            // 0x8000003F wpadal do EmoteState - 522 z 587 jednostek mialo przez to
-            // IsTemporarySpawn() == true i wypadalo z `creature`.
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
-                packet.ReadSingle("UnknownAfterModTimeRate", indexes);
+            // USUNIETE obejscie "float po ModTimeRate" dla 70959/71037: to byl ten sam bajt
+            // co ModSpellHaste z linii 942. Teraz ModSpellHaste jest czytane tylko dla ownera,
+            // wiec dla stworow te 4 bajty pochodza stad.
             data.CreatedBySpell = packet.ReadInt32("CreatedBySpell", indexes);
             data.EmoteState = packet.ReadInt32("EmoteState", indexes);
             // 70959: kolejne u32 w sniffie ma zawsze 0x3F800000 (1.0f). Bez niego
             // CurHealthPct = Health / MaxHealth wywalal sie na MaxHealth = 0 (28 jednostek)
             // i cala metoda Creature() konczyla sie DivideByZeroException.
-            // 70959: te dwa pola sa zapisywane na koncu bloku UnitData, nie tutaj - patrz nizej.
-            // Odczytywane tutaj przesuwaly cala reszte bloku o 4 bajty: ModTimeRate=1.0 trafialo
-            // w CreatedBySpell jako 0x3F800000, a prawdziwy CreatedBySpell (0x8000003F) w EmoteState.
-            if (ClientVersion.Build != ClientVersionBuild.V1_60_1_70959 && ForeverBuild.IsNewLayout)
+            // 70959/71037: ClassicTrainingPoints* leza tutaj, po EmoteState - tak jak w 70938/70862.
+            // Wczesniejsze obejscie przenoszace je na koniec bloku bylo kompensacja bledu
+            // z ModSpellHaste (linia 942); teraz, gdy tamto jest naprawione, pole wraca na miejsce.
+            if (ForeverBuild.Has70938Fields)
             {
                 packet.ReadInt16("ClassicTrainingPointsUsed", indexes);
                 packet.ReadInt16("ClassicTrainingPointsTotal", indexes);
@@ -1057,7 +1063,8 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             // dostawalo 4278190080, co konczylo sie InvalidDataException i utrata calego bloku
             // create. Zmierzone na dump_1.60.1.70959_2026-11-18: bledy spadaja z 566 do 308.
             // Nazwy pol sa tymczasowe - patrz REPORT-70959-SPAWNS.md, pytanie 1 do dewelopera.
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
+            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959
+                || ClientVersion.Build == ClientVersionBuild.V1_60_1_71037)
             {
                 packet.ReadUInt32("UnitDataList0Unknown", indexes);
                 packet.ReadUInt32("UnitDataList1Unknown", indexes);
@@ -1108,17 +1115,8 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             {
                 data.ChannelObjects[i] = packet.ReadPackedGuid128("ChannelObjects", indexes, i);
             }
-            // 70959: ClassicTrainingPoints* leza na KONCU bloku UnitData, po listach
-            // dynamicznych, a nie po EmoteState jak w 70938/70862. Czytane po EmoteState
-            // przesuwaly cala reszte bloku o 4 bajty: CreatedBySpell wychodzil jako
-            // 0x800000FF (-2147483585), wiec Unit.IsTemporarySpawn() oznaczal 545 z 587
-            // stworow jako tymczasowe i Spawns.Creature() nie wypisywal ani jednego wiersza
-            // do `creature`. Zmierzone: patrz REPORT-70959-SPAWNS.md.
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
-            {
-                packet.ReadInt16("ClassicTrainingPointsUsed", indexes);
-                packet.ReadInt16("ClassicTrainingPointsTotal", indexes);
-            }
+            // 70959/71037: ClassicTrainingPoints* sa teraz czytane po EmoteState (wyzej), tak jak
+            // w 70938 - nie ma tu juz dodatkowej kopii na koncu bloku.
             packet.ResetBitReader();
             data.Field_314 = packet.ReadBit("Field_314", indexes);
             hasAssistActionData = packet.ReadBit("HasAssistActionData", indexes);
@@ -1548,7 +1546,10 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             }
             packet.ResetBitReader();
             data.Name = new string('*', (int)packet.ReadBits(6));
-            var surnameLength = ClientVersion.Build == ClientVersionBuild.V1_60_1_70938 ? (int)packet.ReadBits(9) : 0;
+            // 70959/71037: naglowek nazwy jest ten sam co w 70938 - 6 bitow imienia, potem 9 bitow
+            // nazwiska, JEDEN naglowek dla obu stringow (dev tc-forever). Wczesniej te 9 bitow
+            // nie bylo czytane, wiec caly ogon bloku create gracza byl przesuniety.
+            var surnameLength = ForeverBuild.Has70938Fields ? (int)packet.ReadBits(9) : 0;
             if ((flags & UpdateFieldFlag.PartyMember) != UpdateFieldFlag.None)
             {
                 data.HasQuestSession = packet.ReadBit("HasQuestSession", indexes);
@@ -1556,7 +1557,7 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
             data.HasLevelLink = packet.ReadBit("HasLevelLink", indexes);
             hasDeclinedNames = packet.ReadBit("HasDeclinedNames", indexes);
             data.Name = packet.ReadWoWString("Name", data.Name.Length, indexes);
-            if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938)
+            if (ForeverBuild.Has70938Fields)
             {
                 packet.ReadWoWString("Surname", surnameLength, indexes);
             }
@@ -4259,7 +4260,8 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields.V1_60_1_70888
         public override IActivePlayerData ReadUpdateActivePlayerData(Packet packet, params object[] indexes)
         {
             if (ClientVersion.Build == ClientVersionBuild.V1_60_1_70938
-                || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959)
+                || ClientVersion.Build == ClientVersionBuild.V1_60_1_70959
+                || ClientVersion.Build == ClientVersionBuild.V1_60_1_71037)
                 return ReadUpdateActivePlayerData70938(packet, indexes);
 
             // Forever 1.60.1: naglowek maski jak w PlayerData, ale 14 blokow

@@ -37,7 +37,8 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
         // daje 13890 bledow zamiast 18 (zmierzone). Samo 70959: 197 -> 170 bledow.
         private static readonly bool HasShortFragmentMask =
             (ClientVersion.Build >= ClientVersionBuild.V1_60_1_70338 && ClientVersion.Build < ClientVersionBuild.V1_60_1_70938) ||
-            ClientVersion.Build == ClientVersionBuild.V1_60_1_70959;
+            ClientVersion.Build == ClientVersionBuild.V1_60_1_70959 ||
+            ClientVersion.Build == ClientVersionBuild.V1_60_1_71037;
 
         [HasSniffData] // in ReadCreateObjectBlock
         [Parser(Opcode.SMSG_UPDATE_OBJECT, ClientVersionBuild.V12_1_0_69214)]
