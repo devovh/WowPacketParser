@@ -29,3 +29,11 @@ cov-int
 
 # Parser output (SQL dumps, generated files)
 out/
+
+# lokalne sekrety (hasla MySQL do narzedzi w tools/)
+tools/.env.local
+
+# Wyniki przebiegu parsera w katalogu glownym (SQL, logi)
+/*.sql
+/*.pkt.sql
+/*_log.txt

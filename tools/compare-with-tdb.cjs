@@ -4,7 +4,17 @@
 const { execFileSync } = require('child_process');
 
 const MYSQL = 'C:/Program Files/MySQL/MySQL Server 8.4/bin/mysql.exe';
-const DSN = ['-h', '127.0.0.1', '-u', 'root', '-p!Taurus2277', '-N'];
+// Haslo NIE jest trzymane w repo. Ustaw WPP_MYSQL_PWD w srodowisku (albo w
+// tools/.env.local, ktory jest w .gitignore) - skrypt sam go stamtad wezmie.
+const PWD = process.env.WPP_MYSQL_PWD || (() => {
+    try { return require('fs').readFileSync(__dirname + '/.env.local', 'utf8').match(/^\s*WPP_MYSQL_PWD\s*=\s*(.+?)\s*$/m)?.[1]; }
+    catch { return undefined; }
+})();
+if (!PWD) {
+    console.error('Brak hasla MySQL. Ustaw WPP_MYSQL_PWD albo utworz tools/.env.local z linia: WPP_MYSQL_PWD=twoje_haslo');
+    process.exit(1);
+}
+const DSN = ['-h', process.env.WPP_MYSQL_HOST || '127.0.0.1', '-u', process.env.WPP_MYSQL_USER || 'root', '-p' + PWD, '-N'];
 const TDB = 'wpp_tdb_base';
 
 function q(sql) {
