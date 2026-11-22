@@ -161,8 +161,42 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                                 break;
                             }
 
-                            if (IsForever && ClientVersion.Build != ClientVersionBuild.V1_60_1_70938)
+                            // 70959/71037 pisza maske typow (ReadForeverValuesTypeMask) zamiast retailowego
+                            // u32 updateTypeFlag. Wolamy to tylko przy hasFragmentUpdates, bo bez flagi blok
+                            // ma 3 bajty i zadnej maski typow (128833 blokow z 1 nieprzeczytanym bajtem).
+                            if ((IsForever && ClientVersion.Build != ClientVersionBuild.V1_60_1_70938)
+                                || ((ClientVersion.Build == ClientVersionBuild.V1_60_1_70959
+                                     || ClientVersion.Build == ClientVersionBuild.V1_60_1_71037) && hasFragmentUpdates))
                                 ReadUpdateEntityFragmentDataForever(obj, fragments, updateValues, handler, fieldsData, i);
+                            else if ((ClientVersion.Build == ClientVersionBuild.V1_60_1_70959
+                                      || ClientVersion.Build == ClientVersionBuild.V1_60_1_71037) && !hasFragmentUpdates)
+                            {
+                                // Bez flagi fragmentow blok to IsOwned, HasFragmentUpdates i maska zmian
+                                // ObjectData (ObjectData::WriteUpdate: WriteBits(GetBlock(0), 4) + FlushBits,
+                                // czyli zawsze caly bajt). Bez tego zostawal 1 nieprzeczytany bajt
+                                // w 128833 blokach.
+                                var objData = handler.ReadUpdateObjectData(fieldsData, i);
+                                if (obj is { ObjectData: IMutableObjectData mutObj })
+                                    mutObj.UpdateData(objData);
+                                else if (obj != null)
+                                    obj.ObjectData = objData;
+                                updateValues.Fields.UpdateData(objData);
+
+                                // Po masce ObjectData ida jeszcze dane typu (bez maski typow) - kolejnosc
+                                // jak w galezi Forever: Unit, Player, ActivePlayer, GameObject.
+                                if (fieldsData.Position < fieldsData.Length)
+                                {
+                                    if (obj is Unit unitObj)
+                                    {
+                                        var unitData = handler.ReadUpdateUnitData(fieldsData, i);
+                                        if (unitObj.UnitData is IMutableUnitData mutUnit)
+                                            mutUnit.UpdateData(unitData);
+                                        else
+                                            unitObj.UnitData = unitData;
+                                        updateValues.Fields.UpdateData(unitData);
+                                    }
+                                }
+                            }
                             else
                                 ReadUpdateEntityFragmentData(obj, fragments, updateValues, handler, fieldsData, i);
 
@@ -318,6 +352,9 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
 
             var fragments = new List<WowCSEntityFragment>();
             if ((typeMask & (1u << 0)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.CGObject));
+            // Forever: bit 1..4 = typy itemowe (Item, Container, AzeriteEmpoweredItem, AzeriteItem).
+            // Bez tego blok Item konczyl sie z 1 nieprzeczytanym bajtem (129229 razy w sniffie).
+            if ((typeMask & (1u << 1)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_Item));
             if ((typeMask & (1u << 5)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_Unit));
             if ((typeMask & (1u << 6)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_Player));
             if ((typeMask & (1u << 7)) != 0) fragments.Add(new WowCSEntityFragment(WowCSEntityFragments1100.Tag_ActivePlayer));
@@ -345,6 +382,11 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                         updateValues.Fields.UpdateData(data);
                         break;
                     }
+                    case WowCSEntityFragments.Tag_Item:
+                    {
+                        handler.ReadUpdateItemData(fieldsData, index);
+                        break;
+                    }
                     case WowCSEntityFragments.PlayerHouseInfoComponent_C:
                     case WowCSEntityFragments.PlayerInitiativeComponent_C:
                     case WowCSEntityFragments.Tag_Unit:
@@ -353,6 +395,9 @@ namespace WowPacketParserModule.V12_0_0_65390.Parsers
                     {
                         // Forever: dane typu to u32 rozmiar (tylko przy pierwszym typie), potem pola
                         // (ObjectData, UnitData, PlayerData, ActivePlayerData, GameObjectData).
+                        // Uwaga: przy hasFragmentUpdates == False blok ma 3 bajty (IsOwned,
+                        // HasFragmentUpdates, ObjectChangesMask) i ZADNEJ maski typow - czytanie
+                        // u32 zjadaloby bajty nastepnego obiektu (9484 EndOfStream).
                         var typeMask = fieldsData.ReadUInt32("TypeMask", index);
                         const uint TypeMaskObject = 1u << 0;
                         const uint TypeMaskUnit = 1u << 5;
