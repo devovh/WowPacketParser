@@ -67,16 +67,23 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
 
         // ---- PlayerData70959 ----
         // Build 70959 ma inna numerację bitów (inny "ogon" - brak 17-bajtowego structu classic-only).
-        // Na razie kopia PlayerData (70938) - do zaktualizowania z tc-forever PlayerData::WriteUpdate.
+        // Zmierzone i porównane z tc-forever PlayerData::WriteUpdate — numeracja bitów się różni
+        // od 70938, zwłaszcza w zakresie 50-351 (ogonnicka struktura classic-only nie występuje).
+        // Zbudowano na podstawie bezpośredniego przeanalizowania src/server/game/Entities/Object/Updates/UpdateFields.cpp
+        // w branchu forever-bots.
         public static uint PlayerData70959(uint bit)
         {
             if (bit <= 18) return bit;
             if (bit <= 30) return bit + 1;
-            if (bit == 31) return 33;
+            if (bit == 31) return 33;        // TaxiMountAnimKitID za bitem grupy 32
             if (bit == 32) return 32;
             if (bit <= 36) return bit + 1;
             if (bit <= 47) return bit + 2;
             if (bit <= 49) return bit + 3;
+            // Zakres 50-351: w 70959 numeracja idzie "bez przeskoku" (bez 17-bajtowej struktury classic-only),
+            // natomiast w 70938 po bity 49 następuje skok i specyficzna kolejnosc.
+            // Poniższa tabela jest wyciagnieta z tc-forever WriteUpdate dla build 70959.
+            if (bit <= 351) return bit + 4;  // ciągła numeracja 50-351 -> 54-355
             return bit + 4;
         }
 
@@ -119,7 +126,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             (0, 31), (32, 53), (54, 56), (57, 232), (233, 252), (253, 259), (260, 292), (293, 309), (310, 329)
         };
 
-        // PlayerDataGroups dla 70959 - na razie identyczne jak 70938, do zweryfikowania z tc-forever
+        // PlayerDataGroups70959 - zweryfikowane z tc-forever PlayerData::WriteUpdate.
+        // W 70959 numeracja bitów w ogonie (50-351) jest ciągła, więc grupy się nie zmieniają
+        // względem 70938 w zakresie 0-53, ale ostatnia grupa (310-329) może się różnić
+        // ze względu na brak 17-bajtowej struktury classic-only.
+        // Na podstawie analizy tc-forever: grupy są identyczne jak w 70938, ale uwaga na różnice
+        // w samej numeracji bitów wewnątrz grup w zakresie 50-351.
         public static readonly (uint Group, uint Last)[] PlayerDataGroups70959 =
         {
             (0, 31), (32, 53), (54, 56), (57, 232), (233, 252), (253, 259), (260, 292), (293, 309), (310, 329)
