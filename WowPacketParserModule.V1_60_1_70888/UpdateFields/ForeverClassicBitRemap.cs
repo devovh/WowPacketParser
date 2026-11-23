@@ -65,6 +65,21 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
             return bit + 4;
         }
 
+        // ---- PlayerData70959 ----
+        // Build 70959 ma inna numerację bitów (inny "ogon" - brak 17-bajtowego structu classic-only).
+        // Na razie kopia PlayerData (70938) - do zaktualizowania z tc-forever PlayerData::WriteUpdate.
+        public static uint PlayerData70959(uint bit)
+        {
+            if (bit <= 18) return bit;
+            if (bit <= 30) return bit + 1;
+            if (bit == 31) return 33;
+            if (bit == 32) return 32;
+            if (bit <= 36) return bit + 1;
+            if (bit <= 47) return bit + 2;
+            if (bit <= 49) return bit + 3;
+            return bit + 4;
+        }
+
         // ---- ActivePlayerData ----
         private static uint ActivePlayerDataBit70291(uint bit)
         {
@@ -100,6 +115,12 @@ namespace WowPacketParserModule.V1_60_1_70888.UpdateFields
 
         // ---- Grupy klasyczne (zakresy bitow TC, ktore trafiaja do jednego bitu grupowego) ----
         public static readonly (uint Group, uint Last)[] PlayerDataGroups =
+        {
+            (0, 31), (32, 53), (54, 56), (57, 232), (233, 252), (253, 259), (260, 292), (293, 309), (310, 329)
+        };
+
+        // PlayerDataGroups dla 70959 - na razie identyczne jak 70938, do zweryfikowania z tc-forever
+        public static readonly (uint Group, uint Last)[] PlayerDataGroups70959 =
         {
             (0, 31), (32, 53), (54, 56), (57, 232), (233, 252), (253, 259), (260, 292), (293, 309), (310, 329)
         };
